@@ -1,33 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { styles } from './styles';
 import { COLORS } from '../../constants/theme';
+// A linha abaixo importa a constante 'styles' do arquivo irmão.
+import { styles } from './styles';
 
-// A linha 'export default' garante que o componente possa ser importado por outras telas.
-export default function StyledInput({ label, iconName, isPassword, showPassword, setShowPassword, ...props }) {
+// A linha abaixo é crucial. Ela exporta a função como padrão.
+export default function StyledInput({ label, iconName, isPassword, ...props }) {
     const [isFocused, setIsFocused] = useState(false);
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+    const secureText = isPassword && !isPasswordVisible;
 
     return (
-        <View style={styles.inputContainer}>
+        // Esta linha aplica o estilo 'container' que importamos.
+        <View style={styles.container}> 
             {label && <Text style={styles.label}>{label}</Text>}
-            <View style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
+            <View style={[styles.wrapper, isFocused && styles.wrapperFocused]}>
                 {iconName && (
                     <Feather name={iconName} size={20} color={isFocused ? COLORS.primary : COLORS.icon} style={styles.icon} />
                 )}
                 <TextInput
                     style={styles.input}
-                    secureTextEntry={isPassword && !showPassword}
+                    secureTextEntry={secureText}
                     placeholderTextColor={COLORS.textSecondary}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    // Passa todas as outras props (value, onChangeText, etc.) para o TextInput
                     {...props} 
                 />
                 {isPassword && (
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
                         <Feather 
-                            name={showPassword ? "eye-off" : "eye"} 
+                            name={isPasswordVisible ? "eye-off" : "eye"} 
                             size={20} 
                             color={COLORS.icon}
                             style={styles.eyeIcon} 

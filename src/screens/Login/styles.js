@@ -32,41 +32,13 @@ export const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontFamily: FONTS.bold, // Usando a fonte Poppins
-        color: COLORS.textPrimary,
+        fontFamily: FONTS.bold,
+        color: COLORS.textTitle,
     },
     subtitle: {
         fontSize: 18,
-        fontFamily: FONTS.semibold, // Usando a fonte Poppins
+        fontFamily: FONTS.semibold,
         color: COLORS.primary,
-    },
-    label: {
-        fontSize: 14,
-        fontFamily: FONTS.medium, // Usando a fonte Poppins
-        color: COLORS.textSecondary,
-        marginBottom: 8,
-    },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: COLORS.inputBorder,
-    },
-    icon: {
-        paddingLeft: 12,
-    },
-    input: {
-        flex: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 10,
-        fontSize: 16,
-        fontFamily: FONTS.regular, // Usando a fonte Poppins
-        color: COLORS.textPrimary,
-    },
-    // ... (o resto dos estilos permanece o mesmo, mas agora as fontes serão aplicadas)
-    eyeIcon: {
-        padding: 12,
     },
     optionsContainer: {
         flexDirection: 'row',
@@ -84,7 +56,6 @@ export const styles = StyleSheet.create({
         fontFamily: FONTS.regular,
         color: COLORS.textSecondary,
     },
-    forgotPasswordButton: {},
     forgotPasswordText: {
         fontSize: 14,
         color: COLORS.primary,
@@ -95,14 +66,10 @@ export const styles = StyleSheet.create({
         paddingVertical: 16,
         borderRadius: 8,
         alignItems: 'center',
-        marginTop: 16,
+        // CORREÇÃO AQUI: Aumentamos a margem superior para compensar a remoção do divisor
+        marginTop: 24, 
         flexDirection: 'row',
         justifyContent: 'center',
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 5,
     },
     loginButtonText: {
         color: COLORS.card,

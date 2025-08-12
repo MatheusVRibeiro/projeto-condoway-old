@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
     View, 
     Text, 
-    TextInput, 
     TouchableOpacity, 
     Alert,
     Image,
@@ -14,18 +13,17 @@ import {
 import Checkbox from 'expo-checkbox';
 import { Feather } from '@expo/vector-icons';
 import { styles } from './styles';
-import { COLORS } from '../../constants/theme';
+import StyledInput from '../../components/StyledInput';
 
 export default function Login({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
+    
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert("Por favor, preencha todos os campos.");
+            Alert.alert("Atenção", "Por favor, preencha e-mail e senha.");
             return;
         }
         setIsLoading(true);
@@ -48,55 +46,41 @@ export default function Login({ navigation }) {
                 <View style={styles.container}>
                     <View style={styles.card}>
                         <View style={styles.header}>
-                            <Image 
-                                source={require('../../../assets/condoway-logo.png')} // Certifique-se que o logo existe
-                                style={styles.logo} 
-                            />
+                            <Image source={require('../../../assets/icon.png')} style={styles.logo} />
                             <Text style={styles.title}>Bem-vindo(a) ao</Text>
                             <Text style={styles.subtitle}>CondoWay Residence</Text>
                         </View>
                         
-                        <View>
-                            <Text style={styles.label}>E-mail</Text>
-                            <View style={styles.inputWrapper}>
-                                <Feather name="mail" size={20} color={COLORS.icon} style={styles.icon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="seu@email.com"
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    value={email}
-                                    onChangeText={setEmail}
-                                />
-                            </View>
-                        </View>
+                        <StyledInput
+                            label="E-mail"
+                            iconName="mail"
+                            placeholder="seu@email.com"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            value={email}
+                            onChangeText={setEmail}
+                        />
 
-                        <View style={{ marginTop: 16 }}>
-                            <Text style={styles.label}>Senha</Text>
-                            <View style={styles.inputWrapper}>
-                                <Feather name="lock" size={20} color={COLORS.icon} style={styles.icon} />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="••••••••"
-                                    secureTextEntry={!showPassword}
-                                    value={password}
-                                    onChangeText={setPassword}
-                                />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                    <Feather name={showPassword ? "eye-off" : "eye"} size={20} color={COLORS.icon} style={styles.eyeIcon} />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
+                        <StyledInput
+                            label="Senha"
+                            iconName="lock"
+                            placeholder="••••••••"
+                            value={password}
+                            onChangeText={setPassword}
+                            isPassword={true}
+                        />
 
                         <View style={styles.optionsContainer}>
                             <View style={styles.checkboxContainer}>
-                                <Checkbox value={rememberMe} onValueChange={setRememberMe} color={rememberMe ? COLORS.primary : undefined} />
+                                <Checkbox value={rememberMe} onValueChange={setRememberMe} color={rememberMe ? '#1976D2' : undefined} />
                                 <Text style={styles.checkboxLabel}>Lembrar-me</Text>
                             </View>
                             <TouchableOpacity onPress={() => navigation.navigate('EsqSenha')}>
                                 <Text style={styles.forgotPasswordText}>Esqueci a senha?</Text>
                             </TouchableOpacity>
                         </View>
+
+                        {/* A LINHA DIVISÓRIA FOI REMOVIDA DAQUI */}
 
                         <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
                             {isLoading ? <ActivityIndicator color="#ffffff" /> : (

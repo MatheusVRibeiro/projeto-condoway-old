@@ -2,31 +2,28 @@ import { StyleSheet } from 'react-native';
 import { COLORS, FONTS } from '../../constants/theme';
 
 export const styles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 16,
+    container: {
         width: '100%',
+        marginBottom: 16,
     },
     label: {
         fontSize: 14,
+        fontFamily: FONTS.medium,
         color: COLORS.textLabel,
         marginBottom: 8,
-        fontWeight: FONTS.medium,
     },
-    inputWrapper: {
+    wrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.inputBackground,
         borderRadius: 8,
-        borderWidth: 1,
+        borderWidth: 1, // Borda padrão
         borderColor: COLORS.inputBorder,
+        backgroundColor: COLORS.card,
     },
-    inputWrapperFocused: {
+    // CORREÇÃO AQUI
+    wrapperFocused: {
         borderColor: COLORS.primary,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 5,
+        borderWidth: 2, // Borda mais grossa ao focar
     },
     icon: {
         paddingLeft: 12,
@@ -36,6 +33,7 @@ export const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 10,
         fontSize: 16,
+        fontFamily: FONTS.regular,
         color: COLORS.textPrimary,
     },
     eyeIcon: {
