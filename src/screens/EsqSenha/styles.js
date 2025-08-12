@@ -15,34 +15,45 @@ export const styles = StyleSheet.create({
         padding: SIZES.padding,
         width: '100%',
         maxWidth: 400,
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 10,
         elevation: 8,
     },
-    header: {
+    iconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
-    },
-    logo: {
-        width: 80,
-        height: 80,
-        marginBottom: 16,
+        backgroundColor: `${COLORS.primary}1A`, // Azul com 10% de opacidade
     },
     title: {
-        fontSize: 24,
-        fontFamily: FONTS.bold, // Usando a fonte Poppins
+        fontSize: 22,
+        fontFamily: FONTS.bold,
         color: COLORS.textPrimary,
+        marginBottom: 12,
+        textAlign: 'center', // Adicionado para garantir a centralização
     },
     subtitle: {
-        fontSize: 18,
-        fontFamily: FONTS.semibold, // Usando a fonte Poppins
-        color: COLORS.primary,
+        fontSize: 15,
+        fontFamily: FONTS.regular,
+        color: COLORS.textSecondary,
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 22,
+    },
+    // Estilos para o TextInput que usamos
+    inputContainer: {
+        width: '100%',
+        marginBottom: 16,
     },
     label: {
         fontSize: 14,
-        fontFamily: FONTS.medium, // Usando a fonte Poppins
+        fontFamily: FONTS.medium,
         color: COLORS.textSecondary,
         marginBottom: 8,
     },
@@ -53,6 +64,9 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: COLORS.inputBorder,
     },
+    inputWrapperFocused: {
+        borderColor: COLORS.primary,
+    },
     icon: {
         paddingLeft: 12,
     },
@@ -61,51 +75,49 @@ export const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 10,
         fontSize: 16,
-        fontFamily: FONTS.regular, // Usando a fonte Poppins
+        fontFamily: FONTS.regular,
         color: COLORS.textPrimary,
     },
-    // ... (o resto dos estilos permanece o mesmo, mas agora as fontes serão aplicadas)
-    eyeIcon: {
-        padding: 12,
-    },
-    optionsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginVertical: 8,
-    },
-    checkboxContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    checkboxLabel: {
-        marginLeft: 8,
-        fontSize: 14,
-        fontFamily: FONTS.regular,
-        color: COLORS.textSecondary,
-    },
-    forgotPasswordButton: {},
-    forgotPasswordText: {
-        fontSize: 14,
-        color: COLORS.primary,
-        fontFamily: FONTS.semibold,
-    },
-    loginButton: {
+    button: {
+        width: '100%',
         backgroundColor: COLORS.primary,
         paddingVertical: 16,
         borderRadius: 8,
         alignItems: 'center',
-        marginTop: 16,
         flexDirection: 'row',
         justifyContent: 'center',
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 5,
+        marginTop: 8, // Ajuste de margem
     },
-    loginButtonText: {
+    buttonText: {
         color: COLORS.card,
+        fontSize: 16,
+        fontFamily: FONTS.bold,
+        marginLeft: 8,
+    },
+    backButton: {
+        marginTop: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    backButtonText: {
+        fontSize: 14,
+        color: COLORS.primary,
+        fontFamily: FONTS.semibold,
+        marginLeft: 4,
+    },
+    // NOVO ESTILO PARA O BOTÃO DE VOLTAR NO CARD DE SUCESSO
+    successButton: {
+        width: '100%',
+        backgroundColor: `${COLORS.primary}1A`, // Fundo azul claro
+        paddingVertical: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 24,
+    },
+    successButtonText: {
+        color: COLORS.primary, // Texto azul escuro
         fontSize: 16,
         fontFamily: FONTS.bold,
         marginLeft: 8,

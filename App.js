@@ -1,22 +1,23 @@
-// App.js (versão de teste)
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import 'react-native-gesture-handler';
+import React from 'react';
+import Navegacao from './src/routes';
+import { AppLoading } from 'expo'; // Expo's AppLoading component is deprecated
+import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Olá, Mundo!</Text>
-      <Text style={{ marginTop: 10 }}>Se você está vendo isso, o projeto está funcionando.</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  // Carrega as variações da fonte que vamos usar
+  let [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+  });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  // Enquanto as fontes não forem carregadas, não exibe nada (ou um loading)
+  if (!fontsLoaded) {
+    return null; 
+  }
+
+  // Após carregar, exibe o aplicativo
+  return <Navegacao />;
+}
