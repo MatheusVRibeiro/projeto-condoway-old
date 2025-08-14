@@ -1,20 +1,28 @@
-// src/routes/stackNavigation.js
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+//Auth
 import Login from '../screens/Login';
-import CadUsuario from '../screens/CadUsuario';
-import EsqSenha from '../screens/EsqSenha';
-import Home from "../screens/Home";
+import SignUp from '../screens/SignUp'; // <-- CORREÇÃO AQUI
+import ForgotPassword from '../screens/ForgotPassword';
+
+//Home
+import Dashboard from '../screens/Dashboard';
 
 const Stack = createNativeStackNavigator();
 
-export default function StackRoutes() {
-    return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="CadUsuario" component={CadUsuario} />
-            <Stack.Screen name="EsqSenha" component={EsqSenha} />
-            <Stack.Screen name="Home" component={Home} />
-        </Stack.Navigator>
-    );
+export default function StackNavigation() {
+  return (
+    <Stack.Navigator
+      initialRouteName="Login"
+      screenOptions={{
+        headerShown: false,
+      }}>
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="SignUp" component={SignUp} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+
+      <Stack.Screen name="Dashboard" component={Dashboard} />
+    </Stack.Navigator>
+  );
 }

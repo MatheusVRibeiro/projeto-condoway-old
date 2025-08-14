@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { styles } from './styles';
-import { COLORS } from '../../constants/theme';
+import { COLORS } from '../../../constants/theme';
 
 export default function EsqSenha({ navigation }) {
     const [email, setEmail] = useState('');

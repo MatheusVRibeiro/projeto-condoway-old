@@ -13,7 +13,8 @@ import {
 import Checkbox from 'expo-checkbox';
 import { Feather } from '@expo/vector-icons';
 import { styles } from './styles';
-import StyledInput from '../../components/StyledInput';
+import StyledInput from '../../../../src/components/StyledInput';
+
 
 export default function Login({ navigation }) {
     const [email, setEmail] = useState('');
@@ -46,7 +47,7 @@ export default function Login({ navigation }) {
                 <View style={styles.container}>
                     <View style={styles.card}>
                         <View style={styles.header}>
-                            <Image source={require('../../../assets/icon.png')} style={styles.logo} />
+                            <Image source={require('../../../../assets/icon.png')} style={styles.logo} />
                             <Text style={styles.title}>Bem-vindo(a) ao</Text>
                             <Text style={styles.subtitle}>CondoWay Residence</Text>
                         </View>
