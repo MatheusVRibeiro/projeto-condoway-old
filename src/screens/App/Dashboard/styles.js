@@ -195,4 +195,44 @@ export const styles = StyleSheet.create({
     color: '#9ca3af', // text-gray-400
     fontFamily: 'Poppins-Regular',
   },
+  // Adicione no final de src/screens/App/Dashboard/styles.js
+
+  // --- Skeleton Loading ---
+  loadingContainer: {
+    padding: 16,
+  },
+  skeletonHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  skeletonHeaderText: {
+    width: '60%',
+    height: 24,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  skeletonSubText: {
+    width: '40%',
+    height: 16,
+    borderRadius: 8,
+  },
+  skeletonAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  skeletonCard: {
+    height: 90,
+    width: '100%',
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  skeletonActionCard: {
+    width: '48%',
+    height: 110,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
 });

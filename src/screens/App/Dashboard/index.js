@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
+import Skeleton from '../../../components/ui/Skeleton'; // Importe o Skeleton
 
 // Importe os ícones necessários
 import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning } from 'lucide-react-native';
 
-// Componente reutilizável para o card de ação rápida
+// --- Componentes Internos da Tela ---
+
+// Componente para o card de ação rápida
 const AcaoCard = ({ icon: Icon, title, badgeCount, onPress }) => (
   <TouchableOpacity onPress={onPress} style={styles.actionCard}>
     {badgeCount > 0 && (
@@ -20,9 +23,54 @@ const AcaoCard = ({ icon: Icon, title, badgeCount, onPress }) => (
   </TouchableOpacity>
 );
 
+// Componente para a tela de carregamento (Skeleton)
+const DashboardSkeleton = () => (
+  <View style={styles.loadingContainer}>
+    <View style={styles.skeletonHeader}>
+      <View>
+        <Skeleton width={200} height={24} borderRadius={8} />
+        <View style={{ height: 8 }} />
+        <Skeleton width={150} height={16} borderRadius={8} />
+      </View>
+      <Skeleton width={44} height={44} borderRadius={22} />
+    </View>
+    <Skeleton width={'100%'} height={90} borderRadius={12} />
+    <View style={{ height: 24 }} />
+    <Skeleton width={150} height={20} borderRadius={8} />
+    <View style={{ height: 12 }} />
+    <View style={styles.actionsGrid}>
+      <Skeleton width={'48%'} height={110} borderRadius={12} />
+      <Skeleton width={'48%'} height={110} borderRadius={12} />
+    </View>
+  </View>
+);
+
+
+// --- Componente Principal da Tela ---
+
 export default function Dashboard() {
   const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Lógica de Carregamento: Simula a busca de dados
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500); // Atraso de 1.5 segundos para simular a rede
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Renderiza o Skeleton enquanto os dados estão "carregando"
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <DashboardSkeleton />
+      </SafeAreaView>
+    );
+  }
+
+  // Renderiza a tela principal após o carregamento
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -48,7 +96,6 @@ export default function Dashboard() {
 
           {/* === AVISOS IMPORTANTES === */}
           <View style={styles.section}>
-            {/* O ideal aqui é um carrossel, mas começamos com um card simples */}
             <View style={styles.avisoCard}>
                 <AlertTriangle size={20} color="#b91c1c" style={styles.avisoIcon} />
                 <View style={styles.avisoTextContainer}>
@@ -62,10 +109,10 @@ export default function Dashboard() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ações Rápidas</Text>
             <View style={styles.actionsGrid}>
-                <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={() => navigation.navigate('Reservas')} />
-                <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={() => navigation.navigate('Packages')} />
+                <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={() => navigation.navigate('ReservasTab')} />
+                <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={() => navigation.navigate('PackagesTab')} />
                 <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={() => alert('Função indisponível')} />
-                <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={() => navigation.navigate('Ocorrencias')} />
+                <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={() => navigation.navigate('OcorrenciasTab')} />
             </View>
           </View>
 
