@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Calendar, MessageSquareWarning, User, Package } from 'lucide-react-native';
 
-// Importe o AuthProvider e o AuthContext
-import { AuthProvider, useAuth } from '../contexts/AuthContext';
+// Importe o hook de autenticação REAL do contexto
+import { useAuth } from '../contexts/AuthContext';
 
 // Importe suas telas de Autenticação
 import Login from '../screens/Auth/Login';
@@ -18,10 +18,24 @@ import Reservas from '../screens/App/Reservas';
 import Ocorrencias from '../screens/App/Ocorrencias';
 import Perfil from '../screens/App/Perfil';
 import Packages from '../screens/App/Packages';
-import Notifications from '../screens/App/Notifications';
+// 1. Importe o novo ecrã de Configurações
+import Settings from '../screens/App/Settings'; 
 
 const AuthStack = createNativeStackNavigator();
 const AppTab = createBottomTabNavigator();
+// 2. Crie um novo StackNavigator para a secção de Perfil
+const ProfileStackNavigator = createNativeStackNavigator(); 
+
+// 3. Crie um componente para gerir a navegação do Perfil
+//    Ele irá conter o ecrã de Perfil e o de Configurações.
+function ProfileStack() {
+  return (
+    <ProfileStackNavigator.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStackNavigator.Screen name="ProfileMain" component={Perfil} />
+      <ProfileStackNavigator.Screen name="Settings" component={Settings} />
+    </ProfileStackNavigator.Navigator>
+  );
+}
 
 // Navegador para as telas principais (pós-login)
 function AppRoutes() {
@@ -75,9 +89,10 @@ function AppRoutes() {
           tabBarIcon: ({ color, size }) => <Package color={color} size={size} />,
         }} 
       />
+      {/* 4. Altere o componente da aba de Perfil para usar o novo Stack */}
       <AppTab.Screen 
         name="PerfilTab" 
-        component={Perfil} 
+        component={ProfileStack} 
         options={{
           tabBarLabel: 'Perfil',
           tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
@@ -99,7 +114,7 @@ function AuthRoutes() {
   );
 }
 
-// O AuthProvider deve envolver o app no App.js, então aqui só consumimos o contexto
+// O AuthProvider deve envolver a app no App.js, então aqui só consumimos o contexto
 export default function Routes() {
   const { isLoggedIn } = useAuth();
   return isLoggedIn ? <AppRoutes /> : <AuthRoutes />;
