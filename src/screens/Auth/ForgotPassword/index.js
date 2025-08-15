@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { 
     View, 
     Text, 
@@ -7,9 +8,20 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { styles } from './styles';
-import { COLORS } from '../../../constants/theme';
+import { COLORS, FONTS } from '../../../constants/theme';
 
 export default function EsqSenha({ navigation }) {
+    // Carregar fontes Poppins
+    const [fontsLoaded] = useFonts({
+        [FONTS.regular]: Poppins_400Regular,
+        [FONTS.medium]: Poppins_500Medium,
+        [FONTS.semibold]: Poppins_600SemiBold,
+        [FONTS.bold]: Poppins_700Bold,
+    });
+
+    if (!fontsLoaded) {
+        return null;
+    }
     const [email, setEmail] = useState('');
     const [isFocused, setIsFocused] = useState(false);
     const [linkSent, setLinkSent] = useState(false); // Novo estado para controlar a UI

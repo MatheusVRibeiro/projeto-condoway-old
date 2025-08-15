@@ -1,67 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
-import Skeleton from '../../../components/ui/Skeleton'; // Importe o Skeleton
+import Skeleton from '../../../components/ui/Skeleton';
+import * as Animatable from 'react-native-animatable';
+import * as Haptics from 'expo-haptics';
 
-// Importe os ícones necessários
 import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning } from 'lucide-react-native';
 
 // --- Componentes Internos da Tela ---
 
-// Componente para o card de ação rápida
-const AcaoCard = ({ icon: Icon, title, badgeCount, onPress }) => (
-  <TouchableOpacity onPress={onPress} style={styles.actionCard}>
-    {badgeCount > 0 && (
-      <View style={styles.actionBadge}>
-        <Text style={styles.actionBadgeText}>{badgeCount}</Text>
-      </View>
-    )}
-    <Icon color="#2563eb" size={32} style={styles.actionCardIcon} />
-    <Text style={styles.actionCardTitle}>{title}</Text>
-  </TouchableOpacity>
-);
+const AcaoCard = ({ icon: Icon, title, badgeCount, onPress }) => {
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onPress();
+  };
 
-// Componente para a tela de carregamento (Skeleton)
-const DashboardSkeleton = () => (
-  <View style={styles.loadingContainer}>
-    <View style={styles.skeletonHeader}>
-      <View>
-        <Skeleton width={200} height={24} borderRadius={8} />
-        <View style={{ height: 8 }} />
-        <Skeleton width={150} height={16} borderRadius={8} />
-      </View>
-      <Skeleton width={44} height={44} borderRadius={22} />
-    </View>
-    <Skeleton width={'100%'} height={90} borderRadius={12} />
-    <View style={{ height: 24 }} />
-    <Skeleton width={150} height={20} borderRadius={8} />
-    <View style={{ height: 12 }} />
-    <View style={styles.actionsGrid}>
-      <Skeleton width={'48%'} height={110} borderRadius={12} />
-      <Skeleton width={'48%'} height={110} borderRadius={12} />
-    </View>
-  </View>
-);
+  return (
+    <TouchableOpacity onPress={handlePress} style={styles.actionCard}>
+      {badgeCount > 0 && (
+        <View style={styles.actionBadge}>
+          <Text style={styles.actionBadgeText}>{badgeCount}</Text>
+        </View>
+      )}
+      <Icon color="#2563eb" size={32} style={styles.actionCardIcon} />
+      <Text style={styles.actionCardTitle}>{title}</Text>
+    </TouchableOpacity>
+  );
+};
 
+const DashboardSkeleton = () => {
+  const screenWidth = Dimensions.get('window').width;
+  const fullWidth = screenWidth - 32;
+  const halfWidth = fullWidth * 0.48;
+
+  return (
+    <View style={styles.loadingContainer}>
+        <View style={styles.skeletonHeader}>
+          <View>
+            <Skeleton width={200} height={24} borderRadius={8} />
+            <View style={{ height: 8 }} />
+            <Skeleton width={150} height={16} borderRadius={8} />
+          </View>
+          <Skeleton width={44} height={44} borderRadius={22} />
+        </View>
+        <Skeleton width={fullWidth} height={90} borderRadius={12} />
+        <View style={{ height: 24 }} />
+        <Skeleton width={150} height={20} borderRadius={8} />
+        <View style={{ height: 12 }} />
+        <View style={styles.actionsGrid}>
+          <Skeleton width={halfWidth} height={110} borderRadius={12} />
+          <Skeleton width={halfWidth} height={110} borderRadius={12} />
+        </View>
+    </View>
+  );
+};
 
 // --- Componente Principal da Tela ---
 
 export default function Dashboard() {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
+  const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
 
-  // Lógica de Carregamento: Simula a busca de dados
+  // Função para calcular o slide ativo com base na posição do scroll
+  const onScroll = (event) => {
+    const slideWidth = event.nativeEvent.layoutMeasurement.width;
+    const offset = event.nativeEvent.contentOffset.x;
+    const slide = Math.round(offset / slideWidth);
+    if (slide !== activeSlide) {
+      setActiveSlide(slide);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500); // Atraso de 1.5 segundos para simular a rede
-
+    }, 500); 
     return () => clearTimeout(timer);
   }, []);
 
-  // Renderiza o Skeleton enquanto os dados estão "carregando"
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -70,13 +89,12 @@ export default function Dashboard() {
     );
   }
 
-  // Renderiza a tela principal após o carregamento
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.content}>
           {/* === HEADER === */}
-          <View style={[styles.header, styles.section]}>
+          <Animatable.View animation="fadeInDown" duration={500} style={[styles.header, styles.section]}>
             <View style={styles.headerTextContainer}>
               <Text style={styles.title}>Boa noite, {morador.nome}! 👋</Text>
               <Text style={styles.subtitle}>{morador.condominio}</Text>
@@ -92,21 +110,38 @@ export default function Dashboard() {
               </TouchableOpacity>
               <Image source={{ uri: morador.avatarUrl }} style={styles.avatar} />
             </View>
-          </View>
+          </Animatable.View>
 
-          {/* === AVISOS IMPORTANTES === */}
-          <View style={styles.section}>
-            <View style={styles.avisoCard}>
-                <AlertTriangle size={20} color="#b91c1c" style={styles.avisoIcon} />
-                <View style={styles.avisoTextContainer}>
-                    <Text style={styles.avisoTitle}>{avisosImportantes[0].titulo}</Text>
-                    <Text style={styles.avisoText}>{avisosImportantes[0].texto}</Text>
+          {/* === AVISOS IMPORTANTES (CARROSSEL) === */}
+          <Animatable.View animation="fadeInUp" duration={500} delay={100} style={styles.section}>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={onScroll}
+              scrollEventThrottle={16}
+            >
+              {avisosImportantes.map((aviso) => (
+                <View key={aviso.id} style={styles.avisoCardWrapper}>
+                  <View style={styles.avisoCard}>
+                      <AlertTriangle size={20} color="#b91c1c" style={styles.avisoIcon} />
+                      <View style={styles.avisoTextContainer}>
+                          <Text style={styles.avisoTitle}>{aviso.titulo}</Text>
+                          <Text style={styles.avisoText}>{aviso.texto}</Text>
+                      </View>
+                  </View>
                 </View>
+              ))}
+            </ScrollView>
+            <View style={styles.paginationContainer}>
+              {avisosImportantes.map((_, index) => (
+                <View key={index} style={[styles.paginationDot, activeSlide === index && styles.paginationDotActive]} />
+              ))}
             </View>
-          </View>
+          </Animatable.View>
 
           {/* === AÇÕES RÁPIDAS === */}
-          <View style={styles.section}>
+          <Animatable.View animation="fadeInUp" duration={500} delay={200} style={styles.section}>
             <Text style={styles.sectionTitle}>Ações Rápidas</Text>
             <View style={styles.actionsGrid}>
                 <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={() => navigation.navigate('ReservasTab')} />
@@ -114,10 +149,10 @@ export default function Dashboard() {
                 <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={() => alert('Função indisponível')} />
                 <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={() => navigation.navigate('OcorrenciasTab')} />
             </View>
-          </View>
+          </Animatable.View>
 
           {/* === ÚLTIMAS ATUALIZAÇÕES === */}
-          <View style={styles.section}>
+          <Animatable.View animation="fadeInUp" duration={500} delay={300} style={styles.section}>
             <Text style={styles.sectionTitle}>Últimas Atualizações</Text>
             <View style={styles.updatesCard}>
               {Object.entries(ultimasAtualizacoes).map(([data, itens]) => (
@@ -141,7 +176,7 @@ export default function Dashboard() {
                 </View>
               ))}
             </View>
-          </View>
+          </Animatable.View>
 
         </View>
       </ScrollView>

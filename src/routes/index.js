@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
-// Ícones para as abas
 import { Home, Calendar, MessageSquareWarning, User, Package } from 'lucide-react-native';
+
+// Importe o AuthProvider e o AuthContext
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
 // Importe suas telas de Autenticação
 import Login from '../screens/Auth/Login';
@@ -17,28 +18,19 @@ import Reservas from '../screens/App/Reservas';
 import Ocorrencias from '../screens/App/Ocorrencias';
 import Perfil from '../screens/App/Perfil';
 import Packages from '../screens/App/Packages';
-// A tela de Notificações pode ser acessada de outra forma, mas a incluímos aqui se necessário.
 import Notifications from '../screens/App/Notifications';
-
-// Simulação de um hook de autenticação.
-// No futuro, você substituirá isso pelo seu Contexto de Autenticação.
-const useAuth = () => {
-  // Mude para `true` para ver as telas do app, `false` para ver as de login.
-  const isLoggedIn = true; 
-  return { isLoggedIn };
-};
 
 const AuthStack = createNativeStackNavigator();
 const AppTab = createBottomTabNavigator();
 
-// Navegador para as telas principais, com abas na parte inferior
+// Navegador para as telas principais (pós-login)
 function AppRoutes() {
   return (
     <AppTab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2563eb', // Azul primário
-        tabBarInactiveTintColor: '#6b7280', // Cinza
+        tabBarActiveTintColor: '#2563eb',
+        tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopWidth: 1,
@@ -48,12 +40,11 @@ function AppRoutes() {
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontFamily: 'Poppins-Regular', // Adicione se estiver usando fontes customizadas
         },
       }}
     >
       <AppTab.Screen 
-        name="DashboardTab" // Nome único para a rota da aba
+        name="DashboardTab"
         component={Dashboard} 
         options={{
           tabBarLabel: 'Início',
@@ -96,7 +87,7 @@ function AppRoutes() {
   );
 }
 
-// Navegador para o fluxo de autenticação
+// Navegador para o fluxo de autenticação (pré-login)
 function AuthRoutes() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -108,10 +99,8 @@ function AuthRoutes() {
   );
 }
 
-
-// Navegador principal que decide qual fluxo mostrar
+// O AuthProvider deve envolver o app no App.js, então aqui só consumimos o contexto
 export default function Routes() {
   const { isLoggedIn } = useAuth();
-
   return isLoggedIn ? <AppRoutes /> : <AuthRoutes />;
 }

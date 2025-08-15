@@ -1,99 +1,151 @@
 import React, { useState } from 'react';
-import { 
-    View, 
-    Text, 
-    TouchableOpacity, 
-    Alert,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    ActivityIndicator
+import { useAuth } from '../../../contexts/AuthContext';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  SafeAreaView,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import Checkbox from 'expo-checkbox';
-import { Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
-import StyledInput from '../../../../src/components/StyledInput';
+import Toast from 'react-native-toast-message';
+import * as Haptics from 'expo-haptics';
+import { Mail, Lock, Eye, EyeOff, LogIn, Check } from 'lucide-react-native';
 
+export default function Login() {
+  const navigation = useNavigation();
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-export default function Login({ navigation }) {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+  async function handleLogin() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (!email || !password) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Toast.show({
+        type: 'error',
+        text1: 'Atenção',
+        text2: 'Por favor, preencha todos os campos.',
+        position: 'bottom',
+      });
+      return;
+    }
     
-    const handleLogin = async () => {
-        if (!email || !password) {
-            Alert.alert("Atenção", "Por favor, preencha e-mail e senha.");
-            return;
-        }
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500)); 
-        setIsLoading(false); 
-        
-        if (email.toLowerCase() === 'morador@condoway.com' && password === '123') {
-            navigation.navigate('Home');
-        } else {
-            Alert.alert("Erro de Autenticação", "E-mail ou senha inválidos.");
-        }
-    };
+    setIsLoading(true);
 
-    return (
-        <KeyboardAvoidingView 
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={{ flex: 1 }}
-        >
-            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-                <View style={styles.container}>
-                    <View style={styles.card}>
-                        <View style={styles.header}>
-                            <Image source={require('../../../../assets/icon.png')} style={styles.logo} />
-                            <Text style={styles.title}>Bem-vindo(a) ao</Text>
-                            <Text style={styles.subtitle}>CondoWay Residence</Text>
-                        </View>
-                        
-                        <StyledInput
-                            label="E-mail"
-                            iconName="mail"
-                            placeholder="seu@email.com"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            value={email}
-                            onChangeText={setEmail}
-                        />
+    setTimeout(() => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Toast.show({
+        type: 'success',
+        text1: 'Login realizado com sucesso!',
+        text2: 'Bem-vindo(a) de volta.',
+        position: 'bottom',
+      });
+      login({ email });
+      setIsLoading(false);
+    }, 1500);
+  }
 
-                        <StyledInput
-                            label="Senha"
-                            iconName="lock"
-                            placeholder="••••••••"
-                            value={password}
-                            onChangeText={setPassword}
-                            isPassword={true}
-                        />
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <View style={styles.card}>
+          <View style={styles.header}>
+            <Image
+              source={require('../../../../assets/condoway-logo.png')}
+              style={styles.logo}
+            />
+            <Text style={styles.title}>Bem-vindo(a) ao</Text>
+            <Text style={styles.subtitle}>CondoWay Residence</Text>
+          </View>
 
-                        <View style={styles.optionsContainer}>
-                            <View style={styles.checkboxContainer}>
-                                <Checkbox value={rememberMe} onValueChange={setRememberMe} color={rememberMe ? '#1976D2' : undefined} />
-                                <Text style={styles.checkboxLabel}>Lembrar-me</Text>
-                            </View>
-                            <TouchableOpacity onPress={() => navigation.navigate('EsqSenha')}>
-                                <Text style={styles.forgotPasswordText}>Esqueci a senha?</Text>
-                            </TouchableOpacity>
-                        </View>
+          <View style={styles.form}>
+            {/* Campo de E-mail */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>E-mail</Text>
+              <View style={styles.inputContainer}>
+                <Mail color="#9ca3af" size={20} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                />
+              </View>
+            </View>
 
-                        {/* A LINHA DIVISÓRIA FOI REMOVIDA DAQUI */}
+            {/* Campo de Senha */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Senha</Text>
+              <View style={styles.inputContainer}>
+                <Lock color="#9ca3af" size={20} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoComplete="password"
+                />
+                <TouchableOpacity
+                  style={styles.eyeIconContainer}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff color="#9ca3af" size={20} />
+                  ) : (
+                    <Eye color="#9ca3af" size={20} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
 
-                        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-                            {isLoading ? <ActivityIndicator color="#ffffff" /> : (
-                                <>
-                                    <Feather name="log-in" size={20} color="white" />
-                                    <Text style={styles.loginButtonText}>Entrar</Text>
-                                </>
-                            )}
-                        </TouchableOpacity>
-                    </View>
+            {/* Opções */}
+            <View style={styles.optionsContainer}>
+              <TouchableOpacity
+                style={styles.rememberMeContainer}
+                onPress={() => setRememberMe(!rememberMe)}
+              >
+                <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                  {rememberMe && <Check color="white" size={14} />}
                 </View>
-            </ScrollView>
-        </KeyboardAvoidingView>
-    );
+                <Text style={styles.rememberMeText}>Lembrar-me</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+                <Text style={styles.forgotPasswordText}>Esqueci a senha?</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Botão de Login */}
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <LogIn color="white" size={20} />
+                  <Text style={styles.loginButtonText}>Entrar</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 }

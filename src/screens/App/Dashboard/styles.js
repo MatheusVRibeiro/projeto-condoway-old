@@ -1,4 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const cardWidth = width - 32; // Largura da tela menos o padding lateral (16*2)
 
 export const styles = StyleSheet.create({
   // --- Containers ---
@@ -8,7 +11,7 @@ export const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 100, // Espaço extra no final para não sobrepor a TabNav
+    paddingBottom: 100,
   },
   section: {
     marginBottom: 24,
@@ -34,12 +37,10 @@ export const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
-    fontFamily: 'Poppins-Bold', // Adicione se tiver as fontes
   },
   subtitle: {
     fontSize: 14,
     color: '#666',
-    fontFamily: 'Poppins-Regular',
   },
   headerActions: {
     flexDirection: 'row',
@@ -73,15 +74,19 @@ export const styles = StyleSheet.create({
     borderRadius: 22,
   },
 
-  // --- Aviso Card ---
+  // --- ATUALIZAÇÃO: Estilos do Carrossel de Avisos ---
+  avisoCardWrapper: {
+    width: cardWidth, // Garante que cada card ocupe a largura da área de conteúdo
+  },
   avisoCard: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)', // bg-red-50
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#ef4444', // border-red-500
+    borderLeftColor: '#ef4444',
     flexDirection: 'row',
     alignItems: 'flex-start',
+    marginRight: 16, // Espaçamento entre os cards (opcional)
   },
   avisoIcon: {
     marginRight: 12,
@@ -92,15 +97,29 @@ export const styles = StyleSheet.create({
   },
   avisoTitle: {
     fontWeight: 'bold',
-    color: '#991b1b', // text-red-900
-    fontFamily: 'Poppins-Bold',
+    color: '#991b1b',
   },
   avisoText: {
     fontSize: 14,
-    color: '#991b1b', // text-red-900
+    color: '#991b1b',
     marginTop: 4,
-    fontFamily: 'Poppins-Regular',
   },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D1D5DB', // Cor do ponto inativo
+    marginHorizontal: 4,
+  },
+  paginationDotActive: {
+    backgroundColor: '#2563eb', // Cor do ponto ativo
+  },
+  // --- Fim dos Estilos do Carrossel ---
 
   // --- Ações Rápidas Grid ---
   actionsGrid: {
@@ -131,7 +150,6 @@ export const styles = StyleSheet.create({
     color: '#444',
     fontSize: 14,
     textAlign: 'center',
-    fontFamily: 'Poppins-SemiBold',
   },
   actionBadge: {
     position: 'absolute',
@@ -168,7 +186,7 @@ export const styles = StyleSheet.create({
     textTransform: 'uppercase',
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#9ca3af', // text-gray-400
+    color: '#9ca3af',
     paddingBottom: 8,
   },
   updateItem: {
@@ -177,9 +195,9 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   updateIconContainer: {
-    backgroundColor: '#f3f4f6', // bg-gray-100
+    backgroundColor: '#f3f4f6',
     padding: 8,
-    borderRadius: 999, // rounded-full
+    borderRadius: 999,
     marginRight: 12,
   },
   updateTextContainer: {
@@ -187,52 +205,10 @@ export const styles = StyleSheet.create({
   },
   updateText: {
     fontSize: 14,
-    color: '#374151', // text-gray-800
-    fontFamily: 'Poppins-Regular',
+    color: '#374151',
   },
   updateTime: {
     fontSize: 12,
-    color: '#9ca3af', // text-gray-400
-    fontFamily: 'Poppins-Regular',
-  },
-  // Adicione no final de src/screens/App/Dashboard/styles.js
-
-  // --- Skeleton Loading ---
-  loadingContainer: {
-    padding: 16,
-  },
-  skeletonHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  skeletonHeaderText: {
-    width: '60%',
-    height: 24,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  skeletonSubText: {
-    width: '40%',
-    height: 16,
-    borderRadius: 8,
-  },
-  skeletonAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  skeletonCard: {
-    height: 90,
-    width: '100%',
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  skeletonActionCard: {
-    width: '48%',
-    height: 110,
-    borderRadius: 12,
-    marginBottom: 16,
+    color: '#9ca3af',
   },
 });

@@ -7,18 +7,27 @@ export const morador = {
   avatarUrl: "https://i.pravatar.cc/150?u=ana",
 };
 
+// ATUALIZAÇÃO: Adicionamos mais avisos aqui
 export const avisosImportantes = [
   {
     id: 1,
     titulo: "Manutenção programada do elevador",
     texto: "O elevador de serviço estará em manutenção na próxima sexta-feira, das 09:00 às 12:00.",
   },
+  {
+    id: 2,
+    titulo: "Interrupção no Fornecimento de Água",
+    texto: "Haverá uma interrupção no fornecimento de água amanhã para reparos na caixa d'água.",
+  },
+  {
+    id: 3,
+    titulo: "Dedetização nas Garagens",
+    texto: "Favor não deixar veículos na garagem G1 no próximo sábado pela manhã.",
+  }
 ];
 
 export const encomendas = { quantidade: 2 };
 
-// A variável mais importante para este erro é esta abaixo.
-// Garanta que ela está sendo exportada corretamente.
 export const ultimasAtualizacoes = {
   "Hoje": [
     { id: 1, tipo: 'reservations', icone: Calendar, texto: "Sua reserva do Salão de Festas foi confirmada.", hora: "14:30" },
