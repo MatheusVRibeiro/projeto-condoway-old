@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { userProfile } from './mock';
 import { useAuth } from '../../../contexts/AuthContext';
-import { User, FileText, Settings, HelpCircle, LogOut, ChevronRight, Mail, Phone, ChevronDown, Camera, Edit, Save, X, Shield } from 'lucide-react-native';
+import { User, FileText, Settings, HelpCircle, LogOut, ChevronRight, Mail, Phone, ChevronDown, Camera, Edit, X, Shield } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
@@ -115,7 +115,18 @@ export default function Perfil() {
               <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
               <View style={styles.cameraIconOverlay}><Camera size={16} color="white" /></View>
             </TouchableOpacity>
-            <Text style={styles.userName}>{profile.name}</Text>
+            
+            {/* ATUALIZAÇÃO: Lógica para editar o nome */}
+            {isEditing ? (
+              <TextInput
+                style={[styles.userName, { borderBottomWidth: 1, borderColor: '#cbd5e1', paddingBottom: 4 }]}
+                value={tempProfile.name}
+                onChangeText={(text) => setTempProfile(p => ({ ...p, name: text }))}
+              />
+            ) : (
+              <Text style={styles.userName}>{profile.name}</Text>
+            )}
+
             <Text style={styles.userInfo}>{`${profile.apartment} - ${profile.block}`}</Text>
           </Animatable.View>
 

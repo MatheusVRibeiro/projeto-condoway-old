@@ -18,16 +18,16 @@ import Reservas from '../screens/App/Reservas';
 import Ocorrencias from '../screens/App/Ocorrencias';
 import Perfil from '../screens/App/Perfil';
 import Packages from '../screens/App/Packages';
-// 1. Importe o novo ecrã de Configurações
-import Settings from '../screens/App/Settings'; 
+import Settings from '../screens/App/Settings';
+// 1. Importe o novo ecrã de Visitantes
+import Visitantes from '../screens/App/Visitantes'; 
 
 const AuthStack = createNativeStackNavigator();
 const AppTab = createBottomTabNavigator();
-// 2. Crie um novo StackNavigator para a secção de Perfil
-const ProfileStackNavigator = createNativeStackNavigator(); 
+const ProfileStackNavigator = createNativeStackNavigator();
+// 2. Crie um novo StackNavigator principal para a App
+const AppStackNavigator = createNativeStackNavigator(); 
 
-// 3. Crie um componente para gerir a navegação do Perfil
-//    Ele irá conter o ecrã de Perfil e o de Configurações.
 function ProfileStack() {
   return (
     <ProfileStackNavigator.Navigator screenOptions={{ headerShown: false }}>
@@ -37,8 +37,9 @@ function ProfileStack() {
   );
 }
 
-// Navegador para as telas principais (pós-login)
-function AppRoutes() {
+// 3. Renomeie a sua antiga função AppRoutes para TabNavigator
+//    Ela agora representa apenas a navegação por abas.
+function TabNavigator() {
   return (
     <AppTab.Navigator
       screenOptions={{
@@ -89,7 +90,6 @@ function AppRoutes() {
           tabBarIcon: ({ color, size }) => <Package color={color} size={size} />,
         }} 
       />
-      {/* 4. Altere o componente da aba de Perfil para usar o novo Stack */}
       <AppTab.Screen 
         name="PerfilTab" 
         component={ProfileStack} 
@@ -99,6 +99,17 @@ function AppRoutes() {
         }} 
       />
     </AppTab.Navigator>
+  );
+}
+
+// 4. A função AppRoutes agora é o Stack principal, que contém
+//    tanto a navegação por abas como os ecrãs que abrem por cima.
+function AppRoutes() {
+  return (
+    <AppStackNavigator.Navigator screenOptions={{ headerShown: false }}>
+      <AppStackNavigator.Screen name="MainTabs" component={TabNavigator} />
+      <AppStackNavigator.Screen name="Visitantes" component={Visitantes} />
+    </AppStackNavigator.Navigator>
   );
 }
 

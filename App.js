@@ -1,15 +1,42 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import Toast from 'react-native-toast-message';
+// import * as Notifications from 'expo-notifications'; // Comentado
 
-// Importa o componente de rotas centralizado
-import Routes from './src/routes'; 
+import Routes from './src/routes';
 import { AuthProvider } from './src/contexts/AuthContext';
+// import { registerForPushNotificationsAsync } from './src/lib/notifications'; // Comentado
 
 export default function App() {
-  // Carregamento das fontes Poppins
+  // const notificationListener = useRef(); // Comentado
+  // const responseListener = useRef(); // Comentado
+
+  /*
+  // Comentámos todo o bloco useEffect que lida com as notificações
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notificação recebida:', notification);
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Resposta à notificação:', response);
+    });
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
+  */
+
   let [fontsLoaded] = useFonts({
     'Poppins-Regular': Poppins_400Regular,
     'Poppins-Medium': Poppins_500Medium,
@@ -17,9 +44,8 @@ export default function App() {
     'Poppins-Bold': Poppins_700Bold,
   });
 
-  // Garante que a app só será renderizada após as fontes carregarem
   if (!fontsLoaded) {
-    return null; 
+    return null;
   }
 
   return (
@@ -27,7 +53,6 @@ export default function App() {
       <NavigationContainer>
         <Routes />
       </NavigationContainer>
-      {/* O Toast fica no final para aparecer por cima de tudo */}
       <Toast />
     </AuthProvider>
   );

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, Switch, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { ArrowLeft } from 'lucide-react-native';
+// import { schedulePushNotification } from '../../../lib/notifications'; // Comentado
 
 export default function Settings() {
   const navigation = useNavigation();
@@ -53,6 +54,8 @@ export default function Settings() {
             value={notifications.generalNotices}
           />
         </View>
+        
+        {/* O botão de teste foi removido daqui */}
       </View>
     </SafeAreaView>
   );
