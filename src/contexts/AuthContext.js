@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import SplashScreen from '../screens/Auxiliary/SplashScreen'; // Importando o SplashScreen (pasta correta: Auxiliary)
 
 // 1. O contexto define a "forma" dos dados que serão compartilhados.
 const AuthContext = createContext({
@@ -11,11 +13,24 @@ const AuthContext = createContext({
 // 2. O AuthProvider agora controla o estado global de autenticação
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Recupera usuário salvo
+    AsyncStorage.getItem('user').then(storedUser => {
+      if (storedUser) setUser(JSON.parse(storedUser));
+      setLoading(false);
+    });
+  }, []);
 
   const login = (userData) => {
-    setUser(userData || { name: 'Ana Clara' }); // Simula login
+    setUser(userData || { name: 'Ana Clara' });
+    AsyncStorage.setItem('user', JSON.stringify(userData || { name: 'Ana Clara' }));
   };
-  const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+    AsyncStorage.removeItem('user');
+  };
 
   const value = useMemo(() => ({
     user,
@@ -23,6 +38,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
   }), [user]);
+
+  if (loading) return <SplashScreen />;
 
   return (
     <AuthContext.Provider value={value}>

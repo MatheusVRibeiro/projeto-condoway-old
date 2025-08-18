@@ -1,12 +1,12 @@
-import 'react-native-gesture-handler';
-import React, { useEffect, useRef } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+
+import { useColorScheme } from 'react-native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
-import Toast from 'react-native-toast-message';
-// import * as Notifications from 'expo-notifications'; // Comentado
 
 import Routes from './src/routes';
 import { AuthProvider } from './src/contexts/AuthContext';
+import Toast from 'react-native-toast-message';
 // import { registerForPushNotificationsAsync } from './src/lib/notifications'; // Comentado
 
 export default function App() {
@@ -44,13 +44,15 @@ export default function App() {
     'Poppins-Bold': Poppins_700Bold,
   });
 
+  const colorScheme = useColorScheme();
+
   if (!fontsLoaded) {
     return null;
   }
 
   return (
     <AuthProvider>
-      <NavigationContainer>
+      <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Routes />
       </NavigationContainer>
       <Toast />

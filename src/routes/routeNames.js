@@ -1,0 +1,15 @@
+export const ROUTES = {
+  DASHBOARD: 'DashboardTab',
+  RESERVAS: 'ReservasTab',
+  OCORRENCIAS: 'OcorrenciasTab',
+  PACKAGES: 'PackagesTab',
+  PERFIL: 'PerfilTab',
+  PROFILE_MAIN: 'ProfileMain',
+  SETTINGS: 'Settings',
+  MAINTABS: 'MainTabs',
+  VISITANTES: 'Visitantes',
+  LOGIN: 'Login',
+  SIGNUP: 'SignUp',
+  FORGOT_PASSWORD: 'ForgotPassword',
+  RESET_PASSWORD: 'ResetPassword',
+};

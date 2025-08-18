@@ -102,7 +102,7 @@ export default function Perfil() {
   const profileActions = [
     { label: 'Alterar Senha', icon: Shield, onPress: () => setPasswordModalVisible(true) },
     { label: 'Configurações', icon: Settings, onPress: () => navigation.navigate('Settings') },
-    { label: 'Ajuda e Suporte', icon: HelpCircle, onPress: () => {} },
+    { label: 'Ajuda e Suporte', icon: HelpCircle, onPress: () => navigation.navigate('Help') },
     { label: 'Sair da Conta', icon: LogOut, onPress: handleLogout, variant: 'destructive' },
   ];
 
