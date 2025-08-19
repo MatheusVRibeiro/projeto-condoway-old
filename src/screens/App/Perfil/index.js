@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { userProfile } from './mock';
 import { useAuth } from '../../../contexts/AuthContext';
+import { ROUTES } from '../../../routes/routeNames';
 import { User, FileText, Settings, HelpCircle, LogOut, ChevronRight, Mail, Phone, ChevronDown, Camera, Edit, X, Shield } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import * as ImagePicker from 'expo-image-picker';
@@ -70,7 +71,13 @@ export default function Perfil() {
   const handleLogout = () => {
     Alert.alert("Sair da Conta", "Você tem a certeza que deseja sair?", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Sim, Sair", onPress: logout, style: 'destructive' }
+      { text: "Sim, Sair", onPress: () => {
+          logout();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: ROUTES.LOGIN }],
+          });
+        }, style: 'destructive' }
     ]);
   };
 

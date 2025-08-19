@@ -1,6 +1,7 @@
 
 
 import { useAuth } from '../contexts/AuthContext';
+import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 import AppStack from './AppStack';
 import Login from '../screens/Auth/Login';
 import SignUp from '../screens/Auth/SignUp';
@@ -17,7 +18,6 @@ const AuthStack = createNativeStackNavigator();
 function AuthRoutes() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-      <AuthStack.Screen name="Onboarding" component={Onboarding} />
       <AuthStack.Screen name={ROUTES.LOGIN} component={Login} />
       <AuthStack.Screen name={ROUTES.SIGNUP} component={SignUp} />
       <AuthStack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPassword} />
@@ -30,5 +30,9 @@ function AuthRoutes() {
 // O AuthProvider deve envolver a app no App.js, então aqui só consumimos o contexto
 export default function Routes() {
   const { isLoggedIn } = useAuth();
-  return isLoggedIn ? <AppStack /> : <AuthRoutes />;
+  const { showOnboarding } = useOnboardingStatus();
+  if (isLoggedIn) return <AppStack />;
+  if (showOnboarding === null) return null; // loading
+  if (showOnboarding) return <Onboarding />;
+  return <AuthRoutes />;
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useOnboardingStatus } from '../../../hooks/useOnboardingStatus';
 import { styles } from './styles';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
@@ -35,9 +36,11 @@ const OnboardingIllustration = () => (
 
 export default function Onboarding() {
   const navigation = useNavigation();
+  const { completeOnboarding } = useOnboardingStatus();
 
-  const handleStart = () => {
+  const handleStart = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await completeOnboarding();
     navigation.navigate('Login');
   };
 

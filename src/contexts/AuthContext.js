@@ -24,8 +24,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
-    setUser(userData || { name: 'Ana Clara' });
-    AsyncStorage.setItem('user', JSON.stringify(userData || { name: 'Ana Clara' }));
+    if (!userData) return;
+    setUser(userData);
+    AsyncStorage.setItem('user', JSON.stringify(userData));
   };
   const logout = () => {
     setUser(null);
