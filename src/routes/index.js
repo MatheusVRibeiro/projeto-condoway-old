@@ -6,8 +6,8 @@ import Login from '../screens/Auth/Login';
 import SignUp from '../screens/Auth/SignUp';
 import ForgotPassword from '../screens/Auth/ForgotPassword';
 import ResetPassword from '../screens/Auth/ResetPassword';
-import Onboarding from '../screens/Auxiliary/Onboarding';
-import Help from '../screens/Auxiliary/Help';
+import Onboarding from '../screens/App/Onboarding';
+import Help from '../screens/App/Help';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ROUTES } from './routeNames';
 

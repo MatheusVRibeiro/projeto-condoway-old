@@ -9,9 +9,12 @@ import ProfileStack from './ProfileStack';
 
 const AppTab = createBottomTabNavigator();
 
-export default function AppTabs() {
+
+const AppTabs = React.memo(function AppTabs() {
   return (
     <AppTab.Navigator
+      detachInactiveScreens={true}
+      lazy={true}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#2563eb',
@@ -70,4 +73,6 @@ export default function AppTabs() {
       />
     </AppTab.Navigator>
   );
-}
+});
+
+export default AppTabs;

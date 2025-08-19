@@ -7,7 +7,7 @@ import { ArrowLeft, UserPlus, User, FileBadge, Calendar as CalendarIcon } from '
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
 
-export default function Visitantes() {
+const Visitantes = React.memo(function Visitantes() {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('agendados');
   const [visitors, setVisitors] = useState(initialVisitors);
@@ -128,4 +128,6 @@ export default function Visitantes() {
       </Modal>
     </SafeAreaView>
   );
-}
+});
+
+export default Visitantes;

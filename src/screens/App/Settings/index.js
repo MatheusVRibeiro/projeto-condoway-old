@@ -5,7 +5,8 @@ import { styles } from './styles';
 import { ArrowLeft } from 'lucide-react-native';
 // import { schedulePushNotification } from '../../../lib/notifications'; // Comentado
 
-export default function Settings() {
+
+const Settings = React.memo(function Settings() {
   const navigation = useNavigation();
   const [notifications, setNotifications] = useState({
     packages: true,
@@ -16,6 +17,7 @@ export default function Settings() {
   const toggleSwitch = (key) => {
     setNotifications(previousState => ({ ...previousState, [key]: !previousState[key] }));
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -54,9 +56,10 @@ export default function Settings() {
             value={notifications.generalNotices}
           />
         </View>
-        
         {/* O botão de teste foi removido daqui */}
       </View>
     </SafeAreaView>
   );
-}
+});
+
+export default Settings;

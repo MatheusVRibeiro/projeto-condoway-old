@@ -1,3 +1,4 @@
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
@@ -51,11 +52,13 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Routes />
-      </NavigationContainer>
-      <Toast />
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Routes />
+        </NavigationContainer>
+        <Toast />
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

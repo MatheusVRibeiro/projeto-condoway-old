@@ -12,7 +12,7 @@ export default function Onboarding({ navigation }) {
     </View>
   );
 }
-// Arquivo duplicado. Mover para lixeira.
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
