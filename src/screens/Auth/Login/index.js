@@ -49,7 +49,8 @@ export default function Login() {
     setTimeout(() => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setIsLoading(false);
-      login();
+      // Simula login de teste com qualquer e-mail e senha
+      login({ email, name: 'Usuário de Teste' });
     }, 1500);
   }
 
@@ -60,7 +61,7 @@ export default function Login() {
           <SafeAreaView style={{ flex: 1, justifyContent: 'space-around', width: '100%' }}>
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
               <Animatable.View animation="fadeInDown" duration={1000} style={styles.header}>
-                <Image source={require('../../../../assets/condoway-logo.png')} style={styles.logo} />
+                <Image source={require('../../../../assets/condo.png')} style={styles.logo} />
                 <Text style={styles.title}>Acesse sua conta</Text>
                 <Text style={styles.subtitle}>Bem-vindo(a) de volta!</Text>
               </Animatable.View>

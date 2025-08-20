@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
 import { styles } from './styles';
 import { environments, allExistingReservations, myInitialReservations } from './mock';
 import { Calendar as CalendarIcon, Users, Building, ListChecks, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Calendar } from 'react-native-calendars';
 import Toast from 'react-native-toast-message';
 
-const EnvironmentCard = ({ env, onReserve, onDetails }) => (
-  <View style={styles.environmentCard}>
+const EnvironmentCard = React.memo(({ env, onReserve, onDetails }) => (
+  <View style={styles.environmentCard} accessible accessibilityRole="button" accessibilityLabel={`Ambiente ${env.name}`}>
     <View style={styles.cardHeader}>
       <Text style={styles.cardTitle}>{env.name}</Text>
       <View style={{ backgroundColor: env.available ? '#dcfce7' : '#f1f5f9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
@@ -22,19 +22,20 @@ const EnvironmentCard = ({ env, onReserve, onDetails }) => (
       <Text style={styles.cardInfoText}>Capacidade: {env.capacity} pessoas</Text>
     </View>
     <View style={styles.cardFooter}>
-      <TouchableOpacity style={[styles.cardButton, styles.outlineButton]} onPress={onDetails}>
+      <TouchableOpacity style={[styles.cardButton, styles.outlineButton]} onPress={onDetails} accessibilityLabel={`Ver detalhes de ${env.name}`}>
         <Text style={styles.buttonTextOutline}>Ver Detalhes</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={[styles.cardButton, styles.primaryButton, !env.available && styles.disabledButton]} 
         onPress={onReserve}
         disabled={!env.available}
+        accessibilityLabel={`Solicitar ${env.name}`}
       >
         <Text style={styles.buttonTextPrimary}>Solicitar</Text>
       </TouchableOpacity>
     </View>
   </View>
-);
+));
 
 export default function Reservas() {
   const [activeTab, setActiveTab] = useState('reservar');
@@ -44,32 +45,40 @@ export default function Reservas() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleOpenModal = (env) => {
+  const handleOpenModal = useCallback((env) => {
     setSelectedEnvironment(env);
     setSelectedTime(null);
     setModalVisible(true);
-  };
+  }, []);
 
-  const handleRequestReservation = () => {
+  const handleRequestReservation = useCallback(() => {
     if (!selectedTime) {
       Toast.show({ type: 'error', text1: 'Por favor, selecione um horário.' });
       return;
     }
-    const newReservation = {
-      id: Date.now(),
-      environmentName: selectedEnvironment.name,
-      date: selectedDate,
-      time: selectedTime,
-      status: 'pendente'
-    };
-    setMyReservations(prev => [...prev, newReservation]);
-    allExistingReservations.push(newReservation);
-    setModalVisible(false);
-    Toast.show({ type: 'success', text1: 'Solicitação de reserva enviada!' });
-  };
+    try {
+      setIsSubmitting(true);
+      const newReservation = {
+        id: Date.now(),
+        environmentName: selectedEnvironment.name,
+        date: selectedDate,
+        time: selectedTime,
+        status: 'pendente'
+      };
+      setMyReservations(prev => [...prev, newReservation]);
+      allExistingReservations.push(newReservation);
+      setModalVisible(false);
+      Toast.show({ type: 'success', text1: 'Solicitação de reserva enviada!' });
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Erro ao solicitar reserva.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [selectedTime, selectedEnvironment, selectedDate]);
 
-  const handleCancelReservation = (id) => {
+  const handleCancelReservation = useCallback((id) => {
     Alert.alert(
       "Cancelar Reserva",
       "Você tem certeza que deseja cancelar esta reserva?",
@@ -85,7 +94,7 @@ export default function Reservas() {
         }
       ]
     );
-  };
+  }, []);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -226,8 +235,8 @@ export default function Reservas() {
             />
             <TimeSlotPicker />
             <View style={styles.modalFooter}>
-              <TouchableOpacity style={[styles.cardButton, styles.primaryButton]} onPress={handleRequestReservation}>
-                <Text style={styles.buttonTextPrimary}>Confirmar Solicitação</Text>
+              <TouchableOpacity style={[styles.cardButton, styles.primaryButton]} onPress={handleRequestReservation} disabled={isSubmitting} accessibilityLabel="Confirmar solicitação">
+                {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonTextPrimary}>Confirmar Solicitação</Text>}
               </TouchableOpacity>
             </View>
           </View>

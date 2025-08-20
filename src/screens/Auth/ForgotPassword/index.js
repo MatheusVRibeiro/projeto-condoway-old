@@ -11,6 +11,10 @@ import { styles } from './styles';
 import { COLORS, FONTS } from '../../../constants/theme';
 
 export default function EsqSenha({ navigation }) {
+    const [email, setEmail] = useState('');
+    const [isFocused, setIsFocused] = useState(false);
+    const [linkSent, setLinkSent] = useState(false); // Novo estado para controlar a UI
+
     // Carregar fontes Poppins
     const [fontsLoaded] = useFonts({
         [FONTS.regular]: Poppins_400Regular,
@@ -22,9 +26,6 @@ export default function EsqSenha({ navigation }) {
     if (!fontsLoaded) {
         return null;
     }
-    const [email, setEmail] = useState('');
-    const [isFocused, setIsFocused] = useState(false);
-    const [linkSent, setLinkSent] = useState(false); // Novo estado para controlar a UI
 
     const handleResetPassword = () => {
         if (!email) {

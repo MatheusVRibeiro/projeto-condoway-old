@@ -1,5 +1,3 @@
-
-
 import { useAuth } from '../contexts/AuthContext';
 import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 import AppStack from './AppStack';
@@ -14,10 +12,11 @@ import { ROUTES } from './routeNames';
 
 const AuthStack = createNativeStackNavigator();
 
-// Navegador para o fluxo de autenticação (pré-login)
-function AuthRoutes() {
+// Navegador para o fluxo de autenticação (pré-login) — agora com Onboarding como uma tela do stack
+function AuthRoutes({ initialRoute = ROUTES.LOGIN }) {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+      <AuthStack.Screen name="Onboarding" component={Onboarding} />
       <AuthStack.Screen name={ROUTES.LOGIN} component={Login} />
       <AuthStack.Screen name={ROUTES.SIGNUP} component={SignUp} />
       <AuthStack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPassword} />
@@ -33,6 +32,6 @@ export default function Routes() {
   const { showOnboarding } = useOnboardingStatus();
   if (isLoggedIn) return <AppStack />;
   if (showOnboarding === null) return null; // loading
-  if (showOnboarding) return <Onboarding />;
+  if (showOnboarding) return <AuthRoutes initialRoute="Onboarding" />;
   return <AuthRoutes />;
 }

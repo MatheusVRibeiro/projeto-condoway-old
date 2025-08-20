@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, SafeAreaView, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, SafeAreaView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useOnboardingStatus } from '../../../hooks/useOnboardingStatus';
 import { styles } from './styles';
@@ -9,8 +9,8 @@ import * as Haptics from 'expo-haptics';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 
 // Componente da Ilustração (SVG)
-const OnboardingIllustration = () => (
-  <Svg width="300" height="220" viewBox="0 0 300 220">
+const OnboardingIllustration = React.memo(() => (
+  <Svg width="300" height="220" viewBox="0 0 300 220" accessible accessibilityLabel="Ilustração de condomínio">
     {/* Prédio */}
     <Rect x="90" y="20" width="120" height="180" rx="8" fill="#4A5568" />
     <Rect x="115" y="160" width="70" height="40" fill="#2D3748" />
@@ -32,31 +32,57 @@ const OnboardingIllustration = () => (
     <Circle cx="250" cy="155" r="8" fill="#ED8936" />
     <Path d="M242 193 L 245 163 L 255 163 L 258 193 Z" fill="#ED8936" />
   </Svg>
-);
+));
 
-export default function Onboarding() {
+const Onboarding = React.memo(function Onboarding() {
   const navigation = useNavigation();
   const { completeOnboarding } = useOnboardingStatus();
+  const [isStarting, setIsStarting] = useState(false);
 
-  const handleStart = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await completeOnboarding();
-    navigation.navigate('Login');
-  };
+  const handleStart = useCallback(async () => {
+    try {
+      setIsStarting(true);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await completeOnboarding();
+      navigation.navigate('Login');
+    } catch (err) {
+      // toast or fallback
+      console.warn('Onboarding start error', err);
+    } finally {
+      setIsStarting(false);
+    }
+  }, [completeOnboarding, navigation]);
+
+  const handleSkip = useCallback(async () => {
+    try {
+      setIsStarting(true);
+      await completeOnboarding();
+      navigation.navigate('Login');
+    } catch (err) {
+      console.warn('Onboarding skip error', err);
+    } finally {
+      setIsStarting(false);
+    }
+  }, [completeOnboarding, navigation]);
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#3b82f6', '#2563eb']} // Gradiente de azul
+        colors={["#3b82f6", "#2563eb"]} // Gradiente de azul
         style={styles.gradient}
       >
         <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'space-between' }}>
-          
+
           <Animatable.View animation="fadeInDown" duration={1000} style={styles.header}>
             <Image
-              source={require('../../../../assets/condoway-t.png')}
+              source={require('../../../../assets/condo.png')}
               style={styles.logo}
+              accessible
+              accessibilityLabel="Logotipo Condoway"
             />
+            <TouchableOpacity onPress={handleSkip} accessibilityLabel="Pular onboarding" style={{ position: 'absolute', right: 16, top: 8 }}>
+              <Text style={{ color: 'rgba(255,255,255,0.9)' }}>{isStarting ? '...' : 'Pular'}</Text>
+            </TouchableOpacity>
           </Animatable.View>
 
           <Animatable.View animation="zoomIn" duration={1000} style={styles.illustrationContainer}>
@@ -69,8 +95,12 @@ export default function Onboarding() {
           </Animatable.View>
 
           <Animatable.View animation="fadeInUp" duration={1000} delay={200} style={styles.footer}>
-            <TouchableOpacity style={styles.button} onPress={handleStart}>
-              <Text style={styles.buttonText}>Entrar</Text>
+            <TouchableOpacity style={[styles.button, { opacity: isStarting ? 0.7 : 1 }]} onPress={handleStart} disabled={isStarting} accessibilityLabel="Entrar">
+              {isStarting ? (
+                <ActivityIndicator color="#2563eb" />
+              ) : (
+                <Text style={styles.buttonText}>Entrar</Text>
+              )}
             </TouchableOpacity>
           </Animatable.View>
 
@@ -78,4 +108,6 @@ export default function Onboarding() {
       </LinearGradient>
     </View>
   );
-}
+});
+
+export default Onboarding;

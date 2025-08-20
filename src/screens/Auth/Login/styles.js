@@ -19,8 +19,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    height: 60,
-    width: 200,
+    height: 100,
+    width: 260,
     resizeMode: 'contain',
     marginBottom: 24,
   },
