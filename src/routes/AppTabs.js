@@ -1,10 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Calendar, MessageSquareWarning, User, Package } from 'lucide-react-native';
+import { Home, Calendar, MessageSquareWarning, User, Package, UserPlus } from 'lucide-react-native';
+
 import Dashboard from '../screens/App/Dashboard';
 import Reservas from '../screens/App/Reservas';
 import Ocorrencias from '../screens/App/Ocorrencias';
 import Packages from '../screens/App/Packages';
+import Visitantes from '../screens/App/Visitantes';
 import ProfileStack from './ProfileStack';
 
 const AppTab = createBottomTabNavigator();
@@ -62,6 +64,14 @@ const AppTabs = React.memo(function AppTabs() {
           tabBarLabel: 'Encomendas',
           tabBarIcon: ({ color, size }) => <Package color={color} size={size} />,
         }} 
+      />
+      <AppTab.Screen
+        name="VisitantesTab"
+        component={Visitantes}
+        options={{
+          tabBarLabel: 'Visitantes',
+          tabBarIcon: ({ color, size }) => <UserPlus color={color} size={size} />,
+        }}
       />
       <AppTab.Screen 
         name="PerfilTab" 

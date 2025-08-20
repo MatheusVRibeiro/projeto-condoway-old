@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, SafeAreaView, TextInput, TouchableOpacity, FlatList, Modal, SectionList, RefreshControl } from 'react-native';
 import { styles } from './styles';
@@ -6,6 +7,7 @@ import { Package, PackageCheck, Search, X, Calendar, Hash } from 'lucide-react-n
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+import BackButton from '../../../components/BackButton';
 
 // --- Componentes Internos ---
 
@@ -108,9 +110,11 @@ export default function Packages() {
     return Object.keys(groups).map(key => ({ title: key, data: groups[key] }));
   }, [delivered]);
 
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        <BackButton style={{ alignSelf: 'flex-start' }} />
         <View style={styles.header}>
           <View style={styles.headerTitle}>
             <Package color="#2563eb" size={28} />

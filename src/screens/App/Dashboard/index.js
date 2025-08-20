@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { styles } from './styles';
-import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
+import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning } from 'lucide-react-native';
+import BackButton from '../../../components/BackButton';
 import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
-
-import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning } from 'lucide-react-native';
+import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
+import { styles } from './styles';
 
 // --- Componentes Internos da Tela ---
 
@@ -81,6 +82,7 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -89,14 +91,16 @@ export default function Dashboard() {
     );
   }
 
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.content}>
+          <BackButton style={{ alignSelf: 'flex-start' }} />
           {/* === HEADER === */}
           <Animatable.View animation="fadeInDown" duration={500} style={[styles.header, styles.section]}>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.title}>Boa noite, {morador.nome}! 👋</Text>
+              <Text style={styles.title}>Boa noite, {morador.nome}! 44b</Text>
               <Text style={styles.subtitle}>{morador.condominio}</Text>
             </View>
             <View style={styles.headerActions}>
@@ -146,7 +150,7 @@ export default function Dashboard() {
             <View style={styles.actionsGrid}>
                 <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={() => navigation.navigate('ReservasTab')} />
                 <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={() => navigation.navigate('PackagesTab')} />
-                <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={() => alert('Função indisponível')} />
+                <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={() => navigation.navigate('VisitantesTab')} />
                 <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={() => navigation.navigate('OcorrenciasTab')} />
             </View>
           </Animatable.View>

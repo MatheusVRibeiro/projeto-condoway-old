@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, SafeAreaView, FlatList, TouchableOpacity, Modal, TextInput, Button, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, SafeAreaView, FlatList, TouchableOpacity, Modal, TextInput, Button, Platform, ActivityIndicator, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { initialVisitors } from './mock';
 import { ArrowLeft, UserPlus, User } from 'lucide-react-native';
+
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
 
@@ -128,42 +129,44 @@ const Visitantes = React.memo(function Visitantes() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Autorizar Novo Visitante</Text>
-            <TextInput style={styles.input} placeholder="Nome Completo" value={name} onChangeText={setName} autoFocus={true} accessibilityLabel="Nome do visitante" />
-            <TextInput style={styles.input} placeholder="Documento (RG/CPF)" value={document} onChangeText={setDocument} accessibilityLabel="Documento do visitante" />
-            <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)} accessibilityLabel="Selecionar data da visita">
-              <Text style={styles.dateButtonText}>
-                {`Data da Visita: ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR').slice(0,5)}`}
-              </Text>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                testID="dateTimePicker"
-                value={date}
-                mode="datetime"
-                is24Hour={true}
-                display="default"
-                onChange={onDateChange}
-              />
-            )}
-            <View style={styles.modalButtons}>
-              <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#64748b" accessibilityLabel="Cancelar" />
-              <TouchableOpacity onPress={handleAddVisitor} disabled={!isFormValid || isSubmitting} accessibilityLabel="Autorizar visitante" style={{ marginLeft: 8 }}>
-                {isSubmitting ? (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                    <ActivityIndicator color="#2563eb" />
-                  </View>
-                ) : (
-                  <View>
-                    <Text style={{ color: '#2563eb', fontWeight: 'bold' }}>Autorizar</Text>
-                  </View>
-                )}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Autorizar Novo Visitante</Text>
+              <TextInput style={styles.input} placeholder="Nome Completo" value={name} onChangeText={setName} autoFocus={true} accessibilityLabel="Nome do visitante" />
+              <TextInput style={styles.input} placeholder="Documento (RG/CPF)" value={document} onChangeText={setDocument} accessibilityLabel="Documento do visitante" />
+              <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)} accessibilityLabel="Selecionar data da visita">
+                <Text style={styles.dateButtonText}>
+                  {`Data da Visita: ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR').slice(0,5)}`}
+                </Text>
               </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={date}
+                  mode="datetime"
+                  is24Hour={true}
+                  display="default"
+                  onChange={onDateChange}
+                />
+              )}
+              <View style={styles.modalButtons}>
+                <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#64748b" accessibilityLabel="Cancelar" />
+                <TouchableOpacity onPress={handleAddVisitor} disabled={!isFormValid || isSubmitting} accessibilityLabel="Autorizar visitante" style={{ marginLeft: 8 }}>
+                  {isSubmitting ? (
+                    <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                      <ActivityIndicator color="#2563eb" />
+                    </View>
+                  ) : (
+                    <View>
+                      <Text style={{ color: '#2563eb', fontWeight: 'bold' }}>Autorizar</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
