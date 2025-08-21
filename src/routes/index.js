@@ -1,5 +1,4 @@
 import { useAuth } from '../contexts/AuthContext';
-import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 import AppStack from './AppStack';
 import Login from '../screens/Auth/Login';
 import SignUp from '../screens/Auth/SignUp';
@@ -27,11 +26,20 @@ function AuthRoutes({ initialRoute = ROUTES.LOGIN }) {
 }
 
 // O AuthProvider deve envolver a app no App.js, então aqui só consumimos o contexto
+// When logged in, show Onboarding first every time by using a small stack
+const LoggedInStack = createNativeStackNavigator();
+
+function LoggedInRoutes() {
+  return (
+    <LoggedInStack.Navigator screenOptions={{ headerShown: false }}>
+      <LoggedInStack.Screen name="Onboarding" component={Onboarding} />
+      <LoggedInStack.Screen name="AppStack" component={AppStack} />
+    </LoggedInStack.Navigator>
+  );
+}
+
 export default function Routes() {
   const { isLoggedIn } = useAuth();
-  const { showOnboarding } = useOnboardingStatus();
-  if (isLoggedIn) return <AppStack />;
-  if (showOnboarding === null) return null; // loading
-  if (showOnboarding) return <AuthRoutes initialRoute="Onboarding" />;
+  if (isLoggedIn) return <LoggedInRoutes />; // always show Onboarding first after login
   return <AuthRoutes />;
 }

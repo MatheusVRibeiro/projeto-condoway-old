@@ -51,14 +51,17 @@ export const styles = StyleSheet.create({
     color: '#2563eb',
   },
   visitorCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+  backgroundColor: 'white',
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 12,
+  flexDirection: 'row',
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.08,
+  shadowRadius: 6,
+  elevation: 3,
   },
   visitorInfo: {
     flex: 1,
@@ -88,7 +91,11 @@ export const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+  elevation: 10,
+  shadowColor: '#2563eb',
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.12,
+  shadowRadius: 12,
   },
   modalContent: {
     backgroundColor: 'white',
@@ -124,6 +131,33 @@ export const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
+  },
+  modalButtonSpacer: {
+    width: 12,
+  },
+  sectionHeader: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
+  },
+  sectionHeaderText: {
+    fontWeight: '700',
+    fontSize: 16,
+    color: '#0f172a',
+    marginBottom: 8,
+  },
+  emptyState: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyStateIcon: {
+    marginBottom: 12,
+  },
+  presentBadge: {
+    backgroundColor: '#e6f4ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
   },
 });
