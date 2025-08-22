@@ -1,69 +1,112 @@
 import { StyleSheet, Dimensions } from 'react-native';
-
-const { height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#2563eb',
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  gradient: {
-    flex: 1,
-    justifyContent: 'space-between',
+  logoContainer: {
     alignItems: 'center',
-    padding: 32,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: height * 0.08, // Posiciona o logo a 8% do topo
+    marginTop: 32,
+    marginBottom: 8,
   },
   logo: {
-    width: 150,
-    height: 40,
+    width: 90,
+    height: 90,
     resizeMode: 'contain',
+    marginBottom: 8,
   },
-  illustrationContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    // O posicionamento vertical será gerido pelo space-between do container principal
+  logoText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    letterSpacing: 1,
   },
-  mainContent: {
-    alignItems: 'center',
+  carousel: {
+    flex: 1,
     width: '100%',
   },
+  slide: {
+    width,
+    height,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  slideContent: {
+    zIndex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  illustration: {
+    width: '100%',
+    height: height,
+    resizeMode: 'cover',
+    marginBottom: 0,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
   title: {
-    fontSize: 34, // Tamanho maior para mais impacto
+    fontSize: 26,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#fff',
     textAlign: 'center',
-    lineHeight: 42, // Espaçamento entre linhas
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.85)', // Um pouco menos transparente
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
-    marginTop: 16,
-    lineHeight: 24,
-    maxWidth: '90%', // Evita que o texto fique muito largo
+    marginBottom: 24,
   },
-  footer: {
-    width: '100%',
-    marginBottom: height * 0.05, // Posiciona o botão a 5% da base
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    marginHorizontal: 6,
+  },
+  dotActive: {
+    backgroundColor: '#fff',
   },
   button: {
-    backgroundColor: 'white',
-    borderRadius: 14,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 48,
+    alignSelf: 'center',
+    marginBottom: 40,
   },
   buttonText: {
-    color: '#1d4ed8', // Um azul mais escuro para contraste
-    fontSize: 18,
+    color: '#2563eb',
     fontWeight: 'bold',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  buttonPrimary: {
+    backgroundColor: '#646CFF',
+  },
+  buttonTextPrimary: {
+    color: '#fff',
   },
 });

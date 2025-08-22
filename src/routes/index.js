@@ -11,10 +11,10 @@ import { ROUTES } from './routeNames';
 
 const AuthStack = createNativeStackNavigator();
 
-// Navegador para o fluxo de autenticação (pré-login) — agora com Onboarding como uma tela do stack
-function AuthRoutes({ initialRoute = ROUTES.LOGIN }) {
+// Navegador para o fluxo de autenticação (pré-login) — onboarding sempre antes do login
+function AuthRoutes() {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
+    <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Onboarding">
       <AuthStack.Screen name="Onboarding" component={Onboarding} />
       <AuthStack.Screen name={ROUTES.LOGIN} component={Login} />
       <AuthStack.Screen name={ROUTES.SIGNUP} component={SignUp} />

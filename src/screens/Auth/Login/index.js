@@ -49,6 +49,7 @@ export default function Login() {
     setTimeout(() => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setIsLoading(false);
+      // Simula login de teste com qualquer e-mail e senha
       login({ email, name: 'Usuário de Teste' });
     }, 1500);
   }
