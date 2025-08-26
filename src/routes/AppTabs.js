@@ -57,22 +57,22 @@ const AppTabs = React.memo(function AppTabs() {
           tabBarIcon: ({ color, size }) => <MessageSquareWarning color={color} size={size} />,
         }} 
       />
-      <AppTab.Screen 
+      {/* <AppTab.Screen 
         name="PackagesTab" 
         component={Packages} 
         options={{
           tabBarLabel: 'Encomendas',
           tabBarIcon: ({ color, size }) => <Package color={color} size={size} />,
         }} 
-      />
-      <AppTab.Screen
+      /> */}
+      {/* <AppTab.Screen
         name="VisitantesTab"
         component={Visitantes}
         options={{
           tabBarLabel: 'Visitantes',
           tabBarIcon: ({ color, size }) => <UserPlus color={color} size={size} />,
         }}
-      />
+      /> */}
       <AppTab.Screen 
         name="PerfilTab" 
         component={ProfileStack} 

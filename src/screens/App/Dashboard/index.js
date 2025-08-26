@@ -96,7 +96,7 @@ export default function Dashboard() {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.content}>
-          <BackButton style={{ alignSelf: 'flex-start' }} />
+          {/* <BackButton style={{ alignSelf: 'flex-start' }} /> */}
           {/* === HEADER === */}
           <Animatable.View animation="fadeInDown" duration={500} style={[styles.header, styles.section]}>
             <View style={styles.headerTextContainer}>

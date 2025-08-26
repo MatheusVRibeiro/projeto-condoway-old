@@ -7,6 +7,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   content: {
+    flex: 1,
     padding: 16,
     paddingBottom: 100,
   },
@@ -61,28 +62,38 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#e2e8f0',
     borderRadius: 8,
-    padding: 4,
+    padding: 2,
+    gap: 4,
+    marginBottom: 8,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
+    minWidth: 0,
+    paddingVertical: 6,
+    paddingHorizontal: 0,
     borderRadius: 6,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 2,
+    // Removido maxHeight para evitar corte do texto
   },
   tabButtonActive: {
     backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 1,
+    elevation: 1,
   },
   tabText: {
     textAlign: 'center',
     fontWeight: '600',
     color: '#475569',
+    fontSize: 13,
+    paddingHorizontal: 2,
+    flexShrink: 1,
+    minWidth: 0,
   },
   tabTextActive: {
     color: '#2563eb',
@@ -90,18 +101,25 @@ export const styles = StyleSheet.create({
   tabBadge: {
     backgroundColor: '#2563eb',
     borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 0,
+    marginLeft: 4,
+    minWidth: 18,
+    minHeight: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabBadgeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 16,
   },
   tabContent: {
     marginTop: 24,
-    flex: 1, // Importante para o ScrollView/FlatList funcionar corretamente
+    flex: 1,
+    minHeight: 0, // Garante que o FlatList/SectionList ocupe espaço mesmo em layouts aninhados
   },
 
   // --- Card de Encomenda ---
