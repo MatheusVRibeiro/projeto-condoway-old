@@ -12,11 +12,11 @@ import { styles } from './styles';
 
 // --- Componentes Internos da Tela ---
 
-const AcaoCard = ({ icon: Icon, title, badgeCount, onPress }) => {
-  const handlePress = () => {
+const AcaoCard = React.memo(({ icon: Icon, title, badgeCount, onPress }) => {
+  const handlePress = React.useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
-  };
+  }, [onPress]);
 
   return (
     <TouchableOpacity onPress={handlePress} style={styles.actionCard}>
@@ -29,7 +29,7 @@ const AcaoCard = ({ icon: Icon, title, badgeCount, onPress }) => {
       <Text style={styles.actionCardTitle}>{title}</Text>
     </TouchableOpacity>
   );
-};
+});
 
 const DashboardSkeleton = () => {
   const screenWidth = Dimensions.get('window').width;
@@ -65,15 +65,20 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
 
+  const handleReservarEspaco = React.useCallback(() => navigation.navigate('ReservasTab'), [navigation]);
+  const handleMinhasEncomendas = React.useCallback(() => navigation.navigate('Packages'), [navigation]);
+  const handleLiberarVisitante = React.useCallback(() => navigation.navigate('Visitantes'), [navigation]);
+  const handleAbrirOcorrencia = React.useCallback(() => navigation.navigate('OcorrenciasTab'), [navigation]);
+
   // Função para calcular o slide ativo com base na posição do scroll
-  const onScroll = (event) => {
+  const onScroll = React.useCallback((event) => {
     const slideWidth = event.nativeEvent.layoutMeasurement.width;
     const offset = event.nativeEvent.contentOffset.x;
     const slide = Math.round(offset / slideWidth);
     if (slide !== activeSlide) {
       setActiveSlide(slide);
     }
-  };
+  }, [activeSlide]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -81,7 +86,6 @@ export default function Dashboard() {
     }, 500); 
     return () => clearTimeout(timer);
   }, []);
-
 
   if (isLoading) {
     return (
@@ -91,7 +95,6 @@ export default function Dashboard() {
     );
   }
 
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -100,11 +103,11 @@ export default function Dashboard() {
           {/* === HEADER === */}
           <Animatable.View animation="fadeInDown" duration={500} style={[styles.header, styles.section]}>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.title}>Boa noite, {morador.nome}! 44b</Text>
+              <Text style={styles.title}>Boa noite, {morador.nome}!  44b</Text>
               <Text style={styles.subtitle}>{morador.condominio}</Text>
             </View>
             <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.notificationButton}>
+              <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate('Notifications')}>
                 <Bell color="#4b5563" size={28} />
                 {morador.notificacoesNaoLidas > 0 && (
                   <View style={styles.notificationBadge}>
@@ -148,10 +151,10 @@ export default function Dashboard() {
           <Animatable.View animation="fadeInUp" duration={500} delay={200} style={styles.section}>
             <Text style={styles.sectionTitle}>Ações Rápidas</Text>
             <View style={styles.actionsGrid}>
-                <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={() => navigation.navigate('ReservasTab')} />
-                <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={() => navigation.navigate('PackagesTab')} />
-                <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={() => navigation.navigate('VisitantesTab')} />
-                <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={() => navigation.navigate('OcorrenciasTab')} />
+                <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={handleReservarEspaco} />
+                <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={handleMinhasEncomendas} />
+                <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={handleLiberarVisitante} />
+                <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={handleAbrirOcorrencia} />
             </View>
           </Animatable.View>
 
