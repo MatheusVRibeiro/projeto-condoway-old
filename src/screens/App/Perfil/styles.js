@@ -1,7 +1,6 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
-  // --- Containers ---
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
@@ -10,49 +9,177 @@ export const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
-  
-  // --- Cabeçalho do Perfil ---
   profileHeader: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 20,
     marginBottom: 24,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   avatarContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     borderWidth: 4,
     borderColor: 'rgba(37, 99, 235, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   avatar: {
     width: '100%',
     height: '100%',
-    borderRadius: 48,
+    borderRadius: 60,
   },
   cameraIconOverlay: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: 'rgba(37, 99, 235, 0.8)',
-    padding: 6,
-    borderRadius: 15,
-    borderWidth: 2,
+    bottom: 4,
+    right: 4,
+    backgroundColor: '#2563eb',
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 3,
     borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   userName: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#1e293b',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  userNameEditing: {
+    borderBottomWidth: 2,
+    borderColor: '#2563eb',
+    paddingBottom: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+  },
+  userLocationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   userInfo: {
     fontSize: 16,
     color: '#64748b',
+    marginLeft: 4,
   },
-
-  // --- Acordeão ---
+  userBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  userBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400e',
+    marginLeft: 4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    gap: 12,
+  },
+  statsCard: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statsIconContainer: {
+    marginBottom: 8,
+  },
+  statsValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  statsTitle: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  quickActionsContainer: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 16,
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  quickAction: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  quickActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  quickActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+  },
+  badge: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '600',
+  },
   accordionItem: {
     backgroundColor: 'white',
     borderRadius: 12,
@@ -71,6 +198,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
   },
   accordionTitle: {
     fontSize: 18,
@@ -83,27 +211,97 @@ export const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
   },
-
-  // --- Itens de Conteúdo ---
   infoItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingVertical: 12,
     marginTop: 8,
   },
   infoItemIcon: {
     marginRight: 12,
+    marginTop: 2,
+  },
+  infoItemContent: {
+    flex: 1,
+  },
+  infoItemLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: '500',
+    marginBottom: 2,
   },
   infoItemText: {
     fontSize: 14,
     color: '#334155',
+    fontWeight: '500',
   },
   editInput: {
     borderBottomWidth: 1,
     borderColor: '#cbd5e1',
-    flex: 1,
     fontSize: 14,
     color: '#1e293b',
+    paddingVertical: 4,
+  },
+  preferenceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  preferenceContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  preferenceText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  preferenceTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  preferenceDescription: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  documentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  documentIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#fef2f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  documentContent: {
+    flex: 1,
+  },
+  documentName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  documentCategory: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  documentAction: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
   },
   editButtonsContainer: {
     flexDirection: 'row',
@@ -114,7 +312,7 @@ export const styles = StyleSheet.create({
   editButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   saveButton: {
     backgroundColor: '#2563eb',
@@ -124,6 +322,7 @@ export const styles = StyleSheet.create({
   },
   editButtonText: {
     fontWeight: '600',
+    fontSize: 14,
   },
   saveButtonText: {
     color: 'white',
@@ -131,8 +330,6 @@ export const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#334155',
   },
-  
-  // --- Lista de Ações ---
   actionsContainer: {
     marginTop: 24,
   },
@@ -141,13 +338,19 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
   },
   actionButtonDestructive: {
     borderColor: '#fee2e2',
+    backgroundColor: '#fefefe',
   },
   actionButtonIcon: {
     marginRight: 12,
@@ -160,13 +363,29 @@ export const styles = StyleSheet.create({
   actionButtonTextDestructive: {
     color: '#ef4444',
   },
-
-  // --- Modal de Alteração de Senha ---
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 24,
     width: '90%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e293b',
   },
   input: {
     backgroundColor: '#f8fafc',
@@ -175,6 +394,6 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    marginTop: 8,
+    marginBottom: 12,
   },
 });

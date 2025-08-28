@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import useUser from '../../../hooks/useUser';
-import { View, Text, SafeAreaView, FlatList, TouchableOpacity, Modal, TextInput, Button, Platform, ActivityIndicator, TouchableWithoutFeedback, Keyboard, RefreshControl } from 'react-native';
+import { View, Text, SafeAreaView, FlatList, TouchableOpacity, Modal, TextInput, Button, Platform, ActivityIndicator, TouchableWithoutFeedback, Keyboard, RefreshControl, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { initialVisitors } from './mock';
-import { ArrowLeft, UserPlus, User, AlertTriangle } from 'lucide-react-native';
+import { ArrowLeft, UserPlus, User, AlertTriangle, Building, MessageSquare, Briefcase, Home, Users } from 'lucide-react-native';
 import VisitorCard from './VisitorCard';
 import { SectionList } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -13,7 +13,24 @@ import Toast from 'react-native-toast-message';
 function formatDateTime(date) {
   if (!date) return '';
   const d = new Date(date);
-  return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  return d.toLocaleString('pt-BR', { 
+    day: '2-digit',
+    month: '2-digit', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function formatDateOnly(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toLocaleDateString('pt-BR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
 }
 
 function diffHuman(entradaDate, saidaDate) {
@@ -28,14 +45,13 @@ function diffHuman(entradaDate, saidaDate) {
 
 export default function Visitantes() {
   const navigation = useNavigation();
-  const { user } = useUser();
+  const { user: authUser } = useUser();
+  
+  // Para desenvolvimento, usar dados padrão se não houver usuário autenticado
+  const user = authUser || { ap_id: 101, user_tipo: 'morador' };
 
   const [activeTab, setActiveTab] = useState('agendados');
   const [visitors, setVisitors] = useState(initialVisitors);
-  const [periodStart, setPeriodStart] = useState(null);
-  const [periodEnd, setPeriodEnd] = useState(null);
-  const [showPeriodStartPicker, setShowPeriodStartPicker] = useState(false);
-  const [showPeriodEndPicker, setShowPeriodEndPicker] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editVisitor, setEditVisitor] = useState(null);
@@ -46,17 +62,27 @@ export default function Visitantes() {
   // Form state
   const [name, setName] = useState('');
   const [document, setDocument] = useState('');
+  const [visitorType, setVisitorType] = useState('Visitante');
+  const [company, setCompany] = useState('');
+  const [observation, setObservation] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Filtrar visitantes por ap_id e período (sem pesquisa por nome/documento)
+  // Filtrar visitantes por ap_id (sem pesquisa por nome/documento ou período)
   const filteredVisitors = useMemo(() => {
     if (!user) return [];
-    let list = (user.user_tipo && user.user_tipo.toLowerCase() === 'sindico') ? visitors : visitors.filter(v => v.ap_id === user.ap_id);
-    if (periodStart) list = list.filter(v => new Date(v.vst_data_visita) >= periodStart);
-    if (periodEnd) list = list.filter(v => new Date(v.vst_data_visita) <= periodEnd);
+    
+    let list = visitors;
+    
+    // Se não for síndico, filtrar por apartamento
+    if (!user.user_tipo || user.user_tipo.toLowerCase() !== 'sindico') {
+      if (user.ap_id) {
+        list = visitors.filter(v => v.ap_id === user.ap_id);
+      }
+    }
+    
     return list;
-  }, [visitors, user, periodStart, periodEnd]);
+  }, [visitors, user]);
 
   const { scheduled, history } = useMemo(() => {
     const now = new Date();
@@ -96,33 +122,41 @@ export default function Visitantes() {
 
   const presentesCount = useMemo(() => filteredVisitors.filter(v => !v.vst_data_saida).length, [filteredVisitors]);
 
-  const isFormValid = useMemo(() => name.trim().length > 0 && document.trim().length >= 3, [name, document]);
+  const isFormValid = useMemo(() => 
+    name.trim().length > 0 && document.trim().length >= 3 &&
+    (visitorType !== 'Prestador' || company.trim().length > 0), 
+  [name, document, visitorType, company]);
 
   const handleAddVisitor = useCallback(async () => {
     if (!isFormValid) {
-      Toast.show({ type: 'error', text1: 'Preencha o nome e o documento.' });
+      Toast.show({ type: 'error', text1: 'Preencha todos os campos obrigatórios.' });
       return;
     }
     setIsSubmitting(true);
     try {
       const newVisitor = {
         vst_id: Date.now(),
-        ap_id: user?.ap_id || null,
+        ap_id: user?.ap_id || 101,
         vst_nome: name.trim(),
         vst_documento: document.trim(),
+        vst_tipo: visitorType,
+        vst_empresa: company.trim(),
+        vst_observacao: observation.trim(),
         vst_data_visita: date,
         vst_data_saida: null,
       };
       setVisitors(prev => [newVisitor, ...prev]);
       setModalVisible(false);
-      setName(''); setDocument(''); setDate(new Date());
+      // Reset form
+      setName(''); setDocument(''); setVisitorType('Visitante'); 
+      setCompany(''); setObservation(''); setDate(new Date());
       Toast.show({ type: 'success', text1: 'Visitante autorizado com sucesso!' });
     } catch (err) {
       Toast.show({ type: 'error', text1: 'Erro ao autorizar visitante.' });
     } finally {
       setIsSubmitting(false);
     }
-  }, [name, document, date, isFormValid, user]);
+  }, [name, document, visitorType, company, observation, date, isFormValid, user]);
 
   // Ask for confirmation before marking exit (better UX)
   const handleMarkExit = useCallback((id) => {
@@ -164,30 +198,19 @@ export default function Visitantes() {
       </View>
 
       <View style={styles.content}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-          <View style={{ flex: 1 }} />
-          <TouchableOpacity onPress={() => setShowPeriodStartPicker(true)} style={{ marginRight: 8 }}>
-            <Text style={{ color: periodStart ? '#2563eb' : '#64748b', fontWeight: 'bold' }}>{periodStart ? new Date(periodStart).toLocaleDateString('pt-BR') : 'Início'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowPeriodEndPicker(true)}>
-            <Text style={{ color: periodEnd ? '#2563eb' : '#64748b', fontWeight: 'bold' }}>{periodEnd ? new Date(periodEnd).toLocaleDateString('pt-BR') : 'Fim'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ alignItems: 'flex-end', marginBottom: 8 }}>
-          <Text style={{ color: '#2563eb', fontWeight: 'bold' }}>Presentes: {presentesCount}</Text>
-        </View>
-
-        {showPeriodStartPicker && (
-          <DateTimePicker testID="periodStartPicker" value={periodStart || new Date()} mode="date" is24Hour={true} display="default" onChange={(event, selectedDate) => { setShowPeriodStartPicker(Platform.OS === 'ios'); if (selectedDate) setPeriodStart(selectedDate); }} />
-        )}
-        {showPeriodEndPicker && (
-          <DateTimePicker testID="periodEndPicker" value={periodEnd || new Date()} mode="date" is24Hour={true} display="default" onChange={(event, selectedDate) => { setShowPeriodEndPicker(Platform.OS === 'ios'); if (selectedDate) setPeriodEnd(selectedDate); }} />
-        )}
-
         <View style={styles.tabsContainer}>
           <TouchableOpacity style={[styles.tabButton, activeTab === 'agendados' && styles.tabButtonActive]} onPress={() => setActiveTab('agendados')} accessibilityLabel="Mostrar agendados"><Text style={[styles.tabText, activeTab === 'agendados' && styles.tabTextActive]}>Agendados</Text></TouchableOpacity>
           <TouchableOpacity style={[styles.tabButton, activeTab === 'historico' && styles.tabButtonActive]} onPress={() => setActiveTab('historico')} accessibilityLabel="Mostrar histórico"><Text style={[styles.tabText, activeTab === 'historico' && styles.tabTextActive]}>Histórico</Text></TouchableOpacity>
+        </View>
+
+        {/* Status dos visitantes presentes */}
+        <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#374151' }}>Status Atual</Text>
+            <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+              <Text style={{ color: '#16a34a', fontWeight: '700', fontSize: 14 }}>👥 Presentes: {presentesCount}</Text>
+            </View>
+          </View>
         </View>
 
         {/* Render grouped sections with SectionList for performance */}
@@ -209,7 +232,9 @@ export default function Visitantes() {
           ListEmptyComponent={() => (
             <View style={styles.emptyState}>
               <View style={styles.emptyStateIcon}><User size={48} color="#94a3b8" /></View>
-              <Text style={{ fontSize: 16, color: '#475569', marginBottom: 12 }}>{activeTab === 'agendados' ? 'Nenhum visitante agendado.' : 'Nenhum histórico de visitantes.'}</Text>
+              <Text style={{ fontSize: 16, color: '#475569', marginBottom: 12 }}>
+                {activeTab === 'agendados' ? 'Nenhum visitante agendado.' : 'Nenhum histórico de visitantes.'}
+              </Text>
             </View>
           )}
           refreshing={refreshing}
@@ -229,7 +254,26 @@ export default function Visitantes() {
                 <TextInput style={styles.input} placeholder="Documento (RG/CPF)" value={editVisitor?.vst_documento || ''} onChangeText={doc => setEditVisitor(ev => ({ ...ev, vst_documento: doc }))} accessibilityLabel="Documento do visitante" />
                 <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)} accessibilityLabel="Selecionar data da visita"><Text style={styles.dateButtonText}>{editVisitor?.vst_data_visita ? `Data da Visita: ${new Date(editVisitor.vst_data_visita).toLocaleDateString('pt-BR')} ${new Date(editVisitor.vst_data_visita).toLocaleTimeString('pt-BR').slice(0,5)}` : 'Selecionar data da visita'}</Text></TouchableOpacity>
                 {showDatePicker && (
-                  <DateTimePicker testID="dateTimePickerEdit" value={editVisitor?.vst_data_visita ? new Date(editVisitor.vst_data_visita) : new Date()} mode="datetime" is24Hour={true} display="default" onChange={(event, selectedDate) => { setShowDatePicker(Platform.OS === 'ios'); if (selectedDate) setEditVisitor(ev => ({ ...ev, vst_data_visita: selectedDate })); }} />
+                  <DateTimePicker 
+                    testID="dateTimePickerEdit" 
+                    value={editVisitor?.vst_data_visita ? new Date(editVisitor.vst_data_visita) : new Date()} 
+                    mode="datetime" 
+                    is24Hour={true} 
+                    display={Platform.OS === 'ios' ? 'default' : 'default'}
+                    onChange={(event, selectedDate) => { 
+                      if (Platform.OS === 'android') {
+                        setShowDatePicker(false);
+                      }
+                      if (event.type === 'set' && selectedDate) {
+                        setEditVisitor(ev => ({ ...ev, vst_data_visita: selectedDate }));
+                        if (Platform.OS === 'ios') {
+                          setShowDatePicker(false);
+                        }
+                      } else if (event.type === 'dismissed') {
+                        setShowDatePicker(false);
+                      }
+                    }} 
+                  />
                 )}
                 <View style={styles.modalButtons}>
                   <Button title="Cancelar" onPress={() => setEditVisitor(null)} color="#64748b" accessibilityLabel="Cancelar edição" />
@@ -244,18 +288,131 @@ export default function Visitantes() {
         <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <View style={styles.modalContent}>
+              <View style={[styles.modalContent, { maxHeight: '90%' }]}>
                 <Text style={styles.modalTitle}>Autorizar Novo Visitante</Text>
-                <TextInput style={styles.input} placeholder="Nome Completo" value={name} onChangeText={setName} autoFocus={true} accessibilityLabel="Nome do visitante" />
-                <TextInput style={styles.input} placeholder="Documento (RG/CPF)" value={document} onChangeText={setDocument} accessibilityLabel="Documento do visitante" />
-                <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)} accessibilityLabel="Selecionar data da visita"><Text style={styles.dateButtonText}>{`Data da Visita: ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR').slice(0,5)}`}</Text></TouchableOpacity>
+                
+                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+                  {/* Nome */}
+                  <TextInput 
+                    style={styles.input} 
+                    placeholder="Nome Completo" 
+                    value={name} 
+                    onChangeText={setName} 
+                    autoFocus={true} 
+                    accessibilityLabel="Nome do visitante" 
+                  />
+                  
+                  {/* Documento */}
+                  <TextInput 
+                    style={styles.input} 
+                    placeholder="Documento (RG/CPF)" 
+                    value={document} 
+                    onChangeText={setDocument} 
+                    accessibilityLabel="Documento do visitante" 
+                  />
+                  
+                  {/* Tipo de Visitante */}
+                  <View style={styles.selectorContainer}>
+                    <Text style={styles.selectorLabel}>Tipo de Visitante:</Text>
+                    <View style={styles.typeSelector}>
+                      {['Visitante', 'Hospede', 'Prestador'].map((type) => (
+                        <TouchableOpacity
+                          key={type}
+                          style={[
+                            styles.typeOption,
+                            visitorType === type && styles.typeOptionActive
+                          ]}
+                          onPress={() => setVisitorType(type)}
+                        >
+                          {type === 'Prestador' && <Briefcase size={16} color={visitorType === type ? '#ef4444' : '#6b7280'} />}
+                          {type === 'Hospede' && <Home size={16} color={visitorType === type ? '#8b5cf6' : '#6b7280'} />}
+                          {type === 'Visitante' && <Users size={16} color={visitorType === type ? '#10b981' : '#6b7280'} />}
+                          <Text style={[
+                            styles.typeOptionText,
+                            visitorType === type && styles.typeOptionTextActive
+                          ]}>
+                            {type}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                  
+                  {/* Empresa (obrigatório para Prestador) */}
+                  {(visitorType === 'Prestador' || company.length > 0) && (
+                    <View style={styles.inputContainer}>
+                      <Building size={16} color="#6b7280" style={{ marginRight: 8 }} />
+                      <TextInput 
+                        style={[styles.input, { flex: 1, marginBottom: 0, borderWidth: 0, backgroundColor: 'transparent' }]} 
+                        placeholder={visitorType === 'Prestador' ? "Nome da empresa *" : "Nome da empresa (opcional)"} 
+                        value={company} 
+                        onChangeText={setCompany} 
+                        accessibilityLabel="Empresa" 
+                      />
+                    </View>
+                  )}
+                  
+                  {/* Data e Hora */}
+                  <TouchableOpacity 
+                    style={styles.dateButton} 
+                    onPress={() => setShowDatePicker(true)} 
+                    accessibilityLabel="Selecionar data da visita"
+                  >
+                    <Text style={styles.dateButtonText}>
+                      {`Data da Visita: ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR').slice(0,5)}`}
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  {/* Observações */}
+                  <View style={styles.inputContainer}>
+                    <MessageSquare size={16} color="#6b7280" style={{ marginRight: 8, alignSelf: 'flex-start', marginTop: 8 }} />
+                    <TextInput 
+                      style={[styles.input, { flex: 1, minHeight: 80, textAlignVertical: 'top', marginBottom: 0, borderWidth: 0, backgroundColor: 'transparent' }]} 
+                      placeholder="Observações (placa do carro, motivo da visita, etc.)" 
+                      value={observation} 
+                      onChangeText={setObservation} 
+                      multiline={true}
+                      numberOfLines={3}
+                      accessibilityLabel="Observações" 
+                    />
+                  </View>
+                </ScrollView>
+                
                 {showDatePicker && (
-                  <DateTimePicker testID="dateTimePicker" value={date} mode="datetime" is24Hour={true} display="default" onChange={(event, selectedDate) => { setShowDatePicker(Platform.OS === 'ios'); if (selectedDate) setDate(selectedDate); }} />
+                  <DateTimePicker 
+                    testID="dateTimePicker" 
+                    value={date} 
+                    mode="datetime" 
+                    is24Hour={true} 
+                    display={Platform.OS === 'ios' ? 'default' : 'default'}
+                    onChange={(event, selectedDate) => { 
+                      if (Platform.OS === 'android') {
+                        setShowDatePicker(false);
+                      }
+                      if (event.type === 'set' && selectedDate) {
+                        setDate(selectedDate);
+                        if (Platform.OS === 'ios') {
+                          setShowDatePicker(false);
+                        }
+                      } else if (event.type === 'dismissed') {
+                        setShowDatePicker(false);
+                      }
+                    }} 
+                  />
                 )}
+                
                 <View style={styles.modalButtons}>
                   <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#64748b" accessibilityLabel="Cancelar" />
                   <TouchableOpacity onPress={handleAddVisitor} disabled={!isFormValid || isSubmitting} accessibilityLabel="Autorizar visitante" style={{ marginLeft: 8 }}>
-                    {isSubmitting ? (<View style={{ paddingHorizontal: 16, paddingVertical: 10 }}><ActivityIndicator color="#2563eb" /></View>) : (<View><Text style={{ color: '#2563eb', fontWeight: 'bold' }}>Autorizar</Text></View>)}
+                    {isSubmitting ? (
+                      <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
+                        <ActivityIndicator color="#2563eb" />
+                      </View>
+                    ) : (
+                      <View style={[styles.submitButton, !isFormValid && styles.submitButtonDisabled]}>
+                        <Text style={{ color: isFormValid ? '#ffffff' : '#9ca3af', fontWeight: '700' }}>Autorizar</Text>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
