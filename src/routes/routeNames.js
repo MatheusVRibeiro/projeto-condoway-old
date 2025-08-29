@@ -12,4 +12,11 @@ export const ROUTES = {
   SIGNUP: 'SignUp',
   FORGOT_PASSWORD: 'ForgotPassword',
   RESET_PASSWORD: 'ResetPassword',
+  
+  // Profile sub-screens
+  EDIT_PROFILE: 'EditProfile',
+  SECURITY: 'Security',
+  UNIT_DETAILS: 'UnitDetails',
+  DOCUMENTS: 'Documents',
+  HELP: 'Help',
 };

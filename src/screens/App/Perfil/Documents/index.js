@@ -1,0 +1,199 @@
+import React, { useState } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { ArrowLeft, FileText, Download, Eye, Search, Filter, Calendar, Folder } from 'lucide-react-native';
+import * as Animatable from 'react-native-animatable';
+import { styles } from './styles';
+import { userProfile } from '../mock';
+
+export default function Documents() {
+  const navigation = useNavigation();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  
+  const [documents] = useState([
+    ...userProfile.documents,
+    { id: 5, name: "Convenção do Condomínio.pdf", category: "Regras do Condomínio", date: "2024-01-15", size: "2.5 MB" },
+    { id: 6, name: "Regulamento da Piscina.pdf", category: "Regras do Condomínio", date: "2024-02-10", size: "1.2 MB" },
+    { id: 7, name: "Ata Assembleia Março.pdf", category: "Assembleias", date: "2024-03-15", size: "3.1 MB" },
+    { id: 8, name: "Protocolo de Emergência.pdf", category: "Segurança", date: "2024-01-20", size: "1.8 MB" },
+    { id: 9, name: "Manual de Mudança.pdf", category: "Orientações", date: "2024-02-05", size: "2.2 MB" },
+    { id: 10, name: "Formulário de Autorização.pdf", category: "Formulários", date: "2024-03-01", size: "0.8 MB" }
+  ]);
+
+  const categories = [
+    { key: 'all', label: 'Todos', count: documents.length },
+    { key: 'Regras do Condomínio', label: 'Regras', count: documents.filter(d => d.category === 'Regras do Condomínio').length },
+    { key: 'Assembleias', label: 'Assembleias', count: documents.filter(d => d.category === 'Assembleias').length },
+    { key: 'Orientações', label: 'Orientações', count: documents.filter(d => d.category === 'Orientações').length },
+    { key: 'Segurança', label: 'Segurança', count: documents.filter(d => d.category === 'Segurança').length },
+    { key: 'Formulários', label: 'Formulários', count: documents.filter(d => d.category === 'Formulários').length }
+  ];
+
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || doc.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleDownload = (document) => {
+    Alert.alert(
+      'Download',
+      `Baixar ${document.name}?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Baixar', onPress: () => Alert.alert('Sucesso', 'Download iniciado!') }
+      ]
+    );
+  };
+
+  const handleView = (document) => {
+    Alert.alert('Visualizar', `Abrindo ${document.name}...`);
+  };
+
+  const CategoryFilter = ({ category, isSelected, onPress }) => (
+    <TouchableOpacity
+      style={[styles.categoryFilter, isSelected && styles.categoryFilterActive]}
+      onPress={onPress}
+    >
+      <Text style={[styles.categoryFilterText, isSelected && styles.categoryFilterTextActive]}>
+        {category.label}
+      </Text>
+      <View style={[styles.categoryCount, isSelected && styles.categoryCountActive]}>
+        <Text style={[styles.categoryCountText, isSelected && styles.categoryCountTextActive]}>
+          {category.count}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const DocumentItem = ({ document }) => {
+    const getIconColor = (category) => {
+      switch (category) {
+        case 'Regras do Condomínio': return '#2563eb';
+        case 'Assembleias': return '#059669';
+        case 'Orientações': return '#7c3aed';
+        case 'Segurança': return '#dc2626';
+        case 'Formulários': return '#ea580c';
+        default: return '#64748b';
+      }
+    };
+
+    const getIconBg = (category) => {
+      switch (category) {
+        case 'Regras do Condomínio': return '#eff6ff';
+        case 'Assembleias': return '#ecfdf5';
+        case 'Orientações': return '#f3e8ff';
+        case 'Segurança': return '#fef2f2';
+        case 'Formulários': return '#fff7ed';
+        default: return '#f8fafc';
+      }
+    };
+
+    return (
+      <View style={styles.documentItem}>
+        <View style={[styles.documentIcon, { backgroundColor: getIconBg(document.category) }]}>
+          <FileText size={24} color={getIconColor(document.category)} />
+        </View>
+        
+        <View style={styles.documentContent}>
+          <Text style={styles.documentName}>{document.name}</Text>
+          <Text style={styles.documentCategory}>{document.category}</Text>
+          <View style={styles.documentMeta}>
+            <Text style={styles.documentDate}>{document.date}</Text>
+            <Text style={styles.documentSize}>{document.size}</Text>
+          </View>
+        </View>
+        
+        <View style={styles.documentActions}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => handleView(document)}>
+            <Eye size={20} color="#2563eb" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton} onPress={() => handleDownload(document)}>
+            <Download size={20} color="#2563eb" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <Animatable.View animation="fadeInDown" duration={400} style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <ArrowLeft size={24} color="#1e293b" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Documentos</Text>
+        <TouchableOpacity style={styles.filterButton}>
+          <Filter size={20} color="#2563eb" />
+        </TouchableOpacity>
+      </Animatable.View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Search Bar */}
+        <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color="#64748b" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar documentos..."
+              placeholderTextColor="#94a3b8"
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+            />
+          </View>
+        </Animatable.View>
+
+        {/* Category Filters */}
+        <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.filtersContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
+            {categories.map((category) => (
+              <CategoryFilter
+                key={category.key}
+                category={category}
+                isSelected={selectedCategory === category.key}
+                onPress={() => setSelectedCategory(category.key)}
+              />
+            ))}
+          </ScrollView>
+        </Animatable.View>
+
+        {/* Documents List */}
+        <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.documentsContainer}>
+          <View style={styles.documentsHeader}>
+            <Text style={styles.documentsTitle}>
+              {filteredDocuments.length} documento{filteredDocuments.length !== 1 ? 's' : ''} encontrado{filteredDocuments.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
+          
+          <View style={styles.documentsList}>
+            {filteredDocuments.map((document, index) => (
+              <Animatable.View
+                key={document.id}
+                animation="fadeInUp"
+                duration={400}
+                delay={500 + (index * 50)}
+              >
+                <DocumentItem document={document} />
+              </Animatable.View>
+            ))}
+          </View>
+        </Animatable.View>
+
+        {/* No Results */}
+        {filteredDocuments.length === 0 && (
+          <Animatable.View animation="fadeInUp" duration={600} delay={500} style={styles.noResultsContainer}>
+            <Folder size={48} color="#94a3b8" />
+            <Text style={styles.noResultsTitle}>Nenhum documento encontrado</Text>
+            <Text style={styles.noResultsText}>
+              {searchTerm ? 'Tente alterar os termos de busca' : 'Não há documentos nesta categoria'}
+            </Text>
+          </Animatable.View>
+        )}
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

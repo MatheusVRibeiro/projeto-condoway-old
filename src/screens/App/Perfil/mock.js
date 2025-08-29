@@ -4,7 +4,8 @@ export const userProfile = {
   phone: "(11) 98765-4321",
   apartment: "Apto 72",
   block: "Bloco B",
-  avatarUrl: "https://i.pravatar.cc/150?u=ana",
+  condominium: "Residencial Jardins",
+  avatarUrl: require("../../../../assets/condoway-logo.png"),
   initials: "AC",
   memberSince: "Janeiro 2023",
   userType: "morador", // morador, proprietario, sindico, porteiro
