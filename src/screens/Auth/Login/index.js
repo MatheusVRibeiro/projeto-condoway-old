@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
-import { Mail, Lock, Eye, EyeOff, LogIn, Check, Info } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, LogIn, Check, Info, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -57,118 +58,162 @@ export default function Login() {
   return (
     <>
       <View style={styles.container}>
-        <LinearGradient colors={['#3b82f6', '#1d4ed8']} style={styles.gradient}>
-          <SafeAreaView style={{ flex: 1, justifyContent: 'space-around', width: '100%' }}>
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-              <Animatable.View animation="fadeInDown" duration={1000} style={styles.header}>
-                <Image source={require('../../../../assets/condo.png')} style={styles.logo} />
-                <Text style={styles.title}>Acesse sua conta</Text>
-                <Text style={styles.subtitle}>Bem-vindo(a) de volta!</Text>
-              </Animatable.View>
+        <LinearGradient colors={['rgb(37, 99, 235)', '#1e3a8a']} style={styles.gradient}>
+          {/* Elementos decorativos de fundo */}
+          <View style={styles.backgroundElements}>
+            <Animatable.View animation="pulse" iterationCount="infinite" duration={4000} style={[styles.circle, styles.circle1]} />
+            <Animatable.View animation="pulse" iterationCount="infinite" duration={3000} delay={1000} style={[styles.circle, styles.circle2]} />
+            <Animatable.View animation="pulse" iterationCount="infinite" duration={5000} delay={2000} style={[styles.circle, styles.circle3]} />
+          </View>
 
-              <Animatable.View animation="fadeInUp" duration={1000} delay={200} style={styles.form}>
-                {/* Campo de E-mail */}
-                <View style={styles.inputContainer}>
-                  <Mail color="rgba(255, 255, 255, 0.7)" size={20} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Seu e-mail"
-                    placeholderTextColor="rgba(255, 255, 255, 0.7)"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    accessibilityLabel="Campo de e-mail"
-                    accessible={true}
-                    importantForAccessibility="yes"
-                    returnKeyType="next"
-                  />
-                </View>
+          <SafeAreaView style={styles.safeArea}>
+            <ScrollView 
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoid}>
+                
+                {/* Header com logo e saudação */}
+                <Animatable.View animation="fadeInDown" duration={1200} style={styles.header}>
+                  <Image source={require('../../../../assets/condo.png')} style={styles.logo} />
+                  <Text style={styles.welcomeText}>Bem-vindo!</Text>
+                  <Text style={styles.title}>Faça login na sua conta</Text>
+                  <Text style={styles.subtitle}>Acesse o seu condomínio de forma rápida e segura</Text>
+                </Animatable.View>
 
-                {/* Campo de Senha */}
-                <View style={styles.inputContainer}>
-                  <Lock color="rgba(255, 255, 255, 0.7)" size={20} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Sua senha"
-                    placeholderTextColor="rgba(255, 255, 255, 0.7)"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    autoComplete="password"
-                    accessibilityLabel="Campo de senha"
-                    accessible={true}
-                    importantForAccessibility="yes"
-                    returnKeyType="done"
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeIconContainer}
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff color="rgba(255, 255, 255, 0.7)" size={20} />
-                    ) : (
-                      <Eye color="rgba(255, 255, 255, 0.7)" size={20} />
-                    )}
-                  </TouchableOpacity>
-                </View>
-
-                {/* Opções */}
-                <View style={styles.optionsContainer}>
-                  <TouchableOpacity
-                    style={styles.rememberMeContainer}
-                    onPress={() => setRememberMe(!rememberMe)}
-                  >
-                    <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                      {rememberMe && <Check color="#1d4ed8" size={14} />}
+                {/* Formulário principal */}
+                <Animatable.View animation="fadeInUp" duration={1200} delay={300} style={styles.formContainer}>
+                  <View style={styles.form}>
+                    
+                    {/* Campo de E-mail */}
+                    <View style={styles.inputWrapper}>
+                      <Text style={styles.inputLabel}>E-mail</Text>
+                      <View style={styles.inputContainer}>
+                        <View style={styles.inputIconContainer}>
+                          <Mail color="rgb(37, 99, 235)" size={20} />
+                        </View>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Digite seu e-mail"
+                          placeholderTextColor="#9CA3AF"
+                          value={email}
+                          onChangeText={setEmail}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoComplete="email"
+                          accessibilityLabel="Campo de e-mail"
+                          accessible={true}
+                          importantForAccessibility="yes"
+                          returnKeyType="next"
+                        />
+                      </View>
                     </View>
-                    <Text style={styles.rememberMeText}>Lembrar-me</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-                    <Text style={styles.forgotPasswordText}>Esqueci a senha?</Text>
-                  </TouchableOpacity>
-                </View>
 
-                {/* Botão de Login */}
-                <TouchableOpacity
-                  style={styles.loginButton}
-                  onPress={handleLogin}
-                  disabled={isLoading}
-                  accessibilityLabel="Botão de login"
-                  accessible={true}
-                  importantForAccessibility="yes"
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#1d4ed8" />
-                  ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                      <LogIn color="#1d4ed8" size={20} />
-                      <Text style={styles.loginButtonText}>Entrar</Text>
+                    {/* Campo de Senha */}
+                    <View style={styles.inputWrapper}>
+                      <Text style={styles.inputLabel}>Senha</Text>
+                      <View style={styles.inputContainer}>
+                        <View style={styles.inputIconContainer}>
+                          <Lock color="rgb(37, 99, 235)" size={20} />
+                        </View>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Digite sua senha"
+                          placeholderTextColor="#9CA3AF"
+                          value={password}
+                          onChangeText={setPassword}
+                          secureTextEntry={!showPassword}
+                          autoComplete="password"
+                          accessibilityLabel="Campo de senha"
+                          accessible={true}
+                          importantForAccessibility="yes"
+                          returnKeyType="done"
+                        />
+                        <TouchableOpacity
+                          style={styles.eyeIconContainer}
+                          onPress={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff color="#9CA3AF" size={20} />
+                          ) : (
+                            <Eye color="#9CA3AF" size={20} />
+                          )}
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  )}
-                </TouchableOpacity>
+
+                    {/* Opções */}
+                    <View style={styles.optionsContainer}>
+                      <TouchableOpacity
+                        style={styles.rememberMeContainer}
+                        onPress={() => setRememberMe(!rememberMe)}
+                      >
+                        <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                          {rememberMe && <Check color="#fff" size={12} />}
+                        </View>
+                        <Text style={styles.rememberMeText}>Lembrar-me</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+                        <Text style={styles.forgotPasswordText}>Esqueci a senha</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Botão de Login */}
+                    <Animatable.View animation="fadeInUp" duration={1000} delay={600}>
+                      <TouchableOpacity
+                        style={[styles.loginButton, isLoading && styles.loginButtonLoading]}
+                        onPress={handleLogin}
+                        disabled={isLoading}
+                        accessibilityLabel="Botão de login"
+                        accessible={true}
+                        importantForAccessibility="yes"
+                      >
+                        <LinearGradient
+                          colors={['rgb(37, 99, 235)', '#1e3a8a']}
+                          style={styles.loginButtonGradient}
+                        >
+                          {isLoading ? (
+                            <ActivityIndicator color="#fff" size="small" />
+                          ) : (
+                            <View style={styles.loginButtonContent}>
+                              <Text style={styles.loginButtonText}>Entrar</Text>
+                              <ArrowRight color="#fff" size={20} />
+                            </View>
+                          )}
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    </Animatable.View>
+
+                    {/* Link para registro */}
+                    <Animatable.View animation="fadeInUp" duration={1000} delay={800} style={styles.signUpContainer}>
+                      <Text style={styles.signUpText}>Não tem uma conta? </Text>
+                      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                        <Text style={styles.signUpLink}>Cadastre-se</Text>
+                      </TouchableOpacity>
+                    </Animatable.View>
+
+                  </View>
+                </Animatable.View>
 
                 {/* Ajuda/FAQ */}
-                <TouchableOpacity
-                  style={{ alignItems: 'center', marginTop: 16 }}
-                  onPress={() => navigation.navigate('Help')}
-                  accessibilityLabel="Ajuda e perguntas frequentes"
-                  accessible={true}
-                >
-                  <View style={{ alignItems: 'center' }}>
+                <Animatable.View animation="fadeInUp" duration={1000} delay={1000} style={styles.helpContainer}>
+                  <TouchableOpacity
+                    style={styles.helpButton}
+                    onPress={() => navigation.navigate('Help')}
+                    accessibilityLabel="Ajuda e perguntas frequentes"
+                    accessible={true}
+                  >
                     <Info color="#fff" size={18} />
-                    <Text style={{ color: '#fff', marginTop: 4, fontSize: 14 }}>Precisa de ajuda?</Text>
-                  </View>
-                </TouchableOpacity>
+                    <Text style={styles.helpText}>Precisa de ajuda?</Text>
+                  </TouchableOpacity>
+                </Animatable.View>
 
-              </Animatable.View>
-
-            </KeyboardAvoidingView>
+              </KeyboardAvoidingView>
+            </ScrollView>
           </SafeAreaView>
         </LinearGradient>
       </View>
-      {/* Toast container para feedback visual */}
       <Toast />
     </>
   );

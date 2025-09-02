@@ -1,105 +1,227 @@
 import React, { useState } from 'react';
-import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
-import { 
-    View, 
-    Text, 
-    TouchableOpacity, 
-    TextInput
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
+import { Mail, ArrowLeft, ArrowRight, CheckCircle, HelpCircle } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
 import { styles } from './styles';
-import { COLORS, FONTS } from '../../../constants/theme';
 
-export default function EsqSenha({ navigation }) {
-    const [email, setEmail] = useState('');
-    const [isFocused, setIsFocused] = useState(false);
-    const [linkSent, setLinkSent] = useState(false); // Novo estado para controlar a UI
+const ForgotPassword = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-    // Carregar fontes Poppins
-    const [fontsLoaded] = useFonts({
-        [FONTS.regular]: Poppins_400Regular,
-        [FONTS.medium]: Poppins_500Medium,
-        [FONTS.semibold]: Poppins_600SemiBold,
-        [FONTS.bold]: Poppins_700Bold,
-    });
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
-    if (!fontsLoaded) {
-        return null;
+  const handleSendEmail = async () => {
+    if (!email.trim()) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Por favor, insira seu e-mail',
+      });
+      return;
     }
 
-    const handleResetPassword = () => {
-        if (!email) {
-            // Usamos um Alert aqui porque o card ainda não mudou
-            Alert.alert("Campo Vazio", "Por favor, insira seu e-mail.");
-            return;
-        }
-        // Em vez de um Alert, apenas mudamos o estado para mostrar o novo card
-        setLinkSent(true);
-    };
-
-    // Card de Sucesso (renderizado quando linkSent for true)
-    if (linkSent) {
-        return (
-            <View style={styles.container}>
-                <View style={styles.card}>
-                    <View style={styles.iconContainer}>
-                        <Feather name="check-circle" size={32} color={COLORS.primary} />
-                    </View>
-                    <Text style={styles.title}>Link Enviado!</Text>
-                    <Text style={styles.subtitle}>
-                        Verifique sua caixa de entrada e pasta de spam. Enviamos um link seguro para o e-mail: 
-                        <Text style={{ fontFamily: FONTS.bold, color: COLORS.textPrimary }}> {email}</Text>
-                    </Text>
-                    <TouchableOpacity style={styles.successButton} onPress={() => navigation.goBack()}>
-                        <Feather name="arrow-left" size={20} color={COLORS.primary} />
-                        <Text style={styles.successButtonText}>Voltar para o Login</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        );
+    if (!validateEmail(email)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Por favor, insira um e-mail válido',
+      });
+      return;
     }
 
-    // Card Padrão (renderizado quando linkSent for false)
+    setLoading(true);
+    
+    try {
+      // Simular requisição para a API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setSuccess(true);
+      Toast.show({
+        type: 'success',
+        text1: 'E-mail enviado!',
+        text2: 'Verifique sua caixa de entrada',
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Falha ao enviar e-mail. Tente novamente.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
     return (
-        <View style={styles.container}>
-            <View style={styles.card}>
-                <View style={styles.iconContainer}>
-                    <Feather name="key" size={28} color={COLORS.primary} />
-                </View>
+      <SafeAreaView style={styles.container}>
+        <LinearGradient colors={['#f8fafc', '#e2e8f0']} style={styles.container}>
+          <View style={styles.backButtonContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <ArrowLeft size={24} color="rgb(37, 99, 235)" />
+            </TouchableOpacity>
+          </View>
 
-                <Text style={styles.title}>Recuperar Senha</Text>
-                <Text style={styles.subtitle}>
-                    Insira seu e-mail de cadastro e enviaremos um link para você criar uma nova senha.
-                </Text>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <Animatable.View animation="fadeInUp" delay={400} style={styles.successContainer}>
+              <View style={styles.successIcon}>
+                <CheckCircle size={80} color="#22c55e" />
+              </View>
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>E-mail Cadastrado</Text>
-                    <View style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
-                        <Feather name="mail" size={20} color={isFocused ? COLORS.primary : COLORS.icon} style={styles.icon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="seu@email.com"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            value={email}
-                            onChangeText={setEmail}
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
-                            placeholderTextColor={COLORS.textSecondary}
-                        />
-                    </View>
-                </View>
+              <Text style={styles.successTitle}>E-mail enviado!</Text>
+              <Text style={styles.successSubtitle}>
+                Enviamos um link de recuperação para {'\n'}
+                <Text style={styles.successEmail}>{email}</Text>
+              </Text>
 
-                <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
-                    <Feather name="send" size={20} color={COLORS.card} />
-                    <Text style={styles.buttonText}>Enviar Link de Recuperação</Text>
+              <Text style={styles.successDescription}>
+                Verifique sua caixa de entrada e clique no link para redefinir sua senha.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate('Login')}
+              >
+                <LinearGradient
+                  colors={['rgb(37, 99, 235)', '#1e3a8a']}
+                  style={styles.primaryButtonGradient}
+                >
+                  <Text style={styles.primaryButtonText}>Voltar ao Login</Text>
+                  <ArrowRight size={20} color="white" />
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.resendButton}
+                onPress={() => setSuccess(false)}
+              >
+                <Text style={styles.resendButtonText}>Não recebeu? Enviar novamente</Text>
+              </TouchableOpacity>
+
+              {/* Botão de Ajuda */}
+              <Animatable.View animation="fadeInUp" delay={600} style={styles.helpContainer}>
+                <TouchableOpacity
+                  style={styles.helpButton}
+                  onPress={() => navigation.navigate('Help')}
+                >
+                  <HelpCircle size={18} color="#6b7280" />
+                  <Text style={styles.helpText}>Precisa de ajuda?</Text>
                 </TouchableOpacity>
-
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <Feather name="arrow-left" size={16} color={COLORS.primary} />
-                    <Text style={styles.backButtonText}>Voltar para o Login</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+              </Animatable.View>
+            </Animatable.View>
+          </ScrollView>
+        </LinearGradient>
+      </SafeAreaView>
     );
-}
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <LinearGradient colors={['#f8fafc', '#e2e8f0']} style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+        >
+          <View style={styles.backButtonContainer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <ArrowLeft size={24} color="rgb(37, 99, 235)" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <Animatable.View animation="fadeInUp" delay={400} style={styles.formContainer}>
+              <View style={styles.headerContainer}>
+                <Text style={styles.title}>Esqueceu sua senha?</Text>
+                <Text style={styles.subtitle}>
+                  Não se preocupe! Digite seu e-mail e enviaremos {'\n'}
+                  um link para redefinir sua senha.
+                </Text>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>E-mail</Text>
+                <View style={styles.inputContainer}>
+                  <Mail size={20} color="#6b7280" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Digite seu e-mail"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                  />
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.primaryButton, loading && styles.disabledButton]}
+                onPress={handleSendEmail}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={loading ? ['#9ca3af', '#6b7280'] : ['rgb(37, 99, 235)', '#1e3a8a']}
+                  style={styles.primaryButtonGradient}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <>
+                      <Text style={styles.primaryButtonText}>Enviar Link</Text>
+                      <ArrowRight size={20} color="white" />
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.backToLoginButton}
+                onPress={() => navigation.navigate('Login')}
+                disabled={loading}
+              >
+                <Text style={styles.backToLoginText}>Voltar ao Login</Text>
+              </TouchableOpacity>
+
+              {/* Botão de Ajuda */}
+              <Animatable.View animation="fadeInUp" delay={600} style={styles.helpContainer}>
+                <TouchableOpacity
+                  style={styles.helpButton}
+                  onPress={() => navigation.navigate('Help')}
+                >
+                  <HelpCircle size={18} color="#6b7280" />
+                  <Text style={styles.helpText}>Precisa de ajuda?</Text>
+                </TouchableOpacity>
+              </Animatable.View>
+            </Animatable.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </SafeAreaView>
+  );
+};
+
+export default ForgotPassword;
