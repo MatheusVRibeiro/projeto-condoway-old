@@ -1,0 +1,502 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  Alert,
+  Vibration,
+} from 'react-native';
+import {
+  ArrowLeft,
+  Bell,
+  BellOff,
+  Smartphone,
+  Mail,
+  MessageSquare,
+  Users,
+  Package,
+  AlertTriangle,
+  Shield,
+  Volume2,
+  VolumeX,
+  Clock,
+  Settings,
+  CheckCircle,
+} from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../../../contexts/ThemeProvider';
+import { useNotifications } from '../../../../contexts/NotificationProvider';
+import * as Animatable from 'react-native-animatable';
+import Toast from 'react-native-toast-message';
+
+const NotificationPreferences = () => {
+  const navigation = useNavigation();
+  const { theme } = useTheme();
+  const { showNotification } = useNotifications();
+
+  // Estados das preferências de notificação
+  const [preferences, setPreferences] = useState({
+    // Notificações Gerais
+    pushEnabled: true,
+    soundEnabled: true,
+    vibrationEnabled: true,
+    
+    // Comunicação
+    messages: true,
+    announcements: true,
+    emergencyAlerts: true,
+    
+    // Atividades do Condomínio
+    reservations: true,
+    packages: true,
+    visitors: true,
+    maintenanceUpdates: true,
+    
+    // Segurança
+    accessLogs: true,
+    securityAlerts: true,
+    
+    // Configurações Avançadas
+    quietHoursEnabled: false,
+    quietStart: '22:00',
+    quietEnd: '07:00',
+    weekendMode: false,
+  });
+
+  // Auto-save quando preferências mudam
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSavePreferences();
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [preferences]);
+
+  const updatePreference = (key, value) => {
+    // Feedback háptico
+    Vibration.vibrate(50);
+    
+    setPreferences(prev => {
+      const updated = { ...prev, [key]: value };
+      
+      // Lógica dependente: se push estiver desabilitado, desabilitar som e vibração
+      if (key === 'pushEnabled' && !value) {
+        updated.soundEnabled = false;
+        updated.vibrationEnabled = false;
+      }
+      
+      // Se som estiver desabilitado, desabilitar vibração também
+      if (key === 'soundEnabled' && !value) {
+        updated.vibrationEnabled = false;
+      }
+      
+      return updated;
+    });
+  };
+
+  const handleSavePreferences = async () => {
+    try {
+      // Simular salvamento (aqui você faria a chamada para API)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Preferências salvas',
+        text2: 'Suas configurações foram atualizadas',
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao salvar',
+        text2: 'Tente novamente em alguns instantes',
+        position: 'bottom',
+      });
+    }
+  };
+
+  const handleTestNotification = () => {
+    if (!preferences.pushEnabled) {
+      Alert.alert(
+        'Notificações Desabilitadas',
+        'Ative as notificações push para testar',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    showNotification('Teste de Notificação', 'Esta é uma notificação de teste do CondoWay!');
+    
+    Toast.show({
+      type: 'info',
+      text1: 'Notificação enviada!',
+      text2: 'Verifique a área de notificações',
+      position: 'bottom',
+    });
+  };
+
+  const handleClearNotifications = () => {
+    Alert.alert(
+      'Limpar Histórico',
+      'Tem certeza que deseja limpar todo o histórico de notificações?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Limpar', 
+          style: 'destructive',
+          onPress: () => {
+            Toast.show({
+              type: 'success',
+              text1: 'Histórico limpo',
+              text2: 'Todas as notificações foram removidas',
+              position: 'bottom',
+            });
+          }
+        },
+      ]
+    );
+  };
+
+  const PreferenceSection = ({ title, children, icon: Icon }) => (
+    <Animatable.View 
+      animation="fadeInUp" 
+      duration={500}
+      style={[styles.section, { backgroundColor: theme.colors.card }]}
+    >
+      <View style={styles.sectionHeader}>
+        <Icon size={20} color={theme.colors.primary} />
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+          {title}
+        </Text>
+      </View>
+      {children}
+    </Animatable.View>
+  );
+
+  const PreferenceItem = ({ 
+    title, 
+    description, 
+    value, 
+    onToggle, 
+    icon: Icon,
+    disabled = false 
+  }) => (
+    <View style={[styles.preferenceItem, disabled && styles.disabledItem]}>
+      <View style={styles.preferenceLeft}>
+        <Icon 
+          size={18} 
+          color={disabled ? theme.colors.textSecondary : theme.colors.primary} 
+        />
+        <View style={styles.preferenceText}>
+          <Text style={[
+            styles.preferenceTitle, 
+            { color: disabled ? theme.colors.textSecondary : theme.colors.text }
+          ]}>
+            {title}
+          </Text>
+          {description && (
+            <Text style={[styles.preferenceDescription, { color: theme.colors.textSecondary }]}>
+              {description}
+            </Text>
+          )}
+        </View>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ 
+          false: theme.colors.border, 
+          true: theme.colors.primary + '40' 
+        }}
+        thumbColor={value ? theme.colors.primary : theme.colors.textSecondary}
+        disabled={disabled}
+      />
+    </View>
+  );
+
+  const styles = {
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      backgroundColor: theme.colors.card,
+    },
+    backButton: {
+      marginRight: 16,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontFamily: 'Poppins-SemiBold',
+      color: theme.colors.text,
+      flex: 1,
+    },
+    testButton: {
+      backgroundColor: theme.colors.primary + '20',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    testButtonText: {
+      color: theme.colors.primary,
+      fontSize: 12,
+      fontFamily: 'Poppins-Medium',
+    },
+    content: {
+      flex: 1,
+      padding: 16,
+    },
+    section: {
+      marginBottom: 20,
+      borderRadius: 12,
+      padding: 16,
+      shadowColor: theme.colors.shadow || '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontFamily: 'Poppins-SemiBold',
+      marginLeft: 8,
+    },
+    preferenceItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border + '30',
+    },
+    disabledItem: {
+      opacity: 0.5,
+    },
+    preferenceLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    preferenceText: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    preferenceTitle: {
+      fontSize: 14,
+      fontFamily: 'Poppins-Medium',
+    },
+    preferenceDescription: {
+      fontSize: 12,
+      fontFamily: 'Poppins-Regular',
+      marginTop: 2,
+    },
+    dangerZone: {
+      backgroundColor: theme.colors.card,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: '#ef444440',
+      shadowColor: theme.colors.shadow || '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    dangerTitle: {
+      fontSize: 16,
+      fontFamily: 'Poppins-SemiBold',
+      color: '#ef4444',
+      marginBottom: 8,
+    },
+    dangerDescription: {
+      fontSize: 13,
+      fontFamily: 'Poppins-Regular',
+      color: theme.colors.textSecondary,
+      marginBottom: 16,
+      lineHeight: 18,
+    },
+    dangerButton: {
+      backgroundColor: '#ef444420',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#ef4444',
+    },
+    dangerButtonText: {
+      color: '#ef4444',
+      fontSize: 14,
+      fontFamily: 'Poppins-Medium',
+      textAlign: 'center',
+    },
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <Animatable.View animation="fadeInDown" duration={500} style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <ArrowLeft size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+        
+        <Text style={styles.headerTitle}>Notificações</Text>
+        
+        <TouchableOpacity 
+          style={styles.testButton}
+          onPress={handleTestNotification}
+        >
+          <Text style={styles.testButtonText}>Testar</Text>
+        </TouchableOpacity>
+      </Animatable.View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Seção Geral */}
+        <PreferenceSection title="Geral" icon={Settings}>
+          <PreferenceItem
+            title="Notificações Push"
+            description="Receber notificações no dispositivo"
+            value={preferences.pushEnabled}
+            onToggle={(value) => updatePreference('pushEnabled', value)}
+            icon={preferences.pushEnabled ? Bell : BellOff}
+          />
+          
+          <PreferenceItem
+            title="Som"
+            description="Tocar som ao receber notificações"
+            value={preferences.soundEnabled}
+            onToggle={(value) => updatePreference('soundEnabled', value)}
+            icon={preferences.soundEnabled ? Volume2 : VolumeX}
+            disabled={!preferences.pushEnabled}
+          />
+          
+          <PreferenceItem
+            title="Vibração"
+            description="Vibrar ao receber notificações"
+            value={preferences.vibrationEnabled}
+            onToggle={(value) => updatePreference('vibrationEnabled', value)}
+            icon={Smartphone}
+            disabled={!preferences.pushEnabled || !preferences.soundEnabled}
+          />
+        </PreferenceSection>
+
+        {/* Seção Comunicação */}
+        <PreferenceSection title="Comunicação" icon={MessageSquare}>
+          <PreferenceItem
+            title="Mensagens"
+            description="Recados e comunicados importantes"
+            value={preferences.messages}
+            onToggle={(value) => updatePreference('messages', value)}
+            icon={Mail}
+          />
+          
+          <PreferenceItem
+            title="Avisos do Condomínio"
+            description="Informações gerais e atualizações"
+            value={preferences.announcements}
+            onToggle={(value) => updatePreference('announcements', value)}
+            icon={Users}
+          />
+          
+          <PreferenceItem
+            title="Alertas de Emergência"
+            description="Notificações urgentes e de segurança"
+            value={preferences.emergencyAlerts}
+            onToggle={(value) => updatePreference('emergencyAlerts', value)}
+            icon={AlertTriangle}
+          />
+        </PreferenceSection>
+
+        {/* Seção Atividades */}
+        <PreferenceSection title="Atividades do Condomínio" icon={Clock}>
+          <PreferenceItem
+            title="Reservas"
+            description="Confirmações e lembretes de reservas"
+            value={preferences.reservations}
+            onToggle={(value) => updatePreference('reservations', value)}
+            icon={CheckCircle}
+          />
+          
+          <PreferenceItem
+            title="Encomendas"
+            description="Chegada de pacotes e entregas"
+            value={preferences.packages}
+            onToggle={(value) => updatePreference('packages', value)}
+            icon={Package}
+          />
+          
+          <PreferenceItem
+            title="Visitantes"
+            description="Notificações sobre liberação de acesso"
+            value={preferences.visitors}
+            onToggle={(value) => updatePreference('visitors', value)}
+            icon={Users}
+          />
+          
+          <PreferenceItem
+            title="Manutenção"
+            description="Atualizações sobre serviços de manutenção"
+            value={preferences.maintenanceUpdates}
+            onToggle={(value) => updatePreference('maintenanceUpdates', value)}
+            icon={Settings}
+          />
+        </PreferenceSection>
+
+        {/* Seção Segurança */}
+        <PreferenceSection title="Segurança" icon={Shield}>
+          <PreferenceItem
+            title="Logs de Acesso"
+            description="Registros de entrada e saída"
+            value={preferences.accessLogs}
+            onToggle={(value) => updatePreference('accessLogs', value)}
+            icon={Shield}
+          />
+          
+          <PreferenceItem
+            title="Alertas de Segurança"
+            description="Notificações sobre incidentes"
+            value={preferences.securityAlerts}
+            onToggle={(value) => updatePreference('securityAlerts', value)}
+            icon={AlertTriangle}
+          />
+        </PreferenceSection>
+
+        {/* Zona de Perigo */}
+        <Animatable.View animation="fadeInUp" duration={500} delay={200} style={styles.dangerZone}>
+          <Text style={styles.dangerTitle}>Zona de Perigo</Text>
+          <Text style={styles.dangerDescription}>
+            Esta ação irá limpar permanentemente todo o histórico de notificações. 
+            Esta ação não pode ser desfeita.
+          </Text>
+          <TouchableOpacity 
+            style={styles.dangerButton}
+            onPress={handleClearNotifications}
+          >
+            <Text style={styles.dangerButtonText}>Limpar Histórico</Text>
+          </TouchableOpacity>
+        </Animatable.View>
+
+        {/* Espaçamento inferior */}
+        <View style={{ height: 32 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default NotificationPreferences;

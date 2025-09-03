@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, SafeAreaView, TouchableOpacity, Switch, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Bell, ChevronRight } from 'lucide-react-native';
 // import { schedulePushNotification } from '../../../lib/notifications'; // Comentado
 
 
@@ -28,7 +28,19 @@ const Settings = React.memo(function Settings() {
         <Text style={styles.headerTitle}>Configurações</Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Preferências de Notificação</Text>
+        {/* Navegação para Preferências de Notificação */}
+        <TouchableOpacity 
+          style={styles.navigationItem}
+          onPress={() => navigation.navigate('NotificationPreferences')}
+        >
+          <View style={styles.navigationItemLeft}>
+            <Bell size={24} color="#2563eb" />
+            <Text style={styles.navigationItemText}>Preferências de Notificação</Text>
+          </View>
+          <ChevronRight size={20} color="#64748b" />
+        </TouchableOpacity>
+        
+        <Text style={styles.sectionTitle}>Configurações Rápidas</Text>
         <View style={styles.settingRow}>
           <Text style={styles.settingText}>Novas Encomendas</Text>
           <Switch
