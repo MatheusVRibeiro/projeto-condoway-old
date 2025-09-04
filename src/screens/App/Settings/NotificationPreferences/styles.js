@@ -1,6 +1,49 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  // Seção de Tema
+  sectionDescription: {
+    fontSize: 14,
+    marginBottom: 16,
+    marginLeft: 32,
+    lineHeight: 20,
+  },
+  
+  themeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 8,
+  },
+  
+  themeOption: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    position: 'relative',
+    minHeight: 80,
+    justifyContent: 'center',
+  },
+  
+  themeOptionText: {
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  
+  selectedIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
   // Estilos complementares que podem ser usados se necessário
   
   // Animações customizadas

@@ -1,7 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Perfil from '../screens/App/Perfil';
-import Settings from '../screens/App/Settings';
 import NotificationPreferences from '../screens/App/Settings/NotificationPreferences';
 import Help from '../screens/App/Help';
 import EditProfile from '../screens/App/Perfil/EditProfile';
@@ -18,7 +17,6 @@ export default function ProfileStack() {
   return (
     <ProfileStackNavigator.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStackNavigator.Screen name="ProfileMain" component={Perfil} />
-      <ProfileStackNavigator.Screen name="Settings" component={Settings} />
       <ProfileStackNavigator.Screen name="NotificationPreferences" component={NotificationPreferences} />
       <ProfileStackNavigator.Screen name="Help" component={HelpSupport} />
       <ProfileStackNavigator.Screen name="EditProfile" component={EditProfile} />

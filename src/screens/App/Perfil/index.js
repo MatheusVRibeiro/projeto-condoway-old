@@ -6,7 +6,7 @@ import { createProfileStyles } from './styles';
 import { userProfile } from './mock';
 import { useAuth } from '../../../contexts/AuthContext';
 import { ROUTES } from '../../../routes/routeNames';
-import { Edit, Shield, Home, Settings, FileText, HelpCircle, Users, LogOut, MapPin, Star, ChevronRight, Camera } from 'lucide-react-native';
+import { Edit, Shield, Home, Bell, FileText, HelpCircle, Users, LogOut, MapPin, Star, ChevronRight, Camera } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Animatable from 'react-native-animatable';
 
@@ -169,13 +169,13 @@ export default function Perfil() {
         <Animatable.View animation="fadeInUp" duration={400} delay={200} style={styles.menuSection}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>GERAL</Text>
           <View style={[styles.menuGroup, { backgroundColor: theme.colors.card }]}>
-            <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Settings')} activeOpacity={0.7}>
+            <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('NotificationPreferences')} activeOpacity={0.7}>
               <View style={[styles.menuIcon, { backgroundColor: '#f0f9ff' }]}>
-                <Settings size={20} color="#0ea5e9" />
+                <Bell size={20} color="#0ea5e9" />
               </View>
               <View style={styles.menuContent}>
                 <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Preferências</Text>
-                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Configurações do app</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Configurações do aplicativo</Text>
               </View>
               <View style={styles.chevronContainer}>
                 <ChevronRight size={18} color={theme.colors.textSecondary} />

@@ -5,7 +5,7 @@ export const ROUTES = {
   PACKAGES: 'PackagesTab',
   PERFIL: 'PerfilTab',
   PROFILE_MAIN: 'ProfileMain',
-  SETTINGS: 'Settings',
+  NOTIFICATION_PREFERENCES: 'NotificationPreferences',
   MAINTABS: 'MainTabs',
   VISITANTES: 'Visitantes',
   LOGIN: 'Login',

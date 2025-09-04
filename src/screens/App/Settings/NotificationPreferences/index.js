@@ -25,6 +25,8 @@ import {
   Clock,
   Settings,
   CheckCircle,
+  Moon,
+  Sun,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../../contexts/ThemeProvider';
@@ -34,7 +36,7 @@ import Toast from 'react-native-toast-message';
 
 const NotificationPreferences = () => {
   const navigation = useNavigation();
-  const { theme } = useTheme();
+  const { theme, themeMode, setThemeMode } = useTheme();
   const { showNotification } = useNotifications();
 
   // Estados das preferências de notificação
@@ -66,8 +68,16 @@ const NotificationPreferences = () => {
     weekendMode: false,
   });
 
-  // Auto-save quando preferências mudam
+  // Estado para controlar se é a primeira renderização
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Auto-save quando preferências mudam (mas não na primeira renderização)
   useEffect(() => {
+    if (isInitialLoad) {
+      setIsInitialLoad(false);
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       handleSavePreferences();
     }, 1000);
@@ -158,6 +168,61 @@ const NotificationPreferences = () => {
           }
         },
       ]
+    );
+  };
+
+  const handleThemeChange = (mode) => {
+    setThemeMode(mode);
+    Toast.show({
+      type: 'success',
+      text1: 'Tema alterado',
+      text2: `Tema ${mode === 'light' ? 'claro' : mode === 'dark' ? 'escuro' : 'automático'} aplicado.`,
+      position: 'bottom',
+    });
+  };
+
+  const getThemeIcon = (mode) => {
+    switch (mode) {
+      case 'light': return Sun;
+      case 'dark': return Moon;
+      case 'auto': return Smartphone;
+      default: return Sun;
+    }
+  };
+
+  const renderThemeOption = (mode, label) => {
+    const Icon = getThemeIcon(mode);
+    const isSelected = themeMode === mode;
+
+    return (
+      <TouchableOpacity
+        key={mode}
+        onPress={() => handleThemeChange(mode)}
+        style={[
+          styles.themeOption,
+          { 
+            backgroundColor: isSelected ? theme.colors.primary + '15' : theme.colors.card,
+            borderColor: isSelected ? theme.colors.primary : theme.colors.border 
+          }
+        ]}
+      >
+        <Icon 
+          color={isSelected ? theme.colors.primary : theme.colors.textSecondary} 
+          size={24} 
+        />
+        <Text style={[
+          styles.themeOptionText,
+          { 
+            color: isSelected ? theme.colors.primary : theme.colors.text,
+            fontWeight: isSelected ? '600' : '500'
+          }
+        ]}>
+          {label}
+        </Text>
+        {isSelected && (
+          <View style={[styles.selectedIndicator, { backgroundColor: theme.colors.primary }]} />
+        )}
+      </TouchableOpacity>
     );
   };
 
@@ -275,6 +340,44 @@ const NotificationPreferences = () => {
       fontFamily: 'Poppins-SemiBold',
       marginLeft: 8,
     },
+    sectionDescription: {
+      fontSize: 14,
+      color: theme.colors.textSecondary,
+      marginBottom: 16,
+      marginLeft: 28,
+      lineHeight: 20,
+    },
+    themeContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginTop: 8,
+    },
+    themeOption: {
+      flex: 1,
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 2,
+      position: 'relative',
+      minHeight: 80,
+      justifyContent: 'center',
+    },
+    themeOptionText: {
+      fontSize: 14,
+      marginTop: 8,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
+    selectedIndicator: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
     preferenceItem: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -351,12 +454,12 @@ const NotificationPreferences = () => {
       <Animatable.View animation="fadeInDown" duration={500} style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('ProfileMain')}
         >
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         
-        <Text style={styles.headerTitle}>Notificações</Text>
+        <Text style={styles.headerTitle}>Preferências</Text>
         
         <TouchableOpacity 
           style={styles.testButton}
@@ -367,6 +470,29 @@ const NotificationPreferences = () => {
       </Animatable.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Seção de Tema */}
+        <Animatable.View 
+          animation="fadeInUp" 
+          duration={500}
+          style={[styles.section, { backgroundColor: theme.colors.card }]}
+        >
+          <View style={styles.sectionHeader}>
+            <Settings size={20} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Aparência
+            </Text>
+          </View>
+          <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
+            Escolha como o aplicativo deve aparecer
+          </Text>
+          
+          <View style={styles.themeContainer}>
+            {renderThemeOption('light', 'Claro')}
+            {renderThemeOption('dark', 'Escuro')}
+            {renderThemeOption('auto', 'Automático')}
+          </View>
+        </Animatable.View>
+
         {/* Seção Geral */}
         <PreferenceSection title="Geral" icon={Settings}>
           <PreferenceItem

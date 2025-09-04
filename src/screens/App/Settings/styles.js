@@ -20,6 +20,14 @@ export const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#64748b',
   },
   sectionTitle: {
     fontSize: 16,

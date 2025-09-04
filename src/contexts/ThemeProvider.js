@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme, StatusBar } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ThemeContext = createContext();
 
@@ -73,30 +74,67 @@ const darkTheme = {
 
 export const ThemeProvider = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [isDarkMode, setIsDarkMode] = useState(systemColorScheme === 'dark');
+  const [themeMode, setThemeModeState] = useState('auto'); // 'light', 'dark', 'auto'
+  const [currentTheme, setCurrentTheme] = useState(lightTheme);
 
+  // Função para determinar o tema baseado no modo
+  const getThemeFromMode = (mode) => {
+    if (mode === 'auto') {
+      return systemColorScheme === 'dark' ? darkTheme : lightTheme;
+    }
+    return mode === 'dark' ? darkTheme : lightTheme;
+  };
+
+  // Atualiza o tema quando o modo ou esquema do sistema mudam
   useEffect(() => {
-    // Sincronizar com o sistema quando mudar
-    setIsDarkMode(systemColorScheme === 'dark');
-  }, [systemColorScheme]);
+    const newTheme = getThemeFromMode(themeMode);
+    setCurrentTheme(newTheme);
+  }, [themeMode, systemColorScheme]);
 
-  const theme = isDarkMode ? darkTheme : lightTheme;
+  // Carrega as preferências salvas na inicialização
+  useEffect(() => {
+    loadThemePreference();
+  }, []);
 
+  const loadThemePreference = async () => {
+    try {
+      const savedMode = await AsyncStorage.getItem('themeMode');
+      if (savedMode && ['light', 'dark', 'auto'].includes(savedMode)) {
+        setThemeModeState(savedMode);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar preferência de tema:', error);
+    }
+  };
+
+  const setThemeMode = async (mode) => {
+    try {
+      setThemeModeState(mode);
+      await AsyncStorage.setItem('themeMode', mode);
+    } catch (error) {
+      console.error('Erro ao salvar preferência de tema:', error);
+    }
+  };
+
+  // Função legacy para compatibilidade (apenas alterna entre light/dark)
   const toggleTheme = () => {
-    setIsDarkMode(prev => !prev);
+    const newMode = currentTheme.isDark ? 'light' : 'dark';
+    setThemeMode(newMode);
   };
 
   const value = {
-    theme,
-    isDark: isDarkMode,
-    toggleTheme,
+    theme: currentTheme,
+    themeMode,
+    setThemeMode,
+    toggleTheme, // Mantém para compatibilidade
+    isDark: currentTheme.isDark,
   };
 
   return (
     <ThemeContext.Provider value={value}>
       <StatusBar 
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={theme.colors.background}
+        barStyle={currentTheme.isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={currentTheme.colors.background}
       />
       {children}
     </ThemeContext.Provider>
