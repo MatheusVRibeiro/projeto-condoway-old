@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
   // --- Containers ---
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f8fafc', // overridden dinamicamente
   },
   content: {
     padding: 16,
@@ -13,6 +13,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'center'
   },
   headerTitle: {
     fontSize: 24,
@@ -31,7 +33,7 @@ export const styles = StyleSheet.create({
   // --- Abas (Tabs) ---
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#e2e8f0', // overridden
     borderRadius: 8,
     padding: 4,
   },
@@ -41,7 +43,7 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
   },
   tabButtonActive: {
-    backgroundColor: 'white',
+    backgroundColor: 'white', // overridden
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -51,10 +53,10 @@ export const styles = StyleSheet.create({
   tabText: {
     textAlign: 'center',
     fontWeight: '600',
-    color: '#475569',
+    color: '#475569', // overridden
   },
   tabTextActive: {
-    color: '#2563eb',
+    color: '#2563eb', // overridden
   },
   tabContent: {
     marginTop: 24,
@@ -68,7 +70,7 @@ export const styles = StyleSheet.create({
   },
   categoryCard: {
     width: '48%',
-    backgroundColor: 'white',
+    backgroundColor: 'white', // overridden
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -76,11 +78,11 @@ export const styles = StyleSheet.create({
     minHeight: 110,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e2e8f0', // overridden
   },
   categoryTitle: {
     fontWeight: '600',
-    color: '#334155',
+    color: '#334155', // overridden
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
@@ -95,7 +97,7 @@ export const styles = StyleSheet.create({
   formTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#1e293b', // overridden
   },
   inputGroup: {
     marginBottom: 20,
@@ -103,13 +105,13 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#475569',
+    color: '#475569', // overridden
     marginBottom: 8,
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: 'white', // overridden
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#cbd5e1', // overridden
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -133,7 +135,7 @@ export const styles = StyleSheet.create({
     width: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#2563eb',
+    borderColor: '#2563eb', // overridden
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
@@ -142,13 +144,13 @@ export const styles = StyleSheet.create({
     height: 10,
     width: 10,
     borderRadius: 5,
-    backgroundColor: '#2563eb',
+    backgroundColor: '#2563eb', // overridden
   },
   radioLabel: {
     fontSize: 16,
   },
   submitButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#2563eb', // overridden
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -173,17 +175,17 @@ export const styles = StyleSheet.create({
   },
   confirmationText: {
     fontSize: 16,
-    color: '#64748b',
+    color: '#64748b', // overridden
     textAlign: 'center',
     marginVertical: 8,
   },
 
   // --- Lista de Ocorrências ---
   accordionItem: {
-    backgroundColor: 'white',
+    backgroundColor: 'white', // overridden
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e2e8f0', // overridden
     marginBottom: 12,
     overflow: 'hidden',
   },
@@ -199,11 +201,11 @@ export const styles = StyleSheet.create({
   accordionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#1e293b', // overridden
   },
   accordionSubtitle: {
     fontSize: 12,
-    color: '#64748b',
+    color: '#64748b', // overridden
     marginTop: 4,
   },
   statusBadge: {
@@ -219,7 +221,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#f1f5f9', // overridden
   },
   commentBubble: {
     maxWidth: '85%',
@@ -236,17 +238,17 @@ export const styles = StyleSheet.create({
     textAlign: 'right',
   },
   moradorBubble: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#2563eb', // overridden
     alignSelf: 'flex-end',
   },
   sindicoBubble: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f1f5f9', // overridden
     alignSelf: 'flex-start',
   },
   moradorText: {
     color: 'white',
   },
   sindicoText: {
-    color: '#1e293b',
+    color: '#1e293b', // overridden
   },
 });

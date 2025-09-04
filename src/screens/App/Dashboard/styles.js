@@ -46,6 +46,12 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  themeToggle: {
+    marginRight: 16,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
   notificationButton: {
     position: 'relative',
     marginRight: 16,
@@ -74,9 +80,9 @@ export const styles = StyleSheet.create({
     borderRadius: 22,
   },
 
-  // --- ATUALIZAÇÃO: Estilos do Carrossel de Avisos ---
+  // --- Avisos Carrossel ---
   avisoCardWrapper: {
-    width: cardWidth, // Garante que cada card ocupe a largura da área de conteúdo
+    width: cardWidth,
   },
   avisoCard: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -86,129 +92,31 @@ export const styles = StyleSheet.create({
     borderLeftColor: '#ef4444',
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginRight: 16, // Espaçamento entre os cards (opcional)
+    marginRight: 16,
   },
-  avisoIcon: {
-    marginRight: 12,
-    marginTop: 2,
-  },
-  avisoTextContainer: {
-    flex: 1,
-  },
-  avisoTitle: {
-    fontWeight: 'bold',
-    color: '#991b1b',
-  },
-  avisoText: {
-    fontSize: 14,
-    color: '#991b1b',
-    marginTop: 4,
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#D1D5DB', // Cor do ponto inativo
-    marginHorizontal: 4,
-  },
-  paginationDotActive: {
-    backgroundColor: '#2563eb', // Cor do ponto ativo
-  },
-  // --- Fim dos Estilos do Carrossel ---
+  avisoIcon: { marginRight: 12, marginTop: 2 },
+  avisoTextContainer: { flex: 1 },
+  avisoTitle: { fontWeight: 'bold', color: '#991b1b' },
+  avisoText: { fontSize: 14, color: '#991b1b', marginTop: 4 },
+  paginationContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 12 },
+  paginationDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#D1D5DB', marginHorizontal: 4 },
+  paginationDotActive: { backgroundColor: '#2563eb' },
 
-  // --- Ações Rápidas Grid ---
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  actionCard: {
-    width: '48%',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 110,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionCardIcon: {
-    marginBottom: 8,
-  },
-  actionCardTitle: {
-    fontWeight: '600',
-    color: '#444',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  actionBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionBadgeText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
+  // --- Ações Rápidas ---
+  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  actionCard: { width: '48%', backgroundColor: 'white', borderRadius: 12, padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: 110, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  actionCardIcon: { marginBottom: 8 },
+  actionCardTitle: { fontWeight: '600', color: '#444', fontSize: 14, textAlign: 'center' },
+  actionBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: '#ef4444', borderRadius: 10, width: 20, height: 20, justifyContent: 'center', alignItems: 'center' },
+  actionBadgeText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
 
   // --- Últimas Atualizações ---
-  updatesCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  updateGroup: {
-    marginBottom: 12,
-  },
-  updateDate: {
-    textTransform: 'uppercase',
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#9ca3af',
-    paddingBottom: 8,
-  },
-  updateItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  updateIconContainer: {
-    backgroundColor: '#f3f4f6',
-    padding: 8,
-    borderRadius: 999,
-    marginRight: 12,
-  },
-  updateTextContainer: {
-    flex: 1,
-  },
-  updateText: {
-    fontSize: 14,
-    color: '#374151',
-  },
-  updateTime: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
+  updatesCard: { backgroundColor: 'white', borderRadius: 12, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  updateGroup: { marginBottom: 12 },
+  updateDate: { textTransform: 'uppercase', fontSize: 12, fontWeight: 'bold', color: '#9ca3af', paddingBottom: 8 },
+  updateItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
+  updateIconContainer: { backgroundColor: '#f3f4f6', padding: 8, borderRadius: 999, marginRight: 12 },
+  updateTextContainer: { flex: 1 },
+  updateText: { fontSize: 14, color: '#374151' },
+  updateTime: { fontSize: 12, color: '#9ca3af' },
 });

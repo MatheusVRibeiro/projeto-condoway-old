@@ -5,9 +5,11 @@ import { ArrowLeft, Home, MapPin, Calendar, Users, Car, Wifi, Zap, Droplets, Edi
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { userProfile } from '../mock';
+import { useTheme } from '../../../../contexts/ThemeProvider';
 
 export default function UnitDetails() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const [unitData] = useState({
     ...userProfile,
     area: '85m²',
@@ -40,31 +42,31 @@ export default function UnitDetails() {
   const InfoCard = ({ icon: Icon, title, value, subtitle, onEdit }) => (
     <View style={styles.infoCard}>
       <View style={styles.infoHeader}>
-        <View style={styles.infoIconContainer}>
-          <Icon size={20} color="#2563eb" />
+        <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primary + '22' }]}>
+          <Icon size={20} color={theme.colors.primary} />
         </View>
         <View style={styles.infoTitleContainer}>
-          <Text style={styles.infoTitle}>{title}</Text>
-          {subtitle && <Text style={styles.infoSubtitle}>{subtitle}</Text>}
+          <Text style={[styles.infoTitle, { color: theme.colors.textSecondary }]}>{title}</Text>
+          {subtitle && <Text style={[styles.infoSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>}
         </View>
         {onEdit && (
           <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-            <Edit3 size={16} color="#64748b" />
+            <Edit3 size={16} color={theme.colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={[styles.infoValue, { color: theme.colors.text }]}>{value}</Text>
     </View>
   );
 
   const UtilityStatus = ({ icon: Icon, name, status }) => (
-    <View style={styles.utilityItem}>
-      <View style={styles.utilityIcon}>
-        <Icon size={18} color={status === 'Ativo' ? '#10b981' : '#ef4444'} />
+    <View style={[styles.utilityItem, { borderBottomColor: theme.colors.border }]}>
+      <View style={[styles.utilityIcon, { backgroundColor: theme.colors.background }]}>
+        <Icon size={18} color={status === 'Ativo' ? theme.colors.success : theme.colors.error} />
       </View>
-      <Text style={styles.utilityName}>{name}</Text>
-      <View style={[styles.utilityStatus, { backgroundColor: status === 'Ativo' ? '#dcfce7' : '#fee2e2' }]}>
-        <Text style={[styles.utilityStatusText, { color: status === 'Ativo' ? '#166534' : '#dc2626' }]}>
+      <Text style={[styles.utilityName, { color: theme.colors.text }]}>{name}</Text>
+      <View style={[styles.utilityStatus, { backgroundColor: (status === 'Ativo' ? theme.colors.success : theme.colors.error) + '22' }]}>
+        <Text style={[styles.utilityStatusText, { color: status === 'Ativo' ? theme.colors.success : theme.colors.error }]}>
           {status}
         </Text>
       </View>
@@ -73,94 +75,74 @@ export default function UnitDetails() {
 
   const AmenityItem = ({ name }) => (
     <View style={styles.amenityItem}>
-      <View style={styles.amenityDot} />
-      <Text style={styles.amenityText}>{name}</Text>
+      <View style={[styles.amenityDot, { backgroundColor: theme.colors.primary }]} />
+      <Text style={[styles.amenityText, { color: theme.colors.text }]}>{name}</Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <Animatable.View animation="fadeInDown" duration={400} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#1e293b" />
+      <Animatable.View animation="fadeInDown" duration={400} style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border, shadowColor: theme.colors.shadow }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: theme.colors.background }]}>
+          <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Minha Unidade</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Minha Unidade</Text>
         <View style={styles.placeholder} />
       </Animatable.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Unit Overview */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.overviewCard}>
+        <Animatable.View animation="fadeInUp" duration={600} delay={200} style={[styles.overviewCard, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
           <View style={styles.overviewHeader}>
-            <View style={styles.overviewIcon}>
-              <Home size={32} color="#2563eb" />
+            <View style={[styles.overviewIcon, { backgroundColor: theme.colors.primary + '22' }]}>
+              <Home size={32} color={theme.colors.primary} />
             </View>
             <View style={styles.overviewInfo}>
-              <Text style={styles.overviewTitle}>{unitData.apartment}</Text>
-              <Text style={styles.overviewSubtitle}>{unitData.block} • {unitData.condominium}</Text>
-              <Text style={styles.overviewDetail}>{unitData.area} • {unitData.bedrooms} quartos • {unitData.bathrooms} banheiros</Text>
+              <Text style={[styles.overviewTitle, { color: theme.colors.text }]}>{unitData.apartment}</Text>
+              <Text style={[styles.overviewSubtitle, { color: theme.colors.primary }]}>{unitData.block} • {unitData.condominium}</Text>
+              <Text style={[styles.overviewDetail, { color: theme.colors.textSecondary }]}>{unitData.area} • {unitData.bedrooms} quartos • {unitData.bathrooms} banheiros</Text>
             </View>
           </View>
         </Animatable.View>
 
         {/* Basic Information */}
         <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
-          <Text style={styles.sectionTitle}>INFORMAÇÕES BÁSICAS</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>INFORMAÇÕES BÁSICAS</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             <View style={styles.infoGrid}>
-              <InfoCard
-                icon={MapPin}
-                title="Localização"
-                value={`${unitData.apartment}, ${unitData.block}`}
-                subtitle="Endereço da unidade"
-              />
-              <InfoCard
-                icon={Calendar}
-                title="Desde"
-                value={unitData.registrationDate}
-                subtitle="Data de cadastro"
-              />
-              <InfoCard
-                icon={Users}
-                title="Tipo"
-                value={unitData.userType === 'morador' ? 'Morador' : 'Proprietário'}
-                subtitle="Relação com o imóvel"
-              />
-              <InfoCard
-                icon={Car}
-                title="Vagas"
-                value={`${unitData.parkingSpots} vaga`}
-                subtitle="Estacionamento"
-              />
+              <InfoCard icon={MapPin} title="Localização" value={`${unitData.apartment}, ${unitData.block}`} subtitle="Endereço da unidade" />
+              <InfoCard icon={Calendar} title="Desde" value={unitData.registrationDate} subtitle="Data de cadastro" />
+              <InfoCard icon={Users} title="Tipo" value={unitData.userType === 'morador' ? 'Morador' : 'Proprietário'} subtitle="Relação com o imóvel" />
+              <InfoCard icon={Car} title="Vagas" value={`${unitData.parkingSpots} vaga`} subtitle="Estacionamento" />
             </View>
           </View>
         </Animatable.View>
 
         {/* Financial Information */}
         <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.section}>
-          <Text style={styles.sectionTitle}>INFORMAÇÕES FINANCEIRAS</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>INFORMAÇÕES FINANCEIRAS</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             <View style={styles.financialCard}>
-              <Text style={styles.financialLabel}>Taxa Condominial Mensal</Text>
-              <Text style={styles.financialValue}>{unitData.monthlyFee}</Text>
-              <Text style={styles.financialNote}>Valor baseado na última assembleia</Text>
+              <Text style={[styles.financialLabel, { color: theme.colors.textSecondary }]}>Taxa Condominial Mensal</Text>
+              <Text style={[styles.financialValue, { color: theme.colors.primary }]}>{unitData.monthlyFee}</Text>
+              <Text style={[styles.financialNote, { color: theme.colors.textSecondary }]}>Valor baseado na última assembleia</Text>
             </View>
           </View>
         </Animatable.View>
 
         {/* Emergency Contact */}
         <Animatable.View animation="fadeInUp" duration={600} delay={500} style={styles.section}>
-          <Text style={styles.sectionTitle}>CONTATO DE EMERGÊNCIA</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>CONTATO DE EMERGÊNCIA</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             <View style={styles.contactCard}>
               <View style={styles.contactHeader}>
-                <Text style={styles.contactName}>{unitData.emergencyContact.name}</Text>
-                <Text style={styles.contactRelation}>{unitData.emergencyContact.relationship}</Text>
+                <Text style={[styles.contactName, { color: theme.colors.text }]}>{unitData.emergencyContact.name}</Text>
+                <Text style={[styles.contactRelation, { color: theme.colors.textSecondary }]}>{unitData.emergencyContact.relationship}</Text>
               </View>
               <TouchableOpacity style={styles.contactItem}>
-                <Phone size={18} color="#2563eb" />
-                <Text style={styles.contactText}>{unitData.emergencyContact.phone}</Text>
+                <Phone size={18} color={theme.colors.primary} />
+                <Text style={[styles.contactText, { color: theme.colors.text }]}>{unitData.emergencyContact.phone}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -168,8 +150,8 @@ export default function UnitDetails() {
 
         {/* Utilities Status */}
         <Animatable.View animation="fadeInUp" duration={600} delay={600} style={styles.section}>
-          <Text style={styles.sectionTitle}>STATUS DOS SERVIÇOS</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>STATUS DOS SERVIÇOS</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             <UtilityStatus icon={Droplets} name="Água" status={unitData.utilities.water} />
             <UtilityStatus icon={Zap} name="Energia" status={unitData.utilities.electricity} />
             <UtilityStatus icon={Wifi} name="Internet" status={unitData.utilities.internet} />
@@ -178,8 +160,8 @@ export default function UnitDetails() {
 
         {/* Amenities */}
         <Animatable.View animation="fadeInUp" duration={600} delay={700} style={styles.section}>
-          <Text style={styles.sectionTitle}>ÁREAS COMUNS DISPONÍVEIS</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ÁREAS COMUNS DISPONÍVEIS</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             <View style={styles.amenitiesGrid}>
               {unitData.amenities.map((amenity, index) => (
                 <AmenityItem key={index} name={amenity} />

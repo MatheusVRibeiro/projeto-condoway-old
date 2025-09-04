@@ -4,9 +4,11 @@ import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Lock, Eye, EyeOff, Shield, Smartphone, Key, AlertTriangle } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
+import { useTheme } from '../../../../contexts/ThemeProvider';
 
 export default function Security() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,90 +39,69 @@ export default function Security() {
 
   const SecurityOption = ({ icon: Icon, title, subtitle, onPress, hasSwitch = false, switchValue, onSwitchChange, variant = 'default' }) => (
     <TouchableOpacity 
-      style={[styles.optionItem, variant === 'danger' && styles.optionItemDanger]} 
+      style={[styles.optionItem, { borderBottomColor: theme.colors.border }, variant === 'danger' && { borderBottomColor: theme.colors.error + '44' }]} 
       onPress={onPress}
       activeOpacity={hasSwitch ? 1 : 0.7}
     >
-      <View style={[styles.optionIcon, variant === 'danger' && styles.optionIconDanger]}>
-        <Icon size={20} color={variant === 'danger' ? '#dc2626' : '#2563eb'} />
+      <View style={[styles.optionIcon, { backgroundColor: theme.colors.primary + '22' }, variant === 'danger' && { backgroundColor: theme.colors.error + '22' }]}>
+        <Icon size={20} color={variant === 'danger' ? theme.colors.error : theme.colors.primary} />
       </View>
       <View style={styles.optionContent}>
-        <Text style={[styles.optionTitle, variant === 'danger' && styles.optionTitleDanger]}>{title}</Text>
-        <Text style={styles.optionSubtitle}>{subtitle}</Text>
+        <Text style={[styles.optionTitle, { color: variant === 'danger' ? theme.colors.error : theme.colors.text }]}>{title}</Text>
+        <Text style={[styles.optionSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>
       </View>
       {hasSwitch ? (
         <Switch
           value={switchValue}
           onValueChange={onSwitchChange}
-          trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
-          thumbColor={switchValue ? '#ffffff' : '#94a3b8'}
+          trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+          thumbColor={switchValue ? '#ffffff' : theme.colors.textSecondary}
         />
       ) : (
-        <ArrowLeft size={18} color="#94a3b8" style={{ transform: [{ rotate: '180deg' }] }} />
+        <ArrowLeft size={18} color={theme.colors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
       )}
     </TouchableOpacity>
   );
 
   const PasswordInput = ({ label, value, onChangeText, placeholder, showPassword, onToggleShow }) => (
     <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.passwordInputContainer}>
+      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{label}</Text>
+      <View style={[styles.passwordInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
         <TextInput
-          style={styles.passwordInput}
+          style={[styles.passwordInput, { color: theme.colors.text }]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={theme.colors.textSecondary}
           secureTextEntry={!showPassword}
         />
         <TouchableOpacity onPress={onToggleShow} style={styles.eyeButton}>
-          {showPassword ? <EyeOff size={20} color="#64748b" /> : <Eye size={20} color="#64748b" />}
+          {showPassword ? <EyeOff size={20} color={theme.colors.textSecondary} /> : <Eye size={20} color={theme.colors.textSecondary} />}
         </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <Animatable.View animation="fadeInDown" duration={400} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#1e293b" />
+      <Animatable.View animation="fadeInDown" duration={400} style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border, shadowColor: theme.colors.shadow }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: theme.colors.background }]}>
+          <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Segurança</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Segurança</Text>
         <View style={styles.placeholder} />
       </Animatable.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Change Password Section */}
         <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.section}>
-          <Text style={styles.sectionTitle}>ALTERAR SENHA</Text>
-          <View style={styles.sectionContent}>
-            <PasswordInput
-              label="Senha Atual"
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholder="Digite sua senha atual"
-              showPassword={showCurrentPassword}
-              onToggleShow={() => setShowCurrentPassword(!showCurrentPassword)}
-            />
-            <PasswordInput
-              label="Nova Senha"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="Digite a nova senha"
-              showPassword={showNewPassword}
-              onToggleShow={() => setShowNewPassword(!showNewPassword)}
-            />
-            <PasswordInput
-              label="Confirmar Nova Senha"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirme a nova senha"
-              showPassword={showConfirmPassword}
-              onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
-            />
-            <TouchableOpacity style={styles.changePasswordButton} onPress={handleChangePassword}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ALTERAR SENHA</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            <PasswordInput label="Senha Atual" value={currentPassword} onChangeText={setCurrentPassword} placeholder="Digite sua senha atual" showPassword={showCurrentPassword} onToggleShow={() => setShowCurrentPassword(!showCurrentPassword)} />
+            <PasswordInput label="Nova Senha" value={newPassword} onChangeText={setNewPassword} placeholder="Digite a nova senha" showPassword={showNewPassword} onToggleShow={() => setShowNewPassword(!showNewPassword)} />
+            <PasswordInput label="Confirmar Nova Senha" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Confirme a nova senha" showPassword={showConfirmPassword} onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)} />
+            <TouchableOpacity style={[styles.changePasswordButton, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} onPress={handleChangePassword}>
               <Lock size={20} color="white" />
               <Text style={styles.changePasswordText}>Alterar Senha</Text>
             </TouchableOpacity>
@@ -129,54 +110,30 @@ export default function Security() {
 
         {/* Security Settings */}
         <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
-          <Text style={styles.sectionTitle}>CONFIGURAÇÕES DE SEGURANÇA</Text>
-          <View style={styles.sectionContent}>
-            <SecurityOption
-              icon={Smartphone}
-              title="Autenticação de Dois Fatores"
-              subtitle="Adicione uma camada extra de segurança"
-              hasSwitch={true}
-              switchValue={twoFactorEnabled}
-              onSwitchChange={setTwoFactorEnabled}
-            />
-            <SecurityOption
-              icon={Shield}
-              title="Notificações de Segurança"
-              subtitle="Receba alertas sobre atividades suspeitas"
-              hasSwitch={true}
-              switchValue={notificationsEnabled}
-              onSwitchChange={setNotificationsEnabled}
-            />
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>CONFIGURAÇÕES DE SEGURANÇA</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            <SecurityOption icon={Smartphone} title="Autenticação de Dois Fatores" subtitle="Adicione uma camada extra de segurança" hasSwitch={true} switchValue={twoFactorEnabled} onSwitchChange={setTwoFactorEnabled} />
+            <SecurityOption icon={Shield} title="Notificações de Segurança" subtitle="Receba alertas sobre atividades suspeitas" hasSwitch={true} switchValue={notificationsEnabled} onSwitchChange={setNotificationsEnabled} />
           </View>
         </Animatable.View>
 
         {/* Account Security */}
         <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.section}>
-          <Text style={styles.sectionTitle}>SEGURANÇA DA CONTA</Text>
-          <View style={styles.sectionContent}>
-            <SecurityOption
-              icon={Key}
-              title="Sessões Ativas"
-              subtitle="Gerencie dispositivos conectados"
-              onPress={() => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento')}
-            />
-            <SecurityOption
-              icon={AlertTriangle}
-              title="Atividade Recente"
-              subtitle="Visualize ações realizadas na conta"
-              onPress={() => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento')}
-            />
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>SEGURANÇA DA CONTA</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            <SecurityOption icon={Key} title="Sessões Ativas" subtitle="Gerencie dispositivos conectados" onPress={() => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento')} />
+            <SecurityOption icon={AlertTriangle} title="Atividade Recente" subtitle="Visualize ações realizadas na conta" onPress={() => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento')} variant="danger" />
           </View>
         </Animatable.View>
 
         {/* Password Requirements */}
         <Animatable.View animation="fadeInUp" duration={600} delay={500} style={styles.infoSection}>
-          <Text style={styles.infoTitle}>Requisitos de Senha</Text>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoText}>• Mínimo de 6 caracteres</Text>
-            <Text style={styles.infoText}>• Recomendado: letras, números e símbolos</Text>
-            <Text style={styles.infoText}>• Evite informações pessoais</Text>
-            <Text style={styles.infoText}>• Use uma senha única</Text>
+          <Text style={[styles.infoTitle, { color: theme.colors.text }]}>Requisitos de Senha</Text>
+          <View style={[styles.infoContent, { backgroundColor: theme.colors.info + '22', borderLeftColor: theme.colors.info }]}>
+            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Mínimo de 6 caracteres</Text>
+            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Recomendado: letras, números e símbolos</Text>
+            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Evite informações pessoais</Text>
+            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Use uma senha única</Text>
           </View>
         </Animatable.View>
 

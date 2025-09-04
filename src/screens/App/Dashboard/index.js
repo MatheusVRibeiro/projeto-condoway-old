@@ -1,32 +1,48 @@
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning } from 'lucide-react-native';
+import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning, Moon, Sun } from 'lucide-react-native';
 import BackButton from '../../../components/BackButton';
 import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
 import { styles } from './styles';
+import { useTheme } from '../../../contexts/ThemeProvider';
 
 // --- Componentes Internos da Tela ---
 
-const AcaoCard = React.memo(({ icon: Icon, title, badgeCount, onPress }) => {
+const AcaoCard = React.memo(({ icon: Icon, title, badgeCount, onPress, theme }) => {
   const handlePress = React.useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
   }, [onPress]);
 
+  const dynamicStyles = {
+    actionCard: {
+      ...styles.actionCard,
+      backgroundColor: theme.colors.card,
+      shadowColor: theme.colors.shadow,
+    },
+    actionCardTitle: {
+      ...styles.actionCardTitle,
+      color: theme.colors.text,
+    },
+    actionBadgeText: {
+      ...styles.actionBadgeText,
+      color: '#ffffff',
+    }
+  };
+
   return (
-    <TouchableOpacity onPress={handlePress} style={styles.actionCard}>
+    <TouchableOpacity onPress={handlePress} style={dynamicStyles.actionCard}>
       {badgeCount > 0 && (
-        <View style={styles.actionBadge}>
-          <Text style={styles.actionBadgeText}>{badgeCount}</Text>
+        <View style={[styles.actionBadge, { backgroundColor: theme.colors.error }]}>
+          <Text style={dynamicStyles.actionBadgeText}>{badgeCount}</Text>
         </View>
       )}
-      <Icon color="#2563eb" size={32} style={styles.actionCardIcon} />
-      <Text style={styles.actionCardTitle}>{title}</Text>
+      <Icon color={theme.colors.primary} size={32} style={styles.actionCardIcon} />
+      <Text style={dynamicStyles.actionCardTitle}>{title}</Text>
     </TouchableOpacity>
   );
 });
@@ -61,6 +77,7 @@ const DashboardSkeleton = () => {
 // --- Componente Principal da Tela ---
 
 export default function Dashboard() {
+  const { theme, toggleTheme } = useTheme();
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
@@ -96,22 +113,33 @@ export default function Dashboard() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView>
         <View style={styles.content}>
           {/* <BackButton style={{ alignSelf: 'flex-start' }} /> */}
           {/* === HEADER === */}
           <Animatable.View animation="fadeInDown" duration={500} style={[styles.header, styles.section]}>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.title}>Boa noite, {morador.nome}!  44b</Text>
-              <Text style={styles.subtitle}>{morador.condominio}</Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>{`Boa noite, ${morador.nome}!`}</Text>
+              <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>{morador.condominio}</Text>
             </View>
             <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={[styles.themeToggle, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.border + '55' }]} 
+                onPress={toggleTheme}
+              >
+                {theme.isDark ? (
+                  <Sun color={theme.colors.text} size={24} />
+                ) : (
+                  <Moon color={theme.colors.text} size={24} />
+                )}
+              </TouchableOpacity>
+              
               <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate('Notifications')}>
-                <Bell color="#4b5563" size={28} />
+                <Bell color={theme.colors.text} size={28} />
                 {morador.notificacoesNaoLidas > 0 && (
-                  <View style={styles.notificationBadge}>
-                    <Text style={styles.notificationBadgeText}>{morador.notificacoesNaoLidas}</Text>
+                  <View style={[styles.notificationBadge, { backgroundColor: theme.colors.error, borderColor: theme.colors.background }]}>
+                    <Text style={[styles.notificationBadgeText, { color: '#ffffff' }]}>{morador.notificacoesNaoLidas}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -130,11 +158,11 @@ export default function Dashboard() {
             >
               {avisosImportantes.map((aviso) => (
                 <View key={aviso.id} style={styles.avisoCardWrapper}>
-                  <View style={styles.avisoCard}>
-                      <AlertTriangle size={20} color="#b91c1c" style={styles.avisoIcon} />
+                  <View style={[styles.avisoCard, { backgroundColor: theme.colors.error + '15', borderLeftColor: theme.colors.error }]}>
+                      <AlertTriangle size={20} color={theme.colors.error} style={styles.avisoIcon} />
                       <View style={styles.avisoTextContainer}>
-                          <Text style={styles.avisoTitle}>{aviso.titulo}</Text>
-                          <Text style={styles.avisoText}>{aviso.texto}</Text>
+                          <Text style={[styles.avisoTitle, { color: theme.colors.error }]}>{aviso.titulo}</Text>
+                          <Text style={[styles.avisoText, { color: theme.colors.error }]}>{aviso.texto}</Text>
                       </View>
                   </View>
                 </View>
@@ -142,41 +170,45 @@ export default function Dashboard() {
             </ScrollView>
             <View style={styles.paginationContainer}>
               {avisosImportantes.map((_, index) => (
-                <View key={index} style={[styles.paginationDot, activeSlide === index && styles.paginationDotActive]} />
+                <View key={index} style={[
+                  styles.paginationDot, 
+                  { backgroundColor: theme.colors.border },
+                  activeSlide === index && { backgroundColor: theme.colors.primary }
+                ]} />
               ))}
             </View>
           </Animatable.View>
 
           {/* === AÇÕES RÁPIDAS === */}
           <Animatable.View animation="fadeInUp" duration={500} delay={200} style={styles.section}>
-            <Text style={styles.sectionTitle}>Ações Rápidas</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ações Rápidas</Text>
             <View style={styles.actionsGrid}>
-                <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={handleReservarEspaco} />
-                <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={handleMinhasEncomendas} />
-                <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={handleLiberarVisitante} />
-                <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={handleAbrirOcorrencia} />
+                <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={handleReservarEspaco} theme={theme} />
+                <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={handleMinhasEncomendas} theme={theme} />
+                <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={handleLiberarVisitante} theme={theme} />
+                <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={handleAbrirOcorrencia} theme={theme} />
             </View>
           </Animatable.View>
 
           {/* === ÚLTIMAS ATUALIZAÇÕES === */}
           <Animatable.View animation="fadeInUp" duration={500} delay={300} style={styles.section}>
-            <Text style={styles.sectionTitle}>Últimas Atualizações</Text>
-            <View style={styles.updatesCard}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Últimas Atualizações</Text>
+            <View style={[styles.updatesCard, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
               {Object.entries(ultimasAtualizacoes).map(([data, itens]) => (
                 <View key={data} style={styles.updateGroup}>
-                  <Text style={styles.updateDate}>{data}</Text>
+                  <Text style={[styles.updateDate, { color: theme.colors.textSecondary }]}>{data}</Text>
                   {itens.map(item => {
                     const Icone = item.icone;
                     const isClickable = ['reservations', 'packages', 'notifications', 'issues', 'profile'].includes(item.tipo);
                     return (
                       <TouchableOpacity key={item.id} disabled={!isClickable} style={styles.updateItem}>
-                        <View style={styles.updateIconContainer}>
-                          <Icone color="#4b5563" size={20} />
+                        <View style={[styles.updateIconContainer, { backgroundColor: theme.isDark ? theme.colors.background : theme.colors.background }]}>
+                          <Icone color={theme.colors.primary} size={20} />
                         </View>
                         <View style={styles.updateTextContainer}>
-                          <Text style={styles.updateText}>{item.texto}</Text>
+                          <Text style={[styles.updateText, { color: theme.colors.text }]}>{item.texto}</Text>
                         </View>
-                        <Text style={styles.updateTime}>{item.hora}</Text>
+                        <Text style={[styles.updateTime, { color: theme.colors.textSecondary }]}>{item.hora}</Text>
                       </TouchableOpacity>
                     );
                   })}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Calendar, MessageSquareWarning, User, Package, UserPlus } from 'lucide-react-native';
+import { useTheme } from '../contexts/ThemeProvider';
 
 import Dashboard from '../screens/App/Dashboard';
 import Reservas from '../screens/App/Reservas';
@@ -13,18 +14,20 @@ const AppTab = createBottomTabNavigator();
 
 
 const AppTabs = React.memo(function AppTabs() {
+  const { theme } = useTheme();
+  
   return (
     <AppTab.Navigator
       detachInactiveScreens={true}
       lazy={true}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2563eb',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: theme.colors.card,
           borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
+          borderTopColor: theme.colors.border,
           height: 60,
           paddingBottom: 5,
         },

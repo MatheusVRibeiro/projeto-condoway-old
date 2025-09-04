@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, SafeAreaView, TouchableOpacity, Switch, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../../contexts/ThemeProvider';
 import { styles } from './styles';
 import { ArrowLeft, Bell, ChevronRight } from 'lucide-react-native';
 // import { schedulePushNotification } from '../../../lib/notifications'; // Comentado
@@ -8,6 +9,7 @@ import { ArrowLeft, Bell, ChevronRight } from 'lucide-react-native';
 
 const Settings = React.memo(function Settings() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const [notifications, setNotifications] = useState({
     packages: true,
     reservations: true,
@@ -20,50 +22,50 @@ const Settings = React.memo(function Settings() {
 
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color="#1e293b" />
+          <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Configurações</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Configurações</Text>
       </View>
       <View style={styles.content}>
         {/* Navegação para Preferências de Notificação */}
         <TouchableOpacity 
-          style={styles.navigationItem}
+          style={[styles.navigationItem, { backgroundColor: theme.colors.card }]}
           onPress={() => navigation.navigate('NotificationPreferences')}
         >
           <View style={styles.navigationItemLeft}>
-            <Bell size={24} color="#2563eb" />
-            <Text style={styles.navigationItemText}>Preferências de Notificação</Text>
+            <Bell size={24} color={theme.colors.primary} />
+            <Text style={[styles.navigationItemText, { color: theme.colors.text }]}>Preferências de Notificação</Text>
           </View>
-          <ChevronRight size={20} color="#64748b" />
+          <ChevronRight size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
         
-        <Text style={styles.sectionTitle}>Configurações Rápidas</Text>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingText}>Novas Encomendas</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Configurações Rápidas</Text>
+        <View style={[styles.settingRow, { backgroundColor: theme.colors.card }]}>
+          <Text style={[styles.settingText, { color: theme.colors.text }]}>Novas Encomendas</Text>
           <Switch
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={notifications.packages ? "#2563eb" : "#f4f3f4"}
+            trackColor={{ false: theme.colors.border, true: theme.colors.primary + '40' }}
+            thumbColor={notifications.packages ? theme.colors.primary : theme.colors.textSecondary}
             onValueChange={() => toggleSwitch('packages')}
             value={notifications.packages}
           />
         </View>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingText}>Status de Reservas</Text>
+        <View style={[styles.settingRow, { backgroundColor: theme.colors.card }]}>
+          <Text style={[styles.settingText, { color: theme.colors.text }]}>Status de Reservas</Text>
           <Switch
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={notifications.reservations ? "#2563eb" : "#f4f3f4"}
+            trackColor={{ false: theme.colors.border, true: theme.colors.primary + '40' }}
+            thumbColor={notifications.reservations ? theme.colors.primary : theme.colors.textSecondary}
             onValueChange={() => toggleSwitch('reservations')}
             value={notifications.reservations}
           />
         </View>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingText}>Avisos Gerais</Text>
+        <View style={[styles.settingRow, { backgroundColor: theme.colors.card }]}>
+          <Text style={[styles.settingText, { color: theme.colors.text }]}>Avisos Gerais</Text>
           <Switch
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={notifications.generalNotices ? "#2563eb" : "#f4f3f4"}
+            trackColor={{ false: theme.colors.border, true: theme.colors.primary + '40' }}
+            thumbColor={notifications.generalNotices ? theme.colors.primary : theme.colors.textSecondary}
             onValueChange={() => toggleSwitch('generalNotices')}
             value={notifications.generalNotices}
           />

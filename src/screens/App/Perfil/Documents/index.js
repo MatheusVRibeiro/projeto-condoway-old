@@ -5,9 +5,11 @@ import { ArrowLeft, FileText, Download, Eye, Search, Filter, Calendar, Folder } 
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { userProfile } from '../mock';
+import { useTheme } from '../../../../contexts/ThemeProvider';
 
 export default function Documents() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   
@@ -53,14 +55,14 @@ export default function Documents() {
 
   const CategoryFilter = ({ category, isSelected, onPress }) => (
     <TouchableOpacity
-      style={[styles.categoryFilter, isSelected && styles.categoryFilterActive]}
+      style={[styles.categoryFilter, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }, isSelected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
       onPress={onPress}
     >
-      <Text style={[styles.categoryFilterText, isSelected && styles.categoryFilterTextActive]}>
+      <Text style={[styles.categoryFilterText, { color: theme.colors.textSecondary }, isSelected && { color: '#fff' }]}>
         {category.label}
       </Text>
-      <View style={[styles.categoryCount, isSelected && styles.categoryCountActive]}>
-        <Text style={[styles.categoryCountText, isSelected && styles.categoryCountTextActive]}>
+      <View style={[styles.categoryCount, { backgroundColor: theme.colors.background }, isSelected && { backgroundColor: theme.colors.primary + '33' }]}>
+        <Text style={[styles.categoryCountText, { color: theme.colors.textSecondary }, isSelected && { color: '#fff' }]}>
           {category.count}
         </Text>
       </View>
@@ -70,47 +72,48 @@ export default function Documents() {
   const DocumentItem = ({ document }) => {
     const getIconColor = (category) => {
       switch (category) {
-        case 'Regras do Condomínio': return '#2563eb';
-        case 'Assembleias': return '#059669';
+        case 'Regras do Condomínio': return theme.colors.primary;
+        case 'Assembleias': return theme.colors.success;
         case 'Orientações': return '#7c3aed';
-        case 'Segurança': return '#dc2626';
+        case 'Segurança': return theme.colors.error;
         case 'Formulários': return '#ea580c';
-        default: return '#64748b';
+        default: return theme.colors.textSecondary;
       }
     };
 
     const getIconBg = (category) => {
+      const base = theme.colors.primary + '22';
       switch (category) {
-        case 'Regras do Condomínio': return '#eff6ff';
-        case 'Assembleias': return '#ecfdf5';
-        case 'Orientações': return '#f3e8ff';
-        case 'Segurança': return '#fef2f2';
-        case 'Formulários': return '#fff7ed';
-        default: return '#f8fafc';
+        case 'Regras do Condomínio': return theme.colors.primary + '22';
+        case 'Assembleias': return theme.colors.success + '22';
+        case 'Orientações': return '#7c3aed22';
+        case 'Segurança': return theme.colors.error + '22';
+        case 'Formulários': return '#ea580c22';
+        default: return theme.colors.background;
       }
     };
 
     return (
-      <View style={styles.documentItem}>
+      <View style={[styles.documentItem, { borderBottomColor: theme.colors.border }]}>
         <View style={[styles.documentIcon, { backgroundColor: getIconBg(document.category) }]}>
           <FileText size={24} color={getIconColor(document.category)} />
         </View>
         
         <View style={styles.documentContent}>
-          <Text style={styles.documentName}>{document.name}</Text>
-          <Text style={styles.documentCategory}>{document.category}</Text>
+          <Text style={[styles.documentName, { color: theme.colors.text }]}>{document.name}</Text>
+          <Text style={[styles.documentCategory, { color: theme.colors.primary }]}>{document.category}</Text>
           <View style={styles.documentMeta}>
-            <Text style={styles.documentDate}>{document.date}</Text>
-            <Text style={styles.documentSize}>{document.size}</Text>
+            <Text style={[styles.documentDate, { color: theme.colors.textSecondary }]}>{document.date}</Text>
+            <Text style={[styles.documentSize, { color: theme.colors.textSecondary }]}>{document.size}</Text>
           </View>
         </View>
         
         <View style={styles.documentActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => handleView(document)}>
-            <Eye size={20} color="#2563eb" />
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]} onPress={() => handleView(document)}>
+            <Eye size={20} color={theme.colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={() => handleDownload(document)}>
-            <Download size={20} color="#2563eb" />
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]} onPress={() => handleDownload(document)}>
+            <Download size={20} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -118,27 +121,27 @@ export default function Documents() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <Animatable.View animation="fadeInDown" duration={400} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#1e293b" />
+      <Animatable.View animation="fadeInDown" duration={400} style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border, shadowColor: theme.colors.shadow }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: theme.colors.background }]}>
+          <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Documentos</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <Filter size={20} color="#2563eb" />
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Documentos</Text>
+        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme.colors.primary + '22' }]}>
+          <Filter size={20} color={theme.colors.primary} />
         </TouchableOpacity>
       </Animatable.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
         <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Search size={20} color="#64748b" />
+          <View style={[styles.searchBar, { backgroundColor: theme.colors.card, borderColor: theme.colors.border, shadowColor: theme.colors.shadow }]}>
+            <Search size={20} color={theme.colors.textSecondary} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: theme.colors.text }]}            
               placeholder="Buscar documentos..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={theme.colors.textSecondary}
               value={searchTerm}
               onChangeText={setSearchTerm}
             />
@@ -162,12 +165,12 @@ export default function Documents() {
         {/* Documents List */}
         <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.documentsContainer}>
           <View style={styles.documentsHeader}>
-            <Text style={styles.documentsTitle}>
+            <Text style={[styles.documentsTitle, { color: theme.colors.text }]}>
               {filteredDocuments.length} documento{filteredDocuments.length !== 1 ? 's' : ''} encontrado{filteredDocuments.length !== 1 ? 's' : ''}
             </Text>
           </View>
           
-          <View style={styles.documentsList}>
+          <View style={[styles.documentsList, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             {filteredDocuments.map((document, index) => (
               <Animatable.View
                 key={document.id}
@@ -184,9 +187,9 @@ export default function Documents() {
         {/* No Results */}
         {filteredDocuments.length === 0 && (
           <Animatable.View animation="fadeInUp" duration={600} delay={500} style={styles.noResultsContainer}>
-            <Folder size={48} color="#94a3b8" />
-            <Text style={styles.noResultsTitle}>Nenhum documento encontrado</Text>
-            <Text style={styles.noResultsText}>
+            <Folder size={48} color={theme.colors.textSecondary} />
+            <Text style={[styles.noResultsTitle, { color: theme.colors.text }]}>Nenhum documento encontrado</Text>
+            <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
               {searchTerm ? 'Tente alterar os termos de busca' : 'Não há documentos nesta categoria'}
             </Text>
           </Animatable.View>

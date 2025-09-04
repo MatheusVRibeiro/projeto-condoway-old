@@ -18,9 +18,11 @@ import {
 } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
+import { useTheme } from '../../../../contexts/ThemeProvider';
 
 export default function Help() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [supportMessage, setSupportMessage] = useState('');
@@ -111,66 +113,66 @@ export default function Help() {
   };
 
   const ContactCard = ({ option }) => (
-    <TouchableOpacity style={styles.contactCard} onPress={option.action}>
-      <View style={styles.contactIcon}>
-        <option.icon size={24} color="#2563eb" />
+    <TouchableOpacity style={[styles.contactCard, { borderBottomColor: theme.colors.border }]} onPress={option.action}>
+      <View style={[styles.contactIcon, { backgroundColor: theme.colors.primary + '22' }]}>
+        <option.icon size={24} color={theme.colors.primary} />
       </View>
       <View style={styles.contactContent}>
-        <Text style={styles.contactTitle}>{option.title}</Text>
-        <Text style={styles.contactSubtitle}>{option.subtitle}</Text>
-        <Text style={styles.contactDescription}>{option.description}</Text>
+        <Text style={[styles.contactTitle, { color: theme.colors.text }]}>{option.title}</Text>
+        <Text style={[styles.contactSubtitle, { color: theme.colors.primary }]}>{option.subtitle}</Text>
+        <Text style={[styles.contactDescription, { color: theme.colors.textSecondary }]}>{option.description}</Text>
       </View>
-      <ExternalLink size={20} color="#94a3b8" />
+      <ExternalLink size={20} color={theme.colors.textSecondary} />
     </TouchableOpacity>
   );
 
   const FaqItem = ({ item }) => (
-    <View style={styles.faqItem}>
+    <View style={[styles.faqItem, { borderBottomColor: theme.colors.border }]}>      
       <TouchableOpacity style={styles.faqHeader} onPress={() => toggleFaq(item.id)}>
-        <Text style={styles.faqQuestion}>{item.question}</Text>
+        <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>{item.question}</Text>
         {expandedFaq === item.id ? 
-          <ChevronUp size={20} color="#2563eb" /> : 
-          <ChevronDown size={20} color="#64748b" />
+          <ChevronUp size={20} color={theme.colors.primary} /> : 
+          <ChevronDown size={20} color={theme.colors.textSecondary} />
         }
       </TouchableOpacity>
       {expandedFaq === item.id && (
         <Animatable.View animation="fadeInDown" duration={300} style={styles.faqAnswer}>
-          <Text style={styles.faqAnswerText}>{item.answer}</Text>
+          <Text style={[styles.faqAnswerText, { color: theme.colors.textSecondary }]}>{item.answer}</Text>
         </Animatable.View>
       )}
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <Animatable.View animation="fadeInDown" duration={400} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft size={24} color="#1e293b" />
+      <Animatable.View animation="fadeInDown" duration={400} style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border, shadowColor: theme.colors.shadow }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: theme.colors.background }]}>
+          <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ajuda e Suporte</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Ajuda e Suporte</Text>
         <View style={styles.placeholder} />
       </Animatable.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Quick Stats */}
         <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Clock size={20} color="#10b981" />
-            <Text style={styles.statValue}>{'< 2h'}</Text>
-            <Text style={styles.statLabel}>Tempo médio de resposta</Text>
+          <View style={[styles.statCard, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            <Clock size={20} color={theme.colors.success} />
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>{'< 2h'}</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Tempo médio de resposta</Text>
           </View>
-          <View style={styles.statCard}>
-            <Headphones size={20} color="#2563eb" />
-            <Text style={styles.statValue}>24/7</Text>
-            <Text style={styles.statLabel}>Suporte disponível</Text>
+          <View style={[styles.statCard, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            <Headphones size={20} color={theme.colors.primary} />
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>24/7</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Suporte disponível</Text>
           </View>
         </Animatable.View>
 
         {/* Contact Options */}
         <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
-          <Text style={styles.sectionTitle}>ENTRE EM CONTATO</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ENTRE EM CONTATO</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             {contactOptions.map((option, index) => (
               <ContactCard key={index} option={option} />
             ))}
@@ -179,14 +181,14 @@ export default function Help() {
 
         {/* FAQ Search */}
         <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.section}>
-          <Text style={styles.sectionTitle}>PERGUNTAS FREQUENTES</Text>
-          <View style={styles.searchContainer}>
-            <View style={styles.searchBar}>
-              <Search size={20} color="#64748b" />
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>PERGUNTAS FREQUENTES</Text>
+          <View style={[styles.searchContainer, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            <View style={[styles.searchBar, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+              <Search size={20} color={theme.colors.textSecondary} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: theme.colors.text }]}                
                 placeholder="Buscar nas perguntas frequentes..."
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={searchTerm}
                 onChangeText={setSearchTerm}
               />
@@ -196,7 +198,7 @@ export default function Help() {
 
         {/* FAQ List */}
         <Animatable.View animation="fadeInUp" duration={600} delay={500} style={styles.faqContainer}>
-          <View style={styles.faqList}>
+          <View style={[styles.faqList, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             {filteredFaq.map((item, index) => (
               <Animatable.View
                 key={item.id}
@@ -212,20 +214,20 @@ export default function Help() {
 
         {/* Support Message */}
         <Animatable.View animation="fadeInUp" duration={600} delay={700} style={styles.section}>
-          <Text style={styles.sectionTitle}>ENVIE UMA MENSAGEM</Text>
-          <View style={styles.sectionContent}>
-            <Text style={styles.messageLabel}>Descreva seu problema ou dúvida:</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ENVIE UMA MENSAGEM</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            <Text style={[styles.messageLabel, { color: theme.colors.text }]}>Descreva seu problema ou dúvida:</Text>
             <TextInput
-              style={styles.messageInput}
+              style={[styles.messageInput, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, color: theme.colors.text }]}              
               multiline
               numberOfLines={4}
               placeholder="Digite sua mensagem aqui..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={theme.colors.textSecondary}
               value={supportMessage}
               onChangeText={setSupportMessage}
               textAlignVertical="top"
             />
-            <TouchableOpacity style={styles.sendButton} onPress={sendSupportMessage}>
+            <TouchableOpacity style={[styles.sendButton, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} onPress={sendSupportMessage}>
               <Send size={20} color="white" />
               <Text style={styles.sendButtonText}>Enviar Mensagem</Text>
             </TouchableOpacity>
@@ -234,17 +236,17 @@ export default function Help() {
 
         {/* Additional Resources */}
         <Animatable.View animation="fadeInUp" duration={600} delay={800} style={styles.section}>
-          <Text style={styles.sectionTitle}>RECURSOS ADICIONAIS</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>RECURSOS ADICIONAIS</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             <TouchableOpacity style={styles.resourceItem}>
-              <Book size={20} color="#2563eb" />
-              <Text style={styles.resourceText}>Manual do Usuário</Text>
-              <ExternalLink size={16} color="#94a3b8" />
+              <Book size={20} color={theme.colors.primary} />
+              <Text style={[styles.resourceText, { color: theme.colors.text }]}>Manual do Usuário</Text>
+              <ExternalLink size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.resourceItem}>
-              <HelpCircle size={20} color="#2563eb" />
-              <Text style={styles.resourceText}>Centro de Ajuda Online</Text>
-              <ExternalLink size={16} color="#94a3b8" />
+              <HelpCircle size={20} color={theme.colors.primary} />
+              <Text style={[styles.resourceText, { color: theme.colors.text }]}>Centro de Ajuda Online</Text>
+              <ExternalLink size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </Animatable.View>

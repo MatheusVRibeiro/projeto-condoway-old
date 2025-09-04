@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { styles } from './styles';
+import { useTheme } from '../../../contexts/ThemeProvider';
+import { createProfileStyles } from './styles';
 import { userProfile } from './mock';
 import { useAuth } from '../../../contexts/AuthContext';
 import { ROUTES } from '../../../routes/routeNames';
@@ -10,24 +11,37 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Animatable from 'react-native-animatable';
 
 // Componente de ação principal
-const ActionCard = ({ icon: Icon, iconBg = '#eff6ff', iconColor = '#2563eb', title, subtitle, onPress, variant = 'default' }) => (
-  <Animatable.View animation="fadeInUp" duration={400}>
-    <TouchableOpacity 
-      style={[styles.actionCard, variant === 'danger' && styles.actionCardDanger]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.actionIconContainer, { backgroundColor: iconBg }]}>
-        <Icon size={24} color={iconColor} />
-      </View>
-      <View style={styles.actionContent}>
-        <Text style={[styles.actionTitle, variant === 'danger' && styles.actionTitleDanger]}>{title}</Text>
-        {subtitle && <Text style={styles.actionSubtitle}>{subtitle}</Text>}
-      </View>
-      <ChevronRight size={20} color={variant === 'danger' ? '#dc2626' : '#94a3b8'} />
-    </TouchableOpacity>
-  </Animatable.View>
-);
+const ActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onPress, variant = 'default', theme }) => {
+  const bgColor = iconBg || (theme.isDark ? '#1e293b' : '#eff6ff');
+  const iColor = iconColor || theme.colors.primary;
+  
+  return (
+    <Animatable.View animation="fadeInUp" duration={400}>
+      <TouchableOpacity 
+        style={[
+          styles.actionCard, 
+          { backgroundColor: theme.colors.card },
+          variant === 'danger' && styles.actionCardDanger
+        ]}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.actionIconContainer, { backgroundColor: bgColor }]}>
+          <Icon size={24} color={iColor} />
+        </View>
+        <View style={styles.actionContent}>
+          <Text style={[
+            styles.actionTitle, 
+            { color: theme.colors.text },
+            variant === 'danger' && styles.actionTitleDanger
+          ]}>{title}</Text>
+          {subtitle && <Text style={[styles.actionSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>}
+        </View>
+        <ChevronRight size={20} color={variant === 'danger' ? '#dc2626' : theme.colors.textSecondary} />
+      </TouchableOpacity>
+    </Animatable.View>
+  );
+};
 
 // Card de estatística do usuário
 const StatsCard = ({ icon: Icon, value, label, color = '#2563eb' }) => (
@@ -42,6 +56,8 @@ const StatsCard = ({ icon: Icon, value, label, color = '#2563eb' }) => (
 
 export default function Perfil() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createProfileStyles(theme), [theme]);
   const { logout } = useAuth();
   const [profile, setProfile] = useState(userProfile);
 
@@ -72,123 +88,123 @@ export default function Perfil() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView 
         style={styles.scrollContainer} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         {/* Header com avatar e info */}
-        <Animatable.View animation="fadeInDown" duration={400} style={styles.profileCard}>
+        <Animatable.View animation="fadeInDown" duration={400} style={[styles.profileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }] }>
           <TouchableOpacity onPress={handlePickImage} activeOpacity={0.8} style={styles.avatarContainer}>
             <Image 
               source={typeof profile.avatarUrl === 'string' ? { uri: profile.avatarUrl } : profile.avatarUrl} 
-              style={styles.avatar} 
+              style={[styles.avatar, { borderColor: theme.colors.card }]} 
             />
-            <View style={styles.editAvatarBadge}>
+            <View style={[styles.editAvatarBadge, { backgroundColor: theme.colors.primary, borderColor: theme.colors.card }] }>
               <Camera size={16} color="white" />
             </View>
           </TouchableOpacity>
           
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profile.name}</Text>
+            <Text style={[styles.profileName, { color: theme.colors.text }]}>{profile.name}</Text>
             <View style={styles.locationRow}>
               <View style={styles.locationIcon}>
-                <MapPin size={14} color="#64748b" />
+                <MapPin size={14} color={theme.colors.textSecondary} />
               </View>
-              <Text style={styles.locationText}>{profile.apartment} - {profile.block}</Text>
+              <Text style={[styles.locationText, { color: theme.colors.textSecondary }]}>{profile.apartment} - {profile.block}</Text>
             </View>
-            <View style={styles.roleBadge}>
+            <View style={[styles.roleBadge, { backgroundColor: theme.isDark ? '#78350f33' : '#fef3c7' }] }>
               <Star size={12} color="#f59e0b" fill="#f59e0b" />
-              <Text style={styles.roleText}>{getUserTypeLabel(profile.userType)}</Text>
+              <Text style={[styles.roleText, { color: theme.isDark ? '#fbbf24' : '#92400e' }]}>{getUserTypeLabel(profile.userType)}</Text>
             </View>
           </View>
         </Animatable.View>
 
         {/* Menu Principal */}
         <Animatable.View animation="fadeInUp" duration={400} delay={100} style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>CONTA</Text>
-          <View style={styles.menuGroup}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>CONTA</Text>
+          <View style={[styles.menuGroup, { backgroundColor: theme.colors.card }]}>
+            <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7}>
               <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
-                <Edit size={20} color="#2563eb" />
+                <Edit size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>Editar Perfil</Text>
-                <Text style={styles.menuSubtitle}>Dados pessoais e contato</Text>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Editar Perfil</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Dados pessoais e contato</Text>
               </View>
               <View style={styles.chevronContainer}>
-                <ChevronRight size={18} color="#94a3b8" />
+                <ChevronRight size={18} color={theme.colors.textSecondary} />
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Security')} activeOpacity={0.7}>
+            <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('Security')} activeOpacity={0.7}>
               <View style={[styles.menuIcon, { backgroundColor: '#fef3c7' }]}>
                 <Shield size={20} color="#f59e0b" />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>Segurança</Text>
-                <Text style={styles.menuSubtitle}>Senha e autenticação</Text>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Segurança</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Senha e autenticação</Text>
               </View>
               <View style={styles.chevronContainer}>
-                <ChevronRight size={18} color="#94a3b8" />
+                <ChevronRight size={18} color={theme.colors.textSecondary} />
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem]} onPress={() => navigation.navigate('UnitDetails')} activeOpacity={0.7}>
+            <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('UnitDetails')} activeOpacity={0.7}>
               <View style={[styles.menuIcon, { backgroundColor: '#f0fdf4' }]}>
                 <Home size={20} color="#10b981" />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>Minha Unidade</Text>
-                <Text style={styles.menuSubtitle}>Informações do apartamento</Text>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Minha Unidade</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Informações do apartamento</Text>
               </View>
               <View style={styles.chevronContainer}>
-                <ChevronRight size={18} color="#94a3b8" />
+                <ChevronRight size={18} color={theme.colors.textSecondary} />
               </View>
             </TouchableOpacity>
           </View>
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" duration={400} delay={200} style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>GERAL</Text>
-          <View style={styles.menuGroup}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Settings')} activeOpacity={0.7}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>GERAL</Text>
+          <View style={[styles.menuGroup, { backgroundColor: theme.colors.card }]}>
+            <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Settings')} activeOpacity={0.7}>
               <View style={[styles.menuIcon, { backgroundColor: '#f0f9ff' }]}>
                 <Settings size={20} color="#0ea5e9" />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>Preferências</Text>
-                <Text style={styles.menuSubtitle}>Configurações do app</Text>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Preferências</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Configurações do app</Text>
               </View>
               <View style={styles.chevronContainer}>
-                <ChevronRight size={18} color="#94a3b8" />
+                <ChevronRight size={18} color={theme.colors.textSecondary} />
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Documents')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#fef2f2' }]}>
+            <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Documents')} activeOpacity={0.7}>
+              <View style={[styles.menuIcon, { backgroundColor: '#fef2f2' }]}> 
                 <FileText size={20} color="#ef4444" />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>Documentos</Text>
-                <Text style={styles.menuSubtitle}>Regras e formulários</Text>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Documentos</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Regras e formulários</Text>
               </View>
               <View style={styles.chevronContainer}>
-                <ChevronRight size={18} color="#94a3b8" />
+                <ChevronRight size={18} color={theme.colors.textSecondary} />
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem]} onPress={() => navigation.navigate('Help')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#f8fafc' }]}>
+            <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Help')} activeOpacity={0.7}>
+              <View style={[styles.menuIcon, { backgroundColor: '#f8fafc' }]}> 
                 <HelpCircle size={20} color="#64748b" />
               </View>
               <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>Ajuda e Suporte</Text>
-                <Text style={styles.menuSubtitle}>FAQ e contato</Text>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Ajuda e Suporte</Text>
+                <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>FAQ e contato</Text>
               </View>
               <View style={styles.chevronContainer}>
-                <ChevronRight size={18} color="#94a3b8" />
+                <ChevronRight size={18} color={theme.colors.textSecondary} />
               </View>
             </TouchableOpacity>
           </View>
@@ -196,13 +212,13 @@ export default function Perfil() {
 
         {/* Logout */}
         <Animatable.View animation="fadeInUp" duration={400} delay={300} style={styles.dangerSection}>
-          <TouchableOpacity style={[styles.menuItem, styles.dangerItem]} onPress={handleLogout} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.menuItem, styles.dangerItem, { backgroundColor: theme.colors.card, borderColor: theme.isDark ? '#7f1d1d' : '#fee2e2' }]} onPress={handleLogout} activeOpacity={0.7}>
             <View style={[styles.menuIcon, { backgroundColor: '#fef2f2' }]}>
               <LogOut size={20} color="#dc2626" />
             </View>
             <View style={styles.menuContent}>
               <Text style={[styles.menuTitle, styles.dangerText]}>Sair da Conta</Text>
-              <Text style={styles.menuSubtitle}>Fazer logout do aplicativo</Text>
+              <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Fazer logout do aplicativo</Text>
             </View>
             <View style={styles.chevronContainer}>
               <ChevronRight size={18} color="#dc2626" />
@@ -211,7 +227,7 @@ export default function Perfil() {
         </Animatable.View>
 
         <View style={styles.bottomSpacer}>
-          <Text style={styles.appVersion}>CondoWay v1.0.0</Text>
+          <Text style={[styles.appVersion, { color: theme.colors.textSecondary }]}>CondoWay v1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

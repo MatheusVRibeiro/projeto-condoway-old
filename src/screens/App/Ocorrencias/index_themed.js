@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../../contexts/ThemeProvider';
 import { styles } from './styles';
 import { categories, initialIssues } from './mock';
 import { MessageSquareWarning, ArrowLeft, CheckCircle } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import BackButton from '../../../components/BackButton';
-import { useTheme } from '../../../contexts/ThemeProvider';
 
 export default function Ocorrencias() {
   const { theme } = useTheme();
@@ -44,9 +44,9 @@ export default function Ocorrencias() {
       title: category.title,
       description, location,
       date: new Date().toLocaleString('pt-BR'),
-      status: 'Enviada',
+      status: "Enviada",
       priority,
-      comments: [{ author: 'Morador', text: description, date: new Date().toLocaleString('pt-BR') }]
+      comments: [{ author: "Morador", text: description, date: new Date().toLocaleString('pt-BR') }]
     };
     setMyIssues(prev => [newIssue, ...prev]);
     setStep(3);
@@ -54,23 +54,20 @@ export default function Ocorrencias() {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Em Análise': return { backgroundColor: theme.colors.warning + '22', color: theme.colors.warning };
-      case 'Resolvida': return { backgroundColor: theme.colors.success + '22', color: theme.colors.success };
-      default: return { backgroundColor: theme.colors.info + '22', color: theme.colors.info };
+      case 'Em Análise': return { backgroundColor: '#fef9c3', color: '#a16207' };
+      case 'Resolvida': return { backgroundColor: '#dcfce7', color: '#166534' };
+      default: return { backgroundColor: '#dbeafe', color: '#1e40af' };
     }
   };
 
   const renderRegisterContent = () => {
     if (step === 1) {
       return (
-        <View style={[styles.categoryGrid]}>
+        <View style={styles.categoryGrid}>
           {categories.map(cat => (
-            <TouchableOpacity
-              key={cat.id}
-              style={[
-                styles.categoryCard,
-                { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
-              ]}
+            <TouchableOpacity 
+              key={cat.id} 
+              style={[styles.categoryCard, { backgroundColor: theme.colors.card }]} 
               onPress={() => handleCategorySelect(cat)}
             >
               <cat.icon color={theme.colors.primary} size={32} />
@@ -85,23 +82,19 @@ export default function Ocorrencias() {
       return (
         <View>
           <TouchableOpacity onPress={resetForm} style={styles.formHeader}>
-            <ArrowLeft color={theme.colors.textSecondary} size={20} />
-            <Text style={{ marginLeft: 8, color: theme.colors.textSecondary }}>Voltar</Text>
+            <ArrowLeft color={theme.colors.text} size={20} />
+            <Text style={{marginLeft: 8, color: theme.colors.text}}>Voltar</Text>
           </TouchableOpacity>
           <Text style={[styles.formTitle, { color: theme.colors.text }]}>Detalhes da Ocorrência</Text>
-
+          
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Descreva o problema</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Descreva o problema</Text>
             <TextInput
-              style={[
-                styles.input,
-                styles.textarea,
-                {
-                  backgroundColor: theme.colors.card,
-                  borderColor: theme.colors.border,
-                  color: theme.colors.text
-                }
-              ]}
+              style={[styles.input, styles.textarea, { 
+                backgroundColor: theme.colors.card, 
+                color: theme.colors.text,
+                borderColor: theme.colors.border 
+              }]}
               placeholder="Descreva com o máximo de detalhes o que está acontecendo..."
               placeholderTextColor={theme.colors.textSecondary}
               multiline
@@ -110,12 +103,13 @@ export default function Ocorrencias() {
             />
           </View>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Local Específico</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Local Específico</Text>
             <TextInput
-              style={[
-                styles.input,
-                { backgroundColor: theme.colors.card, borderColor: theme.colors.border, color: theme.colors.text }
-              ]}
+              style={[styles.input, { 
+                backgroundColor: theme.colors.card, 
+                color: theme.colors.text,
+                borderColor: theme.colors.border 
+              }]}
               placeholder="Ex: Piscina, Garagem Bloco B..."
               placeholderTextColor={theme.colors.textSecondary}
               value={location}
@@ -123,11 +117,11 @@ export default function Ocorrencias() {
             />
           </View>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Prioridade</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Prioridade</Text>
             <View style={styles.radioGroup}>
               {['baixa', 'media', 'alta'].map(p => (
                 <TouchableOpacity key={p} style={styles.radioButton} onPress={() => setPriority(p)}>
-                  <View style={[styles.radioCircle, { borderColor: theme.colors.primary }]}>
+                  <View style={[styles.radioCircle, { borderColor: theme.colors.border }]}>
                     {priority === p && <View style={[styles.radioDot, { backgroundColor: theme.colors.primary }]} />}
                   </View>
                   <Text style={[styles.radioLabel, { color: theme.colors.text }]}>{p.charAt(0).toUpperCase() + p.slice(1)}</Text>
@@ -145,10 +139,15 @@ export default function Ocorrencias() {
     if (step === 3) {
       return (
         <View style={styles.confirmationContainer}>
-          <CheckCircle color={theme.colors.success} size={64} />
+          <CheckCircle color="#22c55e" size={64} />
           <Text style={[styles.confirmationTitle, { color: theme.colors.text }]}>Ocorrência Enviada!</Text>
-          <Text style={[styles.confirmationText, { color: theme.colors.textSecondary }]}>O síndico foi notificado. Você pode acompanhar o andamento na aba "Minhas Ocorrências".</Text>
-          <TouchableOpacity style={[styles.submitButton, { backgroundColor: theme.colors.primary }]} onPress={() => { resetForm(); setActiveTab('minhas'); }}>
+          <Text style={[styles.confirmationText, { color: theme.colors.textSecondary }]}>
+            O síndico foi notificado. Você pode acompanhar o andamento na aba "Minhas Ocorrências".
+          </Text>
+          <TouchableOpacity 
+            style={[styles.submitButton, { backgroundColor: theme.colors.primary }]} 
+            onPress={() => { resetForm(); setActiveTab('minhas'); }}
+          >
             <Text style={styles.submitButtonText}>Ver Minhas Ocorrências</Text>
           </TouchableOpacity>
         </View>
@@ -163,30 +162,42 @@ export default function Ocorrencias() {
         const isExpanded = expandedId === issue.id;
 
         return (
-          <View key={issue.id} style={[styles.accordionItem, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-            <TouchableOpacity style={styles.accordionTrigger} onPress={() => setExpandedId(isExpanded ? null : issue.id)}>
+          <View key={issue.id} style={[styles.accordionItem, { backgroundColor: theme.colors.card }]}>
+            <TouchableOpacity 
+              style={styles.accordionTrigger} 
+              onPress={() => setExpandedId(isExpanded ? null : issue.id)}
+            >
               <View style={styles.triggerLeft}>
                 <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>{issue.title}</Text>
-                <Text style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}>Protocolo: {issue.protocol}</Text>
+                <Text style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}>
+                  Protocolo: {issue.protocol}
+                </Text>
               </View>
               <View style={[styles.statusBadge, { backgroundColor: statusStyle.backgroundColor }]}>
                 <Text style={[styles.statusBadgeText, { color: statusStyle.color }]}>{issue.status}</Text>
               </View>
             </TouchableOpacity>
             {isExpanded && (
-              <View style={[styles.accordionContent, { borderTopColor: theme.colors.border }]}>
+              <View style={styles.accordionContent}>
                 {issue.comments.map((comment, index) => (
-                  <View
-                    key={index}
+                  <View 
+                    key={index} 
                     style={[
-                      styles.commentBubble,
-                      comment.author === 'Morador'
-                        ? [styles.moradorBubble, { backgroundColor: theme.colors.primary }]
-                        : [styles.sindicoBubble, { backgroundColor: theme.colors.background }]
+                      styles.commentBubble, 
+                      comment.author === 'Morador' ? 
+                        [styles.moradorBubble, { backgroundColor: theme.colors.primary + '20' }] : 
+                        [styles.sindicoBubble, { backgroundColor: theme.colors.card }]
                     ]}
                   >
-                    <Text style={comment.author === 'Morador' ? styles.moradorText : [styles.sindicoText, { color: theme.colors.text }]}>{comment.text}</Text>
-                    <Text style={[styles.commentDate, { color: comment.author === 'Morador' ? theme.colors.textSecondary : theme.colors.textSecondary }]}>{comment.date}</Text>
+                    <Text style={[
+                      comment.author === 'Morador' ? styles.moradorText : styles.sindicoText,
+                      { color: theme.colors.text }
+                    ]}>
+                      {comment.text}
+                    </Text>
+                    <Text style={[styles.commentDate, { color: theme.colors.textSecondary }]}>
+                      {comment.date}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -199,27 +210,47 @@ export default function Ocorrencias() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView>
         <View style={styles.content}>
           <BackButton style={{ alignSelf: 'flex-start' }} />
           <View style={styles.header}>
-            <MessageSquareWarning color={theme.colors.primary} size={28} />
-            <Text style={[styles.headerTitleText, { color: theme.colors.text }]}>Ocorrências</Text>
+            <Text style={styles.headerTitle}>
+              <MessageSquareWarning color={theme.colors.primary} size={28} />
+              <Text style={[styles.headerTitleText, { color: theme.colors.text }]}>Ocorrências</Text>
+            </Text>
           </View>
 
           {step === 1 && (
-            <View style={[styles.tabsContainer, { backgroundColor: theme.colors.card }]}>
+            <View style={styles.tabsContainer}>
               <TouchableOpacity
-                style={[styles.tabButton, activeTab === 'registrar' && [styles.tabButtonActive, { backgroundColor: theme.colors.primary + '22' }]]}
+                style={[
+                  styles.tabButton, 
+                  { borderColor: theme.colors.border },
+                  activeTab === 'registrar' && { backgroundColor: theme.colors.primary }
+                ]}
                 onPress={() => setActiveTab('registrar')}
               >
-                <Text style={[styles.tabText, { color: activeTab === 'registrar' ? theme.colors.primary : theme.colors.textSecondary }]}>Registrar Nova</Text>
+                <Text style={[
+                  styles.tabText, 
+                  { color: activeTab === 'registrar' ? '#ffffff' : theme.colors.text }
+                ]}>
+                  Registrar Nova
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.tabButton, activeTab === 'minhas' && [styles.tabButtonActive, { backgroundColor: theme.colors.primary + '22' }]]}
+                style={[
+                  styles.tabButton,
+                  { borderColor: theme.colors.border },
+                  activeTab === 'minhas' && { backgroundColor: theme.colors.primary }
+                ]}
                 onPress={() => setActiveTab('minhas')}
               >
-                <Text style={[styles.tabText, { color: activeTab === 'minhas' ? theme.colors.primary : theme.colors.textSecondary }]}>Minhas Ocorrências</Text>
+                <Text style={[
+                  styles.tabText,
+                  { color: activeTab === 'minhas' ? '#ffffff' : theme.colors.text }
+                ]}>
+                  Minhas Ocorrências
+                </Text>
               </TouchableOpacity>
             </View>
           )}

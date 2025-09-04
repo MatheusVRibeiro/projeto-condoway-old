@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, SafeAreaView, ImageBackground, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useTheme } from '../../../contexts/ThemeProvider';
 import { useOnboardingStatus } from '../../../hooks/useOnboardingStatus';
 import { useAuth } from '../../../contexts/AuthContext';
 import { ROUTES } from '../../../routes/routeNames';
@@ -11,6 +12,7 @@ const { width } = Dimensions.get('window');
 
 const Onboarding = () => {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const { completeOnboarding } = useOnboardingStatus();
   const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);

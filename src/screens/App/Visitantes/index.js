@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import useUser from '../../../hooks/useUser';
+import { useTheme } from '../../../contexts/ThemeProvider';
 import { View, Text, SafeAreaView, FlatList, TouchableOpacity, Modal, TextInput, Button, Platform, ActivityIndicator, TouchableWithoutFeedback, Keyboard, RefreshControl, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
@@ -45,6 +46,7 @@ function diffHuman(entradaDate, saidaDate) {
 
 export default function Visitantes() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const { user: authUser } = useUser();
   
   // Para desenvolvimento, usar dados padrão se não houver usuário autenticado
@@ -188,27 +190,26 @@ export default function Visitantes() {
   const getItemLayout = useCallback((_, index) => ({ length: 100, offset: 100 * index, index }), []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>        
         <TouchableOpacity onPress={() => navigation.goBack()} accessibilityLabel="Voltar">
-          <ArrowLeft size={24} color="#1e293b" />
+          <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gestão de Visitantes</Text>
-  {/* ...existing code... */}
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Gestão de Visitantes</Text>
       </View>
 
       <View style={styles.content}>
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity style={[styles.tabButton, activeTab === 'agendados' && styles.tabButtonActive]} onPress={() => setActiveTab('agendados')} accessibilityLabel="Mostrar agendados"><Text style={[styles.tabText, activeTab === 'agendados' && styles.tabTextActive]}>Agendados</Text></TouchableOpacity>
-          <TouchableOpacity style={[styles.tabButton, activeTab === 'historico' && styles.tabButtonActive]} onPress={() => setActiveTab('historico')} accessibilityLabel="Mostrar histórico"><Text style={[styles.tabText, activeTab === 'historico' && styles.tabTextActive]}>Histórico</Text></TouchableOpacity>
+        <View style={[styles.tabsContainer, { backgroundColor: theme.colors.card }]}>
+          <TouchableOpacity style={[styles.tabButton, activeTab === 'agendados' && [styles.tabButtonActive, { backgroundColor: theme.colors.primary }]]} onPress={() => setActiveTab('agendados')} accessibilityLabel="Mostrar agendados"><Text style={[styles.tabText, { color: activeTab === 'agendados' ? '#fff' : theme.colors.textSecondary }]}>Agendados</Text></TouchableOpacity>
+          <TouchableOpacity style={[styles.tabButton, activeTab === 'historico' && [styles.tabButtonActive, { backgroundColor: theme.colors.primary }]]} onPress={() => setActiveTab('historico')} accessibilityLabel="Mostrar histórico"><Text style={[styles.tabText, { color: activeTab === 'historico' ? '#fff' : theme.colors.textSecondary }]}>Histórico</Text></TouchableOpacity>
         </View>
 
         {/* Status dos visitantes presentes */}
-        <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
+        <View style={{ backgroundColor: theme.colors.card, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: theme.colors.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3, borderWidth: 1, borderColor: theme.colors.border }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#374151' }}>Status Atual</Text>
-            <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
-              <Text style={{ color: '#16a34a', fontWeight: '700', fontSize: 14 }}>👥 Presentes: {presentesCount}</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: theme.colors.text }}>Status Atual</Text>
+            <View style={{ backgroundColor: theme.colors.success + '22', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+              <Text style={{ color: theme.colors.success, fontWeight: '700', fontSize: 14 }}>Presentes: {presentesCount}</Text>
             </View>
           </View>
         </View>
@@ -227,12 +228,12 @@ export default function Visitantes() {
           keyExtractor={(item) => item.vst_id.toString()}
           renderItem={renderItem}
           renderSectionHeader={({ section: { title, data } }) => (
-            data && data.length ? (<View style={styles.sectionHeader}><Text style={styles.sectionHeaderText}>{title}</Text></View>) : null
+            data && data.length ? (<View style={[styles.sectionHeader, { backgroundColor: theme.colors.background }]}><Text style={[styles.sectionHeaderText, { color: theme.colors.text }]}>{title}</Text></View>) : null
           )}
           ListEmptyComponent={() => (
             <View style={styles.emptyState}>
-              <View style={styles.emptyStateIcon}><User size={48} color="#94a3b8" /></View>
-              <Text style={{ fontSize: 16, color: '#475569', marginBottom: 12 }}>
+              <View style={styles.emptyStateIcon}><User size={48} color={theme.colors.textSecondary} /></View>
+              <Text style={{ fontSize: 16, color: theme.colors.textSecondary, marginBottom: 12 }}>
                 {activeTab === 'agendados' ? 'Nenhum visitante agendado.' : 'Nenhum histórico de visitantes.'}
               </Text>
             </View>
@@ -242,95 +243,85 @@ export default function Visitantes() {
           contentContainerStyle={{ paddingBottom: 140 }}
         />
 
-        <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)} accessibilityLabel="Adicionar visitante"><UserPlus size={28} color="white" /></TouchableOpacity>
+        <TouchableOpacity style={[styles.fab, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} onPress={() => setModalVisible(true)} accessibilityLabel="Adicionar visitante"><UserPlus size={28} color="white" /></TouchableOpacity>
 
         {/* Modal de edição */}
         <Modal animationType="fade" transparent={true} visible={!!editVisitor} onRequestClose={() => setEditVisitor(null)}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Editar Visitante</Text>
-                <TextInput style={styles.input} placeholder="Nome Completo" value={editVisitor?.vst_nome || ''} onChangeText={nome => setEditVisitor(ev => ({ ...ev, vst_nome: nome }))} accessibilityLabel="Nome do visitante" />
-                <TextInput style={styles.input} placeholder="Documento (RG/CPF)" value={editVisitor?.vst_documento || ''} onChangeText={doc => setEditVisitor(ev => ({ ...ev, vst_documento: doc }))} accessibilityLabel="Documento do visitante" />
-                <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)} accessibilityLabel="Selecionar data da visita"><Text style={styles.dateButtonText}>{editVisitor?.vst_data_visita ? `Data da Visita: ${new Date(editVisitor.vst_data_visita).toLocaleDateString('pt-BR')} ${new Date(editVisitor.vst_data_visita).toLocaleTimeString('pt-BR').slice(0,5)}` : 'Selecionar data da visita'}</Text></TouchableOpacity>
+              <View style={[styles.modalContent, { backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border }]}>                
+                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Editar Visitante</Text>
+                <TextInput style={[styles.input, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, color: theme.colors.text }]} placeholder="Nome Completo" placeholderTextColor={theme.colors.textSecondary} value={editVisitor?.vst_nome || ''} onChangeText={nome => setEditVisitor(ev => ({ ...ev, vst_nome: nome }))} accessibilityLabel="Nome do visitante" />
+                <TextInput style={[styles.input, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, color: theme.colors.text }]} placeholder="Documento (RG/CPF)" placeholderTextColor={theme.colors.textSecondary} value={editVisitor?.vst_documento || ''} onChangeText={doc => setEditVisitor(ev => ({ ...ev, vst_documento: doc }))} accessibilityLabel="Documento do visitante" />
+                <TouchableOpacity style={[styles.dateButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]} onPress={() => setShowDatePicker(true)} accessibilityLabel="Selecionar data da visita"><Text style={[styles.dateButtonText, { color: theme.colors.textSecondary }]}>{editVisitor?.vst_data_visita ? `Data da Visita: ${new Date(editVisitor.vst_data_visita).toLocaleDateString('pt-BR')} ${new Date(editVisitor.vst_data_visita).toLocaleTimeString('pt-BR').slice(0,5)}` : 'Selecionar data da visita'}</Text></TouchableOpacity>
                 {showDatePicker && (
-                  <DateTimePicker 
-                    testID="dateTimePickerEdit" 
-                    value={editVisitor?.vst_data_visita ? new Date(editVisitor.vst_data_visita) : new Date()} 
-                    mode="datetime" 
-                    is24Hour={true} 
+                  <DateTimePicker
+                    testID="dateTimePickerEdit"
+                    value={editVisitor?.vst_data_visita ? new Date(editVisitor.vst_data_visita) : new Date()}
+                    mode="datetime"
+                    is24Hour={true}
                     display={Platform.OS === 'ios' ? 'default' : 'default'}
-                    onChange={(event, selectedDate) => { 
-                      if (Platform.OS === 'android') {
-                        setShowDatePicker(false);
-                      }
+                    onChange={(event, selectedDate) => {
+                      if (Platform.OS === 'android') { setShowDatePicker(false); }
                       if (event.type === 'set' && selectedDate) {
                         setEditVisitor(ev => ({ ...ev, vst_data_visita: selectedDate }));
-                        if (Platform.OS === 'ios') {
-                          setShowDatePicker(false);
-                        }
-                      } else if (event.type === 'dismissed') {
-                        setShowDatePicker(false);
-                      }
-                    }} 
+                        if (Platform.OS === 'ios') { setShowDatePicker(false); }
+                      } else if (event.type === 'dismissed') { setShowDatePicker(false); }
+                    }}
                   />
                 )}
                 <View style={styles.modalButtons}>
-                  <Button title="Cancelar" onPress={() => setEditVisitor(null)} color="#64748b" accessibilityLabel="Cancelar edição" />
-                  <TouchableOpacity onPress={() => { setVisitors(prev => prev.map(v => v.vst_id === editVisitor.vst_id ? { ...v, ...editVisitor } : v)); setEditVisitor(null); Toast.show({ type: 'success', text1: 'Visitante atualizado!' }); }} accessibilityLabel="Salvar edição" style={{ marginLeft: 8 }}><View><Text style={{ color: '#2563eb', fontWeight: 'bold' }}>Salvar</Text></View></TouchableOpacity>
+                  <Button title="Cancelar" onPress={() => setEditVisitor(null)} color={theme.colors.textSecondary} accessibilityLabel="Cancelar edição" />
+                  <TouchableOpacity onPress={() => { setVisitors(prev => prev.map(v => v.vst_id === editVisitor.vst_id ? { ...v, ...editVisitor } : v)); setEditVisitor(null); Toast.show({ type: 'success', text1: 'Visitante atualizado!' }); }} accessibilityLabel="Salvar edição" style={{ marginLeft: 8 }}><View><Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>Salvar</Text></View></TouchableOpacity>
                 </View>
               </View>
             </View>
           </TouchableWithoutFeedback>
         </Modal>
 
-  {/* Modal de autorização */}
+        {/* Modal de autorização */}
         <Modal animationType="fade" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <View style={[styles.modalContent, { maxHeight: '90%' }]}>
-                <Text style={styles.modalTitle}>Autorizar Novo Visitante</Text>
+              <View style={[styles.modalContent, { maxHeight: '90%', backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border }]}>
+                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Autorizar Novo Visitante</Text>
                 
                 <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
                   {/* Nome */}
-                  <TextInput 
-                    style={styles.input} 
-                    placeholder="Nome Completo" 
-                    value={name} 
-                    onChangeText={setName} 
-                    autoFocus={true} 
-                    accessibilityLabel="Nome do visitante" 
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, color: theme.colors.text }]}             
+                    placeholder="Nome Completo"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={name}
+                    onChangeText={setName}
+                    autoFocus={true}
+                    accessibilityLabel="Nome do visitante"
                   />
                   
                   {/* Documento */}
-                  <TextInput 
-                    style={styles.input} 
-                    placeholder="Documento (RG/CPF)" 
-                    value={document} 
-                    onChangeText={setDocument} 
-                    accessibilityLabel="Documento do visitante" 
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, color: theme.colors.text }]}             
+                    placeholder="Documento (RG/CPF)"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={document}
+                    onChangeText={setDocument}
+                    accessibilityLabel="Documento do visitante"
                   />
                   
                   {/* Tipo de Visitante */}
                   <View style={styles.selectorContainer}>
-                    <Text style={styles.selectorLabel}>Tipo de Visitante:</Text>
+                    <Text style={[styles.selectorLabel, { color: theme.colors.text }]}>Tipo de Visitante:</Text>
                     <View style={styles.typeSelector}>
                       {['Visitante', 'Hospede', 'Prestador'].map((type) => (
                         <TouchableOpacity
                           key={type}
-                          style={[
-                            styles.typeOption,
-                            visitorType === type && styles.typeOptionActive
-                          ]}
+                          style={[styles.typeOption, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }, visitorType === type && [styles.typeOptionActive, { backgroundColor: theme.colors.primary + '22', borderColor: theme.colors.primary }]]}
                           onPress={() => setVisitorType(type)}
                         >
-                          {type === 'Prestador' && <Briefcase size={16} color={visitorType === type ? '#ef4444' : '#6b7280'} />}
-                          {type === 'Hospede' && <Home size={16} color={visitorType === type ? '#8b5cf6' : '#6b7280'} />}
-                          {type === 'Visitante' && <Users size={16} color={visitorType === type ? '#10b981' : '#6b7280'} />}
-                          <Text style={[
-                            styles.typeOptionText,
-                            visitorType === type && styles.typeOptionTextActive
-                          ]}>
+                          {type === 'Prestador' && <Briefcase size={16} color={visitorType === type ? theme.colors.error : theme.colors.textSecondary} />}
+                          {type === 'Hospede' && <Home size={16} color={visitorType === type ? '#8b5cf6' : theme.colors.textSecondary} />}
+                          {type === 'Visitante' && <Users size={16} color={visitorType === type ? theme.colors.success : theme.colors.textSecondary} />}
+                          <Text style={[styles.typeOptionText, { color: theme.colors.textSecondary }, visitorType === type && { color: theme.colors.text, fontWeight: '700' }]}>
                             {type}
                           </Text>
                         </TouchableOpacity>
@@ -340,77 +331,71 @@ export default function Visitantes() {
                   
                   {/* Empresa (obrigatório para Prestador) */}
                   {(visitorType === 'Prestador' || company.length > 0) && (
-                    <View style={styles.inputContainer}>
-                      <Building size={16} color="#6b7280" style={{ marginRight: 8 }} />
-                      <TextInput 
-                        style={[styles.input, { flex: 1, marginBottom: 0, borderWidth: 0, backgroundColor: 'transparent' }]} 
-                        placeholder={visitorType === 'Prestador' ? "Nome da empresa *" : "Nome da empresa (opcional)"} 
-                        value={company} 
-                        onChangeText={setCompany} 
-                        accessibilityLabel="Empresa" 
+                    <View style={[styles.inputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>                      
+                      <Building size={16} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />
+                      <TextInput
+                        style={[styles.input, { flex: 1, marginBottom: 0, borderWidth: 0, backgroundColor: 'transparent', color: theme.colors.text }]}             
+                        placeholder={visitorType === 'Prestador' ? 'Nome da empresa *' : 'Nome da empresa (opcional)'}
+                        placeholderTextColor={theme.colors.textSecondary}
+                        value={company}
+                        onChangeText={setCompany}
+                        accessibilityLabel="Empresa"
                       />
                     </View>
                   )}
                   
                   {/* Data e Hora */}
-                  <TouchableOpacity 
-                    style={styles.dateButton} 
-                    onPress={() => setShowDatePicker(true)} 
+                  <TouchableOpacity
+                    style={[styles.dateButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}             
+                    onPress={() => setShowDatePicker(true)}
                     accessibilityLabel="Selecionar data da visita"
                   >
-                    <Text style={styles.dateButtonText}>
-                      {`Data da Visita: ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR').slice(0,5)}`}
-                    </Text>
+                    <Text style={[styles.dateButtonText, { color: theme.colors.textSecondary }]}> {`Data da Visita: ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR').slice(0, 5)}`}</Text>
                   </TouchableOpacity>
                   
                   {/* Observações */}
-                  <View style={styles.inputContainer}>
-                    <MessageSquare size={16} color="#6b7280" style={{ marginRight: 8, alignSelf: 'flex-start', marginTop: 8 }} />
-                    <TextInput 
-                      style={[styles.input, { flex: 1, minHeight: 80, textAlignVertical: 'top', marginBottom: 0, borderWidth: 0, backgroundColor: 'transparent' }]} 
-                      placeholder="Observações (placa do carro, motivo da visita, etc.)" 
-                      value={observation} 
-                      onChangeText={setObservation} 
+                  <View style={[styles.inputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>                    
+                    <MessageSquare size={16} color={theme.colors.textSecondary} style={{ marginRight: 8, alignSelf: 'flex-start', marginTop: 8 }} />
+                    <TextInput
+                      style={[styles.input, { flex: 1, minHeight: 80, textAlignVertical: 'top', marginBottom: 0, borderWidth: 0, backgroundColor: 'transparent', color: theme.colors.text }]}             
+                      placeholder="Observações (placa do carro, motivo da visita, etc.)"
+                      placeholderTextColor={theme.colors.textSecondary}
+                      value={observation}
+                      onChangeText={setObservation}
                       multiline={true}
                       numberOfLines={3}
-                      accessibilityLabel="Observações" 
+                      accessibilityLabel="Observações"
                     />
                   </View>
                 </ScrollView>
                 
                 {showDatePicker && (
-                  <DateTimePicker 
-                    testID="dateTimePicker" 
-                    value={date} 
-                    mode="datetime" 
-                    is24Hour={true} 
+                  <DateTimePicker
+                    testID="dateTimePicker"
+                    value={date}
+                    mode="datetime"
+                    is24Hour={true}
                     display={Platform.OS === 'ios' ? 'default' : 'default'}
-                    onChange={(event, selectedDate) => { 
-                      if (Platform.OS === 'android') {
-                        setShowDatePicker(false);
-                      }
+                    onChange={(event, selectedDate) => {
+                      if (Platform.OS === 'android') { setShowDatePicker(false); }
                       if (event.type === 'set' && selectedDate) {
                         setDate(selectedDate);
-                        if (Platform.OS === 'ios') {
-                          setShowDatePicker(false);
-                        }
-                      } else if (event.type === 'dismissed') {
-                        setShowDatePicker(false);
-                      }
-                    }} 
+                        if (Platform.OS === 'ios') { setShowDatePicker(false); }
+                      } else if (event.type === 'dismissed') { setShowDatePicker(false); }
+                    }}
                   />
                 )}
                 
                 <View style={styles.modalButtons}>
-                  <Button title="Cancelar" onPress={() => setModalVisible(false)} color="#64748b" accessibilityLabel="Cancelar" />
+                  <Button title="Cancelar" onPress={() => setModalVisible(false)} color={theme.colors.textSecondary} accessibilityLabel="Cancelar" />
                   <TouchableOpacity onPress={handleAddVisitor} disabled={!isFormValid || isSubmitting} accessibilityLabel="Autorizar visitante" style={{ marginLeft: 8 }}>
                     {isSubmitting ? (
                       <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-                        <ActivityIndicator color="#2563eb" />
+                        <ActivityIndicator color={theme.colors.primary} />
                       </View>
                     ) : (
-                      <View style={[styles.submitButton, !isFormValid && styles.submitButtonDisabled]}>
-                        <Text style={{ color: isFormValid ? '#ffffff' : '#9ca3af', fontWeight: '700' }}>Autorizar</Text>
+                      <View style={[styles.submitButton, { backgroundColor: isFormValid ? theme.colors.primary : theme.colors.border }, !isFormValid && styles.submitButtonDisabled]}>
+                        <Text style={{ color: isFormValid ? '#ffffff' : theme.colors.textSecondary, fontWeight: '700' }}>Autorizar</Text>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -424,18 +409,18 @@ export default function Visitantes() {
         <Modal animationType="slide" transparent={true} visible={!!confirmExitVisitor} onRequestClose={handleCancelExit}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.45)' }}>
-              <View style={[styles.modalContent, { width: '90%', alignItems: 'center' }]}>
-                <View style={{ backgroundColor: '#fff4f4', borderRadius: 40, padding: 12, marginBottom: 12 }}>
-                  <AlertTriangle size={36} color="#b91c1c" />
+              <View style={[styles.modalContent, { width: '90%', alignItems: 'center', backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border }]}>                
+                <View style={{ backgroundColor: theme.colors.error + '22', borderRadius: 40, padding: 12, marginBottom: 12 }}>
+                  <AlertTriangle size={36} color={theme.colors.error} />
                 </View>
-                <Text style={[styles.modalTitle, { marginBottom: 8 }]}>Confirmar saída</Text>
-                <Text style={{ color: '#475569', marginBottom: 16, textAlign: 'center' }}>{`Deseja marcar a saída de${confirmVisitorData ? ' ' + confirmVisitorData.vst_nome : ' este visitante'}?`}</Text>
-                {confirmVisitorData && <Text style={{ marginBottom: 8, fontWeight: '600' }}>{`Entrada: ${formatDateTime(confirmVisitorData.vst_data_visita)}`}</Text>}
+                <Text style={[styles.modalTitle, { marginBottom: 8, color: theme.colors.text }]}>Confirmar saída</Text>
+                <Text style={{ color: theme.colors.textSecondary, marginBottom: 16, textAlign: 'center' }}>{`Deseja marcar a saída de${confirmVisitorData ? ' ' + confirmVisitorData.vst_nome : ' este visitante'}?`}</Text>
+                {confirmVisitorData && <Text style={{ marginBottom: 8, fontWeight: '600', color: theme.colors.text }}>{`Entrada: ${formatDateTime(confirmVisitorData.vst_data_visita)}`}</Text>}
                 <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between', marginTop: 12 }}>
-                  <TouchableOpacity onPress={handleCancelExit} style={{ flex: 1, marginRight: 8, backgroundColor: '#e6e9ee', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
-                    <Text style={{ color: '#475569', fontWeight: '600' }}>Cancelar</Text>
+                  <TouchableOpacity onPress={handleCancelExit} style={{ flex: 1, marginRight: 8, backgroundColor: theme.colors.background, paddingVertical: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
+                    <Text style={{ color: theme.colors.textSecondary, fontWeight: '600' }}>Cancelar</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={handleConfirmExit} style={{ flex: 1, marginLeft: 8, backgroundColor: '#ef4444', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
+                  <TouchableOpacity onPress={handleConfirmExit} style={{ flex: 1, marginLeft: 8, backgroundColor: theme.colors.error, paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}>
                     <Text style={{ color: '#fff', fontWeight: '700' }}>Confirmar saída</Text>
                   </TouchableOpacity>
                 </View>

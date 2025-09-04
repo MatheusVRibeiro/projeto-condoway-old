@@ -3,41 +3,37 @@ import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Modal, Alert, A
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { styles } from './styles';
 import { environments, allExistingReservations, myInitialReservations } from './mock';
-import { Users, Building, Clock } from 'lucide-react-native';
+import { Calendar as CalendarIcon, Users, Building, ListChecks, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Calendar } from 'react-native-calendars';
 import Toast from 'react-native-toast-message';
+import BackButton from '../../../components/BackButton';
 
-const EnvironmentCard = React.memo(({ env, onReserve, onDetails, theme, styles: s }) => (
-  <View style={[s.environmentCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]} accessible accessibilityRole="button" accessibilityLabel={`Ambiente ${env.name}`}>
-    <View style={s.cardHeader}>
-      <Text style={[s.cardTitle, { color: theme.colors.text }]}>{env.name}</Text>
-      <View style={{ backgroundColor: env.available ? theme.colors.success + '33' : theme.colors.border, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
-        <Text style={{ color: env.available ? theme.colors.success : theme.colors.textSecondary, fontSize: 12, fontWeight: 'bold' }}>
+const EnvironmentCard = React.memo(({ env, onReserve, onDetails, theme }) => (
+  <View style={[styles.environmentCard, { backgroundColor: theme.colors.card }]} accessible accessibilityRole="button" accessibilityLabel={`Ambiente ${env.name}`}>
+    <View style={styles.cardHeader}>
+      <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{env.name}</Text>
+      <View style={{ backgroundColor: env.available ? '#dcfce7' : theme.colors.border, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
+        <Text style={{ color: env.available ? '#166534' : theme.colors.textSecondary, fontSize: 12, fontWeight: 'bold' }}>
           {env.available ? 'Disponível' : 'Indisponível'}
         </Text>
       </View>
     </View>
-    <Text style={[s.cardDescription, { color: theme.colors.textSecondary }]}>{env.description}</Text>
-    <View style={s.cardInfo}>
+    <Text style={[styles.cardDescription, { color: theme.colors.textSecondary }]}>{env.description}</Text>
+    <View style={styles.cardInfo}>
       <Users color={theme.colors.textSecondary} size={16} />
-      <Text style={[s.cardInfoText, { color: theme.colors.textSecondary }]}>Capacidade: {env.capacity} pessoas</Text>
+      <Text style={[styles.cardInfoText, { color: theme.colors.textSecondary }]}>Capacidade: {env.capacity} pessoas</Text>
     </View>
-    <View style={s.cardFooter}>
-      <TouchableOpacity style={[s.cardButton, s.outlineButton, { borderColor: theme.colors.border }]} onPress={onDetails} accessibilityLabel={`Ver detalhes de ${env.name}`}>
-        <Text style={[s.buttonTextOutline, { color: theme.colors.text }]}>Ver Detalhes</Text>
+    <View style={styles.cardFooter}>
+      <TouchableOpacity style={[styles.cardButton, styles.outlineButton, { borderColor: theme.colors.border }]} onPress={onDetails} accessibilityLabel={`Ver detalhes de ${env.name}`}>
+        <Text style={[styles.buttonTextOutline, { color: theme.colors.text }]}>Ver Detalhes</Text>
       </TouchableOpacity>
       <TouchableOpacity 
-        style={[
-          s.cardButton, 
-          s.primaryButton, 
-          { backgroundColor: theme.colors.primary }, 
-          !env.available && { backgroundColor: theme.colors.border }
-        ]} 
+        style={[styles.cardButton, styles.primaryButton, { backgroundColor: theme.colors.primary }, !env.available && styles.disabledButton]} 
         onPress={onReserve}
         disabled={!env.available}
         accessibilityLabel={`Solicitar ${env.name}`}
       >
-        <Text style={[s.buttonTextPrimary, { color: '#ffffff' }]}>Solicitar</Text>
+        <Text style={styles.buttonTextPrimary}>Solicitar</Text>
       </TouchableOpacity>
     </View>
   </View>
@@ -45,7 +41,6 @@ const EnvironmentCard = React.memo(({ env, onReserve, onDetails, theme, styles: 
 
 export default function Reservas() {
   const { theme } = useTheme();
-  // const styles = useMemo(() => createReservationStyles(theme), [theme]);
   const [activeTab, setActiveTab] = useState('reservar');
   const [myReservations, setMyReservations] = useState(myInitialReservations);
   const [modalVisible, setModalVisible] = useState(false);
@@ -106,9 +101,9 @@ export default function Reservas() {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'pendente': return { backgroundColor: theme.colors.warning + '33', color: theme.colors.warning };
-      case 'confirmada': return { backgroundColor: theme.colors.success + '33', color: theme.colors.success };
-      default: return { backgroundColor: theme.colors.error + '22', color: theme.colors.error };
+      case 'pendente': return { backgroundColor: '#fef9c3', color: '#a16207' };
+      case 'confirmada': return { backgroundColor: '#dcfce7', color: '#166534' };
+      default: return { backgroundColor: '#fee2e2', color: '#991b1b' };
     }
   };
 
@@ -133,15 +128,15 @@ export default function Reservas() {
                 onPress={() => setSelectedTime(slot)}
                 style={[
                   styles.timeSlotButton,
-                  { borderColor: theme.colors.border, backgroundColor: theme.colors.card },
-                  isSelected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+                  { backgroundColor: isSelected ? theme.colors.primary : theme.colors.card },
+                  { borderColor: theme.colors.border },
                   isReserved && { backgroundColor: theme.colors.border }
                 ]}
               >
                 <Text style={[
                   styles.timeSlotText,
-                  { color: isSelected ? '#ffffff' : theme.colors.textSecondary },
-                  isReserved && { color: theme.colors.textSecondary + '88' }
+                  { color: isSelected ? '#ffffff' : theme.colors.text },
+                  isReserved && { color: theme.colors.textSecondary }
                 ]}>{slot}</Text>
               </TouchableOpacity>
             );
@@ -155,6 +150,7 @@ export default function Reservas() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView>
         <View style={styles.content}>
+          <BackButton style={{ alignSelf: 'flex-start' }} />
           <View style={styles.header}>
             <View style={styles.headerTitle}>
               <Building color={theme.colors.primary} size={28} />
@@ -163,23 +159,25 @@ export default function Reservas() {
             <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>Solicite um espaço ou gerencie as suas reservas.</Text>
           </View>
 
-          <View style={[styles.tabsContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+          <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[
-                styles.tabButton,
-                activeTab === 'reservar' && { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary, shadowOpacity: 0.3, shadowRadius: 6, elevation: 3 }
+                styles.tabButton, 
+                { borderColor: theme.colors.border },
+                activeTab === 'reservar' && { backgroundColor: theme.colors.primary }
               ]}
               onPress={() => setActiveTab('reservar')}
             >
               <Text style={[
-                styles.tabText,
+                styles.tabText, 
                 { color: activeTab === 'reservar' ? '#ffffff' : theme.colors.text }
               ]}>Reservar</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.tabButton,
-                activeTab === 'minhas' && { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary, shadowOpacity: 0.3, shadowRadius: 6, elevation: 3 }
+                { borderColor: theme.colors.border },
+                activeTab === 'minhas' && { backgroundColor: theme.colors.primary }
               ]}
               onPress={() => setActiveTab('minhas')}
             >
@@ -199,7 +197,6 @@ export default function Reservas() {
                   onReserve={() => handleOpenModal(env)}
                   onDetails={() => Alert.alert("Detalhes", env.rules.join("\n"))}
                   theme={theme}
-                  styles={styles}
                 />
               ))}
             </View>
@@ -209,7 +206,7 @@ export default function Reservas() {
                 const statusStyle = getStatusStyle(res.status);
                 const isExpanded = expandedId === res.id;
                 return (
-                  <View key={res.id} style={[styles.accordionItem, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+                  <View key={res.id} style={[styles.accordionItem, { backgroundColor: theme.colors.card }]}>
                     <TouchableOpacity style={styles.accordionTrigger} onPress={() => setExpandedId(isExpanded ? null : res.id)}>
                       <View style={styles.triggerLeft}>
                         <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>{res.environmentName}</Text>
@@ -225,11 +222,11 @@ export default function Reservas() {
                       <View style={styles.accordionContent}>
                         <View style={styles.detailRow}>
                           <Clock size={16} color={theme.colors.textSecondary} />
-                          <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>Horário: {res.time}</Text>
+                          <Text style={[styles.detailText, { color: theme.colors.text }]}>Horário: {res.time}</Text>
                         </View>
                         {res.status !== 'cancelada' && (
-                          <TouchableOpacity style={[styles.cancelButton, { backgroundColor: theme.colors.error + '22' }]} onPress={() => handleCancelReservation(res.id)}>
-                            <Text style={[styles.cancelButtonText, { color: theme.colors.error }]}>Cancelar Reserva</Text>
+                          <TouchableOpacity style={styles.cancelButton} onPress={() => handleCancelReservation(res.id)}>
+                            <Text style={styles.cancelButtonText}>Cancelar Reserva</Text>
                           </TouchableOpacity>
                         )}
                       </View>
@@ -262,8 +259,7 @@ export default function Reservas() {
                 todayTextColor: theme.colors.primary,
                 arrowColor: theme.colors.primary,
                 calendarBackground: theme.colors.card,
-                textDisabledColor: theme.colors.textSecondary + '55',
-                textSectionTitleColor: theme.colors.textSecondary,
+                textSectionTitleColor: theme.colors.text,
                 dayTextColor: theme.colors.text,
                 monthTextColor: theme.colors.text,
               }}
