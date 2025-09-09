@@ -65,7 +65,7 @@ const Onboarding = () => {
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.logoContainer}>
             <Image source={require('../../../../assets/condo.png')} style={styles.logo} accessibilityLabel="Logo" />
-            <Text style={styles.logoText}>Condoway</Text>
+            <Text style={styles.logoText}>CondoWay</Text>
           </View>
           <FlatList
             ref={flatListRef}

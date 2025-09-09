@@ -84,7 +84,6 @@ export default function Perfil() {
 
   const handleLogout = () => {
     logout();
-    navigation.reset({ index: 0, routes: [{ name: ROUTES.LOGIN }] });
   };
 
   return (

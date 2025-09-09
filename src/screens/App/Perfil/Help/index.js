@@ -20,8 +20,8 @@ import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { useTheme } from '../../../../contexts/ThemeProvider';
 
-export default function Help() {
-  const navigation = useNavigation();
+export default function Help({ navigation: navProp }) {
+  const navigation = navProp || useNavigation();
   const { theme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedFaq, setExpandedFaq] = useState(null);
@@ -169,16 +169,6 @@ export default function Help() {
           </View>
         </Animatable.View>
 
-        {/* Contact Options */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ENTRE EM CONTATO</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            {contactOptions.map((option, index) => (
-              <ContactCard key={index} option={option} />
-            ))}
-          </View>
-        </Animatable.View>
-
         {/* FAQ Search */}
         <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>PERGUNTAS FREQUENTES</Text>
@@ -231,6 +221,16 @@ export default function Help() {
               <Send size={20} color="white" />
               <Text style={styles.sendButtonText}>Enviar Mensagem</Text>
             </TouchableOpacity>
+          </View>
+        </Animatable.View>
+
+        {/* Contact Options (moved below Support Message) */}
+        <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ENTRE EM CONTATO</Text>
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+            {contactOptions.map((option, index) => (
+              <ContactCard key={index} option={option} />
+            ))}
           </View>
         </Animatable.View>
 

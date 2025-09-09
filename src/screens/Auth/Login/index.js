@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
@@ -19,6 +20,7 @@ import { Mail, Lock, Eye, EyeOff, LogIn, Check, Info, ArrowRight } from 'lucide-
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useAuth } from '../../../contexts/AuthContext';
+import Help from '../../../screens/App/Perfil/Help';
 
 // Função simples de validação de e-mail
 function validateEmail(email) {
@@ -33,6 +35,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
 
   async function handleLogin() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -200,7 +203,7 @@ export default function Login() {
                 <Animatable.View animation="fadeInUp" duration={1000} delay={1000} style={styles.helpContainer}>
                   <TouchableOpacity
                     style={styles.helpButton}
-                    onPress={() => navigation.navigate('Help')}
+                    onPress={() => setHelpVisible(true)}
                     accessibilityLabel="Ajuda e perguntas frequentes"
                     accessible={true}
                   >
@@ -208,6 +211,11 @@ export default function Login() {
                     <Text style={styles.helpText}>Precisa de ajuda?</Text>
                   </TouchableOpacity>
                 </Animatable.View>
+
+              {/* Help Modal — reutiliza componente App/Help para manter conteúdo e estilos consistentes */}
+              <Modal animationType="slide" transparent={false} visible={helpVisible} onRequestClose={() => setHelpVisible(false)}>
+                <Help navigation={{ goBack: () => setHelpVisible(false) }} />
+              </Modal>
 
               </KeyboardAvoidingView>
             </ScrollView>

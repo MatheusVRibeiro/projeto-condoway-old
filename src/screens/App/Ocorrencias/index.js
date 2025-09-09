@@ -42,13 +42,18 @@ export default function Ocorrencias() {
     setStep(2);
   };
 
-  const resetForm = () => {
+  const resetForm = async () => {
     setStep(1);
     setCategory(null);
     setDescription('');
     setLocation('');
     setPriority('media');
     setAttachments([]);
+    try {
+      await AsyncStorage.removeItem(DRAFT_KEY);
+    } catch (e) {
+      console.warn('Failed to remove draft', e);
+    }
   };
 
   // compress image helper using expo-image-manipulator (falls back to original URI on error)
