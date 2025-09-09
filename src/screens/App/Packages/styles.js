@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 0,
   },
   header: {
     alignItems: 'center',
@@ -17,17 +17,32 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1e293b',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center', // centraliza o ícone e o título
+    width: '100%',
+    marginBottom: 8,
   },
   headerTitleText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1e293b',
     marginLeft: 8,
+    textAlign: 'center',
+    // remover flex para permitir centralização correta
+  },
+  notificationButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerSubtitle: {
     fontSize: 14,
@@ -35,11 +50,113 @@ export const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // --- Barra de Pesquisa ---
+  // --- Header Actions ---
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  helpButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  // --- Estatísticas ---
+  statsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#e2e8f0',
+    marginHorizontal: 16,
+  },
+
+  // --- Busca e Filtros ---
+  searchFilterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
   searchContainer: {
     position: 'relative',
-    marginBottom: 24,
+    flex: 1,
   },
+  filterButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filtersContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  filterTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  filterOptions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  filterOptionText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+  // --- Barra de Pesquisa ---
   searchIcon: {
     position: 'absolute',
     left: 12,
@@ -119,7 +236,8 @@ export const styles = StyleSheet.create({
   tabContent: {
     marginTop: 24,
     flex: 1,
-    minHeight: 0, // Garante que o FlatList/SectionList ocupe espaço mesmo em layouts aninhados
+    minHeight: 0,
+    paddingBottom: 20,
   },
 
   // --- Card de Encomenda ---
@@ -250,5 +368,49 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#475569',
+  },
+
+  // --- Floating Action Button ---
+  fabButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+  },
+
+  // --- Package Card Urgency ---
+  urgentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 2,
+  },
+  urgentText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+
+  // --- Urgent Alert ---
+  urgentAlert: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
   },
 });

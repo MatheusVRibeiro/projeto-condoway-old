@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
   // --- Containers ---
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc', // overridden dinamicamente
+    backgroundColor: '#f8fafc',
   },
   content: {
     padding: 16,
@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     marginBottom: 16,
     flexDirection: 'row',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 24,
@@ -30,10 +30,10 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // --- Abas (Tabs) ---
+  // --- Tabs ---
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#e2e8f0', // overridden
+    backgroundColor: '#e2e8f0',
     borderRadius: 8,
     padding: 4,
   },
@@ -43,7 +43,7 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
   },
   tabButtonActive: {
-    backgroundColor: 'white', // overridden
+    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -53,16 +53,13 @@ export const styles = StyleSheet.create({
   tabText: {
     textAlign: 'center',
     fontWeight: '600',
-    color: '#475569', // overridden
-  },
-  tabTextActive: {
-    color: '#2563eb', // overridden
+    color: '#475569',
   },
   tabContent: {
     marginTop: 24,
   },
 
-  // --- Passo 1: Grade de Categorias ---
+  // --- Categories grid ---
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -70,7 +67,7 @@ export const styles = StyleSheet.create({
   },
   categoryCard: {
     width: '48%',
-    backgroundColor: 'white', // overridden
+    backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -78,177 +75,91 @@ export const styles = StyleSheet.create({
     minHeight: 110,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0', // overridden
+    borderColor: '#e2e8f0',
   },
   categoryTitle: {
     fontWeight: '600',
-    color: '#334155', // overridden
+    color: '#334155',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
   },
 
-  // --- Passo 2: Formulário ---
-  formHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  formTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1e293b', // overridden
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569', // overridden
-    marginBottom: 8,
-  },
+  // --- Form ---
+  formHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  formTitle: { fontSize: 20, fontWeight: 'bold', color: '#1e293b' },
+  inputGroup: { marginBottom: 20 },
+  label: { fontSize: 14, fontWeight: '600', color: '#475569', marginBottom: 8 },
   input: {
-    backgroundColor: 'white', // overridden
+    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#cbd5e1', // overridden
+    borderColor: '#cbd5e1',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
   },
-  textarea: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  radioGroup: {
+  textarea: { minHeight: 100, textAlignVertical: 'top' },
+  attachmentButton: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 8,
-  },
-  radioButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  radioCircle: {
-    height: 20,
-    width: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#2563eb', // overridden
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
-  },
-  radioDot: {
-    height: 10,
-    width: 10,
-    borderRadius: 5,
-    backgroundColor: '#2563eb', // overridden
-  },
-  radioLabel: {
-    fontSize: 16,
-  },
-  submitButton: {
-    backgroundColor: '#2563eb', // overridden
     padding: 16,
     borderRadius: 8,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  // --- Passo 3: Confirmação ---
-  confirmationContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  confirmationTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 16,
-  },
-  confirmationText: {
-    fontSize: 16,
-    color: '#64748b', // overridden
-    textAlign: 'center',
-    marginVertical: 8,
-  },
-
-  // --- Lista de Ocorrências ---
-  accordionItem: {
-    backgroundColor: 'white', // overridden
-    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0', // overridden
-    marginBottom: 12,
-    overflow: 'hidden',
+    borderStyle: 'dashed',
   },
-  accordionTrigger: {
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  triggerLeft: {
-    flex: 1,
-  },
-  accordionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e293b', // overridden
-  },
-  accordionSubtitle: {
-    fontSize: 12,
-    color: '#64748b', // overridden
-    marginTop: 4,
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  accordionContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9', // overridden
-  },
-  commentBubble: {
-    maxWidth: '85%',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  commentText: {
-    fontSize: 14,
-  },
-  commentDate: {
-    fontSize: 10,
-    marginTop: 4,
-    textAlign: 'right',
-  },
-  moradorBubble: {
-    backgroundColor: '#2563eb', // overridden
-    alignSelf: 'flex-end',
-  },
-  sindicoBubble: {
-    backgroundColor: '#f1f5f9', // overridden
-    alignSelf: 'flex-start',
-  },
-  moradorText: {
-    color: 'white',
-  },
-  sindicoText: {
-    color: '#1e293b', // overridden
-  },
+  attachmentButtonText: { marginLeft: 8, fontSize: 16, fontWeight: '600' },
+
+  // attachment preview & thumbnails
+  attachmentPreviewContainer: { position: 'relative', marginTop: 8 },
+  attachmentImage: { width: '100%', height: 200, borderRadius: 8 },
+  removeAttachmentButton: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 16, padding: 4 },
+  attachmentsRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
+  thumbnailWrapper: { width: 100, height: 100, marginRight: 8, marginBottom: 8, position: 'relative' },
+  thumbnail: { width: '100%', height: '100%', borderRadius: 8, backgroundColor: '#e5e7eb' },
+  progressBarContainer: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6, backgroundColor: '#f1f5f9', borderBottomLeftRadius: 8, borderBottomRightRadius: 8, overflow: 'hidden' },
+  progressBar: { height: '100%', width: '0%', backgroundColor: '#2563eb' },
+
+  radioGroup: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 8 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalOption: { paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#e6eef8' },
+  modalOptionText: { fontSize: 16, fontWeight: '600' },
+  modalCancel: { borderBottomWidth: 0, marginTop: 8 },
+  radioButton: { flexDirection: 'row', alignItems: 'center' },
+  radioCircle: { height: 20, width: 20, borderRadius: 10, borderWidth: 2, borderColor: '#2563eb', alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  radioDot: { height: 10, width: 10, borderRadius: 5, backgroundColor: '#2563eb' },
+
+  submitButton: { backgroundColor: '#2563eb', padding: 16, borderRadius: 8, alignItems: 'center' },
+  submitButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+
+  // confirmation
+  confirmationContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  confirmationTitle: { fontSize: 24, fontWeight: 'bold', marginTop: 16 },
+  confirmationText: { fontSize: 16, color: '#64748b', textAlign: 'center', marginVertical: 8 },
+
+  // issues list
+  accordionItem: { backgroundColor: 'white', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 12, overflow: 'hidden' },
+  accordionTrigger: { padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  triggerLeft: { flex: 1 },
+  accordionTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
+  accordionSubtitle: { fontSize: 12, color: '#64748b', marginTop: 4 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusBadgeText: { fontSize: 12, fontWeight: '600' },
+  accordionContent: { paddingHorizontal: 16, paddingBottom: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+
+  // comments
+  commentBubble: { maxWidth: '85%', padding: 12, borderRadius: 12, marginBottom: 12 },
+  commentText: { fontSize: 14 },
+  commentDate: { fontSize: 10, marginTop: 4, textAlign: 'right' },
+  moradorBubble: { backgroundColor: '#2563eb', alignSelf: 'flex-end' },
+  sindicoBubble: { backgroundColor: '#f1f5f9', alignSelf: 'flex-start' },
+  moradorText: { color: 'white' },
+  sindicoText: { color: '#1e293b' },
+
+  // Message composer
+  messageContainer: { flexDirection: 'row', alignItems: 'flex-end', marginTop: 12, padding: 8, borderRadius: 10, borderWidth: 1, borderColor: '#e6eef8' },
+  messageInput: { flex: 1, minHeight: 40, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, backgroundColor: 'transparent' },
+  sendButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginLeft: 8, justifyContent: 'center', alignItems: 'center' },
+  sendButtonText: { fontWeight: '700', fontSize: 14, color: '#fff' },
 });

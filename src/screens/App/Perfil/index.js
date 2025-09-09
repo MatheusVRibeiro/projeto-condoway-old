@@ -139,8 +139,8 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('Security')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#fef3c7' }]}>
-                <Shield size={20} color="#f59e0b" />
+              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+                <Shield size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
                 <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Segurança</Text>
@@ -152,8 +152,8 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('UnitDetails')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#f0fdf4' }]}>
-                <Home size={20} color="#10b981" />
+              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+                <Home size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
                 <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Minha Unidade</Text>
@@ -170,8 +170,8 @@ export default function Perfil() {
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>GERAL</Text>
           <View style={[styles.menuGroup, { backgroundColor: theme.colors.card }]}>
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('NotificationPreferences')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#f0f9ff' }]}>
-                <Bell size={20} color="#0ea5e9" />
+              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+                <Bell size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
                 <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Preferências</Text>
@@ -183,8 +183,8 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Documents')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#fef2f2' }]}> 
-                <FileText size={20} color="#ef4444" />
+              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}> 
+                <FileText size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
                 <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Documentos</Text>
@@ -196,8 +196,8 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Help')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#f8fafc' }]}> 
-                <HelpCircle size={20} color="#64748b" />
+              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}> 
+                <HelpCircle size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
                 <Text style={[styles.menuTitle, { color: theme.colors.text }]}>Ajuda e Suporte</Text>
