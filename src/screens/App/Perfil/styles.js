@@ -494,7 +494,6 @@ export const makeProfileStyles = (theme) => ({
   scrollContainer: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 70, // Reduzido para um espaçamento mais adequado
   },
   profileCard: {
     backgroundColor: theme.colors.card,
@@ -658,11 +657,7 @@ export const makeProfileStyles = (theme) => ({
   },
   chevronContainer: { padding: 4 },
   dangerSection: { marginBottom: 16 },
-  bottomSpacer: { 
-    alignItems: 'center', 
-    paddingVertical: 20,
-    paddingBottom: 25, // Reduzido para um espaçamento mais adequado
-  },
+  bottomSpacer: { alignItems: 'center', paddingVertical: 16 },
   appVersion: { fontSize: 12, color: theme.colors.textSecondary, fontWeight: '500' },
   dangerText: { color: '#dc2626', fontWeight: '700' },
 });

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning, Moon, Sun } from 'lucide-react-native';
-import BackButton from '../../../components/BackButton';
 import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
@@ -116,7 +115,6 @@ export default function Dashboard() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView>
         <View style={styles.content}>
-          {/* <BackButton style={{ alignSelf: 'flex-start' }} /> */}
           {/* === HEADER === */}
           <Animatable.View animation="fadeInDown" duration={500} style={[styles.header, styles.section]}>
             <View style={styles.headerTextContainer}>

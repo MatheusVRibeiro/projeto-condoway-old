@@ -6,7 +6,6 @@ import { environments, allExistingReservations, myInitialReservations } from './
 import { Calendar as CalendarIcon, Users, Building, ListChecks, Clock, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Calendar } from 'react-native-calendars';
 import Toast from 'react-native-toast-message';
-import BackButton from '../../../components/BackButton';
 
 const EnvironmentCard = React.memo(({ env, onReserve, onDetails, theme }) => (
   <View style={[styles.environmentCard, { backgroundColor: theme.colors.card }]} accessible accessibilityRole="button" accessibilityLabel={`Ambiente ${env.name}`}>
@@ -150,7 +149,6 @@ export default function Reservas() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView>
         <View style={styles.content}>
-          <BackButton style={{ alignSelf: 'flex-start' }} />
           <View style={styles.header}>
             <View style={styles.headerTitle}>
               <Building color={theme.colors.primary} size={28} />

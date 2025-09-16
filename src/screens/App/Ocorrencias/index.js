@@ -2,26 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, Alert, FlatList, ActivityIndicator, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
-import { categories, initialIssues } from './mock';
+import { categories } from './mock';
 import { MessageSquareWarning, ArrowLeft, CheckCircle, Paperclip, XCircle } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Toast from 'react-native-toast-message';
-import BackButton from '../../../components/BackButton';
 import { useTheme } from '../../../contexts/ThemeProvider';
+import { useAuth } from '../../../contexts/AuthContext';
 import ActionSheet from 'react-native-actions-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from '../../../services/api'; // Importando a API centralizada
 
 export default function Ocorrencias() {
   const { theme } = useTheme();
+  const { user } = useAuth(); // Pegando dados do usuário autenticado
   const actionSheetRef = useRef(null);
   const commentsScrollRef = useRef(null);
   const insets = useSafeAreaInsets();
   const openImageOptions = () => actionSheetRef.current?.setModalVisible(true);
   const closeImageOptions = () => actionSheetRef.current?.setModalVisible(false);
   const [activeTab, setActiveTab] = useState('registrar');
-  const [myIssues, setMyIssues] = useState(initialIssues);
+  const [myIssues, setMyIssues] = useState([]);
   const [step, setStep] = useState(1);
   const [category, setCategory] = useState(null);
   const [description, setDescription] = useState('');
@@ -36,6 +38,81 @@ export default function Ocorrencias() {
   const [messageDrafts, setMessageDrafts] = useState({}); // { [issueId]: text }
 
   const DRAFT_KEY = '@condoway_occurrence_draft_v1';
+
+  // Buscar ocorrências ao carregar a tela
+  useEffect(() => {
+    console.log('Dados do usuário:', user); // Debug
+    if (user?.user_id && user?.token) {
+      buscarMinhasOcorrencias();
+    } else {
+      console.log('Usuário não autenticado ou sem token:', { 
+        user_id: user?.user_id, 
+        token: user?.token ? 'presente' : 'ausente' 
+      });
+    }
+  }, [user]);
+
+  const buscarMinhasOcorrencias = async () => {
+    try {
+      console.log('🔍 Iniciando busca de ocorrências...');
+      console.log('👤 Dados do usuário:', { user_id: user?.user_id, token: user?.token ? 'presente' : 'ausente' });
+      
+      setUploading(true);
+      const ocorrenciasDaApi = await api.buscarOcorrencias(user.token);
+      
+      console.log('📋 Ocorrências recebidas da API:', ocorrenciasDaApi);
+      console.log('📊 Tipo de dados:', typeof ocorrenciasDaApi);
+      console.log('📏 É array?', Array.isArray(ocorrenciasDaApi));
+      console.log('📏 Quantidade:', ocorrenciasDaApi?.length);
+      
+      // Garantir que sempre seja um array válido
+      const ocorrenciasValidas = Array.isArray(ocorrenciasDaApi) ? ocorrenciasDaApi : [];
+      console.log('✅ Ocorrências válidas:', ocorrenciasValidas);
+      
+      // Mapear os dados da API para o formato esperado pelo componente
+      const ocorrenciasMapeadas = ocorrenciasValidas.map(oco => ({
+        id: oco.oco_id,
+        protocol: oco.oco_protocolo,
+        title: oco.oco_categoria,
+        category: oco.oco_categoria,
+        description: oco.oco_descricao,
+        location: oco.oco_localizacao,
+        date: new Date(oco.oco_data).toLocaleString('pt-BR'),
+        status: oco.oco_status === 'Aberta' ? 'Em Análise' : 
+                oco.oco_status === 'Em Andamento' ? 'Em Análise' : 
+                oco.oco_status === 'Resolvida' ? 'Resolvida' : oco.oco_status,
+        priority: oco.oco_prioridade?.toLowerCase() || 'media',
+        attachments: oco.oco_imagem ? [oco.oco_imagem] : [],
+        comments: [
+          {
+            author: 'Morador',
+            text: oco.oco_descricao,
+            date: new Date(oco.oco_data).toLocaleString('pt-BR')
+          }
+        ]
+      }));
+      
+      // Filtrar apenas as ocorrências do usuário logado
+      const minhasOcorrencias = ocorrenciasMapeadas.filter(oco => {
+        const ocorrenciaOriginal = ocorrenciasValidas.find(orig => orig.oco_id === oco.id);
+        return ocorrenciaOriginal?.userap_id === user?.user_id;
+      });
+      
+      console.log('🎯 Ocorrências mapeadas (todas):', ocorrenciasMapeadas.length);
+      console.log('👤 Minhas ocorrências filtradas:', minhasOcorrencias.length, minhasOcorrencias);
+      console.log('🔍 User ID para filtro:', user?.user_id);
+      
+      setMyIssues(minhasOcorrencias);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao carregar ocorrências',
+        text2: error.message
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleCategorySelect = (selectedCategory) => {
     setCategory(selectedCategory);
@@ -109,26 +186,36 @@ export default function Ocorrencias() {
     setUploadProgress(prev => { const copy = { ...prev }; delete copy[id]; return copy; });
   };
 
-  // Simulate upload function (replace with real upload to backend)
-  const uploadFile = (attachmentObj) => new Promise((resolve, reject) => {
-    const { id } = attachmentObj;
-    setUploading(true);
-    setUploadProgress(prev => ({ ...prev, [id]: 0 }));
-    let progress = 0;
-    const timer = setInterval(() => {
-      progress += Math.floor(Math.random() * 20) + 10;
-      if (progress >= 100) progress = 100;
-      setUploadProgress(prev => ({ ...prev, [id]: progress }));
-      if (progress >= 100) {
-        clearInterval(timer);
-        // emulate server returning url
-        setUploading(false);
-        resolve({ success: true, url: attachmentObj.uri });
-      }
-    }, 400);
-    // timeout safety
-    setTimeout(() => { if (progress < 100) { clearInterval(timer); reject(new Error('Upload timeout')); } }, 30000);
-  });
+  // Upload de arquivo usando a API
+  const uploadFile = async (attachmentObj) => {
+    if (!user?.token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    try {
+      const { id, uri } = attachmentObj;
+      setUploadProgress(prev => ({ ...prev, [id]: 0 }));
+      
+      // Simular progresso para feedback visual
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const current = prev[id] || 0;
+          if (current >= 90) return prev;
+          return { ...prev, [id]: current + 10 };
+        });
+      }, 200);
+
+      const url = await api.uploadAnexo(uri, user.token);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(prev => ({ ...prev, [id]: 100 }));
+      
+      return { success: true, url };
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     // draft auto-save
@@ -144,26 +231,6 @@ export default function Ocorrencias() {
     };
     saveDraft();
   }, [category, description, location, priority, attachments]);
-
-  // persist issues locally while backend is not available
-  useEffect(() => {
-    const loadIssues = async () => {
-      try {
-        const raw = await AsyncStorage.getItem('@condoway_issues_v1');
-        if (raw) setMyIssues(JSON.parse(raw));
-      } catch (e) { console.warn('load issues fail', e); }
-    };
-    loadIssues();
-  }, []);
-
-  useEffect(() => {
-    const save = async () => {
-      try {
-        await AsyncStorage.setItem('@condoway_issues_v1', JSON.stringify(myIssues));
-      } catch (e) { console.warn('save issues fail', e); }
-    };
-    save();
-  }, [myIssues]);
 
   useEffect(() => {
     // draft auto-recovery
@@ -186,41 +253,153 @@ export default function Ocorrencias() {
     loadDraft();
   }, []);
 
+  // Função para enviar comentário
+  const handleSendComment = async (issueId, text) => {
+    if (!text.trim()) {
+      Toast.show({ type: 'error', text1: 'Digite uma mensagem' });
+      return;
+    }
+
+    if (!user?.token) {
+      Toast.show({ type: 'error', text1: 'Usuário não autenticado' });
+      return;
+    }
+
+    try {
+      const novoComentario = await api.adicionarComentario(issueId, text, user.token);
+      
+      // Atualizar a lista local com o novo comentário
+      setMyIssues(prev => prev.map(it => 
+        it.id === issueId 
+          ? { ...it, comments: [...(it.comments || []), novoComentario] } 
+          : it
+      ));
+      
+      setMessageDrafts(prev => ({ ...prev, [issueId]: '' }));
+      Toast.show({ type: 'success', text1: 'Mensagem enviada' });
+      
+      // Autoscroll para o final
+      setTimeout(() => commentsScrollRef.current?.scrollToEnd({ animated: true }), 150);
+      
+    } catch (error) {
+      console.error('Erro ao enviar comentário:', error);
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Erro ao enviar mensagem', 
+        text2: error.message 
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!description.trim() || !location.trim()) {
       Toast.show({ type: 'error', text1: 'Preencha todos os campos obrigatórios' });
       return;
     }
-    // upload attachments sequentially (could be parallel)
-    const uploadedAttachments = [];
-    for (const a of attachments) {
-      try {
-        const res = await uploadFile(a);
-        uploadedAttachments.push(res.url || a.uri);
-      } catch (e) {
-        // mark failed and provide retry option
-        Toast.show({ type: 'error', text1: 'Falha no upload de algum anexo. Tente novamente.' });
-        return;
-      }
+
+    console.log('Verificando autenticação:', { 
+      user: user ? 'presente' : 'ausente',
+      user_id: user?.user_id,
+      token: user?.token ? 'presente' : 'ausente'
+    });
+
+    if (!user) {
+      Toast.show({ type: 'error', text1: 'Usuário não encontrado', text2: 'Faça login novamente' });
+      return;
     }
 
-    const newIssue = {
-      id: Date.now(),
-      protocol: `OCO-${Date.now().toString().slice(-6)}`,
-      category: category?.title || 'Geral',
-      title: category?.title || 'Ocorrência',
-      description,
-      location,
-      date: new Date().toLocaleString('pt-BR'),
-      status: 'Enviada',
-      priority,
-      attachments: uploadedAttachments,
-      comments: [{ author: 'Morador', text: description, date: new Date().toLocaleString('pt-BR') }]
-    };
-    setMyIssues(prev => [newIssue, ...prev]);
-    setStep(3);
-    // clear draft
-    try { await AsyncStorage.removeItem(DRAFT_KEY); } catch(e){}
+    if (!user.token) {
+      Toast.show({ type: 'error', text1: 'Token de autenticação não encontrado', text2: 'Faça login novamente' });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      // Upload de anexos sequencialmente
+      const uploadedAttachments = [];
+      for (const attachment of attachments) {
+        try {
+          if (attachment.uri) {
+            const urlAnexo = await api.uploadAnexo(attachment.uri, user.token);
+            uploadedAttachments.push(urlAnexo);
+          }
+        } catch (e) {
+          console.error('Erro no upload do anexo:', e);
+          Toast.show({ 
+            type: 'error', 
+            text1: 'Falha no upload de anexo', 
+            text2: 'Tente novamente.' 
+          });
+          return;
+        }
+      }
+
+      // NÃO gerar protocolo no cliente. O backend gera o protocolo (oco_protocolo) automaticamente.
+      console.log('📤 Montando dados da ocorrência (sem protocolo)');
+      const dadosOcorrencia = {
+        user_id: user.user_id, // ID do usuário que está criando
+        categoria: category?.title || 'Geral',
+        descricao: description,
+        local: location,
+        prioridade: priority.charAt(0).toUpperCase() + priority.slice(1), // Capitalizar primeira letra
+        anexos: uploadedAttachments,
+      };
+
+      console.log('📤 Enviando ocorrência:', dadosOcorrencia);
+      console.log('👤 Dados do usuário para criação:', { 
+        user_id: user?.user_id, 
+        token: user?.token ? 'presente' : 'ausente' 
+      });
+      
+      const novaOcorrencia = await api.criarOcorrencia(dadosOcorrencia, user.token);
+      
+      // pegar protocolo retornado pela API, se houver
+      const protocoloRetornado = novaOcorrencia?.oco_protocolo || novaOcorrencia?.protocolo;
+
+      // Garantir que a nova ocorrência tenha um ID válido
+      const ocorrenciaComId = {
+        id: novaOcorrencia?.oco_id || novaOcorrencia?.id || Date.now(),
+        protocol: protocoloRetornado || 'Gerando...',
+        category: category?.title || 'Geral',
+        title: category?.title || 'Ocorrência',
+        description,
+        location,
+        date: new Date().toLocaleString('pt-BR'),
+        status: 'Em Análise', // Status inicial mais apropriado
+        priority,
+        attachments: uploadedAttachments,
+        comments: [{ author: 'Morador', text: description, date: new Date().toLocaleString('pt-BR') }],
+        ...novaOcorrencia
+      };
+      
+      // Atualizar a lista de ocorrências
+      setMyIssues(prev => [ocorrenciaComId, ...prev]);
+      setStep(3);
+      
+      // Limpar rascunho
+      try { 
+        await AsyncStorage.removeItem(DRAFT_KEY); 
+      } catch(e) {
+        console.warn('Erro ao remover rascunho:', e);
+      }
+
+      Toast.show({ 
+        type: 'success', 
+        text1: 'Ocorrência criada com sucesso!',
+        text2: protocoloRetornado ? `Protocolo: ${protocoloRetornado}` : undefined
+      });
+
+    } catch (error) {
+      console.error('Erro ao criar ocorrência:', error);
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Erro ao criar ocorrência', 
+        text2: error.message 
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const getStatusStyle = (status) => {
@@ -394,7 +573,18 @@ export default function Ocorrencias() {
         <View style={styles.confirmationContainer}>
           <CheckCircle color={theme.colors.success} size={64} />
           <Text style={[styles.confirmationTitle, { color: theme.colors.text }]}>Ocorrência Enviada!</Text>
-          <Text style={[styles.confirmationText, { color: theme.colors.textSecondary }]}>O síndico foi notificado. Você pode acompanhar o andamento na aba "Minhas Ocorrências".</Text>
+          
+          {/* Exibir o protocolo de forma destacada */}
+          <View style={[styles.protocolContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]}>
+            <Text style={[styles.protocolLabel, { color: theme.colors.textSecondary }]}>Protocolo</Text>
+            <Text style={[styles.protocolNumber, { color: theme.colors.primary }]}>
+              {myIssues[0]?.protocol || 'Gerando...'}
+            </Text>
+          </View>
+          
+          <Text style={[styles.confirmationText, { color: theme.colors.textSecondary }]}>
+            O síndico foi notificado. Guarde o número do protocolo para acompanhar sua ocorrência.
+          </Text>
           <TouchableOpacity style={[styles.submitButton, { backgroundColor: theme.colors.primary }]} onPress={() => { resetForm(); setActiveTab('minhas'); }}>
             <Text style={styles.submitButtonText}>Ver Minhas Ocorrências</Text>
           </TouchableOpacity>
@@ -405,10 +595,15 @@ export default function Ocorrencias() {
 
   const renderMyIssues = () => (
     <FlatList
-      data={myIssues}
-      keyExtractor={(item) => item.id.toString()}
+      data={myIssues.filter(item => item && item.id)} // Filtra itens válidos
+      keyExtractor={(item, index) => item?.id?.toString() || `item-${index}`}
       contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
       renderItem={({ item }) => {
+        // Validação de segurança
+        if (!item || !item.id) {
+          return null;
+        }
+        
         const issue = item;
         const statusStyle = getStatusStyle(issue.status);
         const isExpanded = expandedId === issue.id;
@@ -466,22 +661,9 @@ export default function Ocorrencias() {
                     <TouchableOpacity
                       accessibilityLabel={`Enviar mensagem para a ocorrência ${issue.protocol}`}
                       style={[styles.sendButton, { backgroundColor: theme.colors.primary }]}
-                      onPress={async () => {
+                      onPress={() => {
                         const text = (messageDrafts[issue.id] || '').trim();
-                        if (!text) return Toast.show({ type: 'error', text1: 'Digite uma mensagem' });
-                        // append morador comment
-                        setMyIssues(prev => prev.map(it => it.id === issue.id ? { ...it, comments: [...it.comments, { author: 'Morador', text, date: new Date().toLocaleString('pt-BR') }] } : it));
-                        setMessageDrafts(prev => ({ ...prev, [issue.id]: '' }));
-                        Toast.show({ type: 'success', text1: 'Mensagem enviada' });
-                        // autoscroll to bottom
-                        setTimeout(() => commentsScrollRef.current?.scrollToEnd({ animated: true }), 150);
-                        // simulate syndic reply after delay
-                        setTimeout(() => {
-                          const reply = 'Recebemos sua ocorrência. O zelador irá verificar amanhã pela manhã.';
-                          setMyIssues(prev => prev.map(it => it.id === issue.id ? { ...it, comments: [...it.comments, { author: 'Síndico', text: reply, date: new Date().toLocaleString('pt-BR') }] } : it));
-                          // autoscroll after reply
-                          setTimeout(() => commentsScrollRef.current?.scrollToEnd({ animated: true }), 200);
-                        }, 4000);
+                        handleSendComment(issue.id, text);
                       }}
                     >
                       <Text style={[styles.sendButtonText, { color: '#fff' }]}>Enviar</Text>
@@ -499,7 +681,6 @@ export default function Ocorrencias() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <View style={[styles.content, { flex: 1 }]}>
-        <BackButton style={{ alignSelf: 'flex-start' }} />
         <View style={styles.header}>
           <MessageSquareWarning color={theme.colors.primary} size={28} />
           <Text style={[styles.headerTitleText, { color: theme.colors.text }]}>Registrar Ocorrências</Text>

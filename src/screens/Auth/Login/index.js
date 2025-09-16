@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useAuth } from '../../../contexts/AuthContext';
 import Help from '../../../screens/App/Perfil/Help';
+import { api } from '../../services/api'; // Importando a API (caminho corrigido)
 
 // Função simples de validação de e-mail
 function validateEmail(email) {
@@ -39,23 +40,37 @@ export default function Login() {
 
   async function handleLogin() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     if (!email || !password) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Toast.show({ type: 'error', text1: 'Atenção', text2: 'Por favor, preencha todos os campos.', position: 'bottom' });
       return;
     }
+    
     if (!validateEmail(email)) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Toast.show({ type: 'error', text1: 'E-mail inválido', text2: 'Digite um e-mail válido.', position: 'bottom' });
       return;
     }
+    
     setIsLoading(true);
-    setTimeout(() => {
+    
+    try {
+      const userData = await api.login(email, password);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      login(userData);
+    } catch (error) {
+      console.error('Erro no login:', error); // Log para debug
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Erro de Login', 
+        text2: error.message, 
+        position: 'bottom' 
+      });
+    } finally {
       setIsLoading(false);
-      // Simula login de teste com qualquer e-mail e senha
-      login({ email, name: 'Usuário de Teste' });
-    }, 1500);
+    }
   }
 
   return (

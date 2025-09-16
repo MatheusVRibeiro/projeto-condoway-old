@@ -162,4 +162,27 @@ export const styles = StyleSheet.create({
   messageInput: { flex: 1, minHeight: 40, maxHeight: 120, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, backgroundColor: 'transparent' },
   sendButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginLeft: 8, justifyContent: 'center', alignItems: 'center' },
   sendButtonText: { fontWeight: '700', fontSize: 14, color: '#fff' },
+
+  // Protocol display
+  protocolContainer: { 
+    backgroundColor: '#f8fafc', 
+    borderWidth: 2, 
+    borderRadius: 12, 
+    padding: 16, 
+    marginVertical: 16, 
+    alignItems: 'center',
+    borderStyle: 'dashed'
+  },
+  protocolLabel: { 
+    fontSize: 12, 
+    fontWeight: '500', 
+    textTransform: 'uppercase', 
+    letterSpacing: 1, 
+    marginBottom: 4 
+  },
+  protocolNumber: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    letterSpacing: 1 
+  },
 });

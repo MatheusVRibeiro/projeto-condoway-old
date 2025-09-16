@@ -6,7 +6,6 @@ import { styles } from './styles';
 import { categories, initialIssues } from './mock';
 import { MessageSquareWarning, ArrowLeft, CheckCircle } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
-import BackButton from '../../../components/BackButton';
 
 export default function Ocorrencias() {
   const { theme } = useTheme();
@@ -212,7 +211,6 @@ export default function Ocorrencias() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView>
         <View style={styles.content}>
-          <BackButton style={{ alignSelf: 'flex-start' }} />
           <View style={styles.header}>
             <Text style={styles.headerTitle}>
               <MessageSquareWarning color={theme.colors.primary} size={28} />
