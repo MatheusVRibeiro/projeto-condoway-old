@@ -32,7 +32,8 @@ export default function Packages() {
     delivered,
     packages,
     groupedAwaitingPickup,
-    groupedDelivered
+    groupedDelivered,
+    loading,
   } = usePackages();
 
   const { isVisible: modalVisible, selectedItem: selectedPackage, openModal, closeModal } = useModal();
@@ -81,7 +82,7 @@ export default function Packages() {
         />
 
         <View style={styles.tabContent}>
-          {refreshing ? (
+          {loading ? (
             <LoadingState message="Carregando encomendas..." />
           ) : (
             <PackageList 

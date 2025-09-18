@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';
+import { useNotifications } from '../../../contexts/NotificationProvider';
 
 // --- Componentes Internos da Tela ---
 
@@ -77,6 +78,7 @@ const DashboardSkeleton = () => {
 
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
+  const { unreadCount } = useNotifications();
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
@@ -85,6 +87,7 @@ export default function Dashboard() {
   const handleMinhasEncomendas = React.useCallback(() => navigation.navigate('Packages'), [navigation]);
   const handleLiberarVisitante = React.useCallback(() => navigation.navigate('Visitantes'), [navigation]);
   const handleAbrirOcorrencia = React.useCallback(() => navigation.navigate('OcorrenciasTab'), [navigation]);
+  const handleVerNotificacoes = React.useCallback(() => navigation.navigate('Notifications'), [navigation]);
 
   // Função para calcular o slide ativo com base na posição do scroll
   const onScroll = React.useCallback((event) => {
@@ -133,11 +136,11 @@ export default function Dashboard() {
                 )}
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate('Notifications')}>
+              <TouchableOpacity style={styles.notificationButton} onPress={handleVerNotificacoes}>
                 <Bell color={theme.colors.text} size={28} />
-                {morador.notificacoesNaoLidas > 0 && (
+                {unreadCount > 0 && (
                   <View style={[styles.notificationBadge, { backgroundColor: theme.colors.error, borderColor: theme.colors.background }]}>
-                    <Text style={[styles.notificationBadgeText, { color: '#ffffff' }]}>{morador.notificacoesNaoLidas}</Text>
+                    <Text style={[styles.notificationBadgeText, { color: '#ffffff' }]}>{unreadCount}</Text>
                   </View>
                 )}
               </TouchableOpacity>

@@ -12,7 +12,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import ActionSheet from 'react-native-actions-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '../../../services/api'; // Importando a API centralizada
+import { apiService } from '../../../services/api'; // Importando a API centralizada com axios
 
 export default function Ocorrencias() {
   const { theme } = useTheme();
@@ -58,7 +58,7 @@ export default function Ocorrencias() {
       console.log('👤 Dados do usuário:', { user_id: user?.user_id, token: user?.token ? 'presente' : 'ausente' });
       
       setUploading(true);
-      const ocorrenciasDaApi = await api.buscarOcorrencias(user.token);
+      const ocorrenciasDaApi = await apiService.buscarOcorrencias();
       
       console.log('📋 Ocorrências recebidas da API:', ocorrenciasDaApi);
       console.log('📊 Tipo de dados:', typeof ocorrenciasDaApi);
@@ -205,7 +205,7 @@ export default function Ocorrencias() {
         });
       }, 200);
 
-      const url = await api.uploadAnexo(uri, user.token);
+      const url = await apiService.uploadAnexo(uri);
       
       clearInterval(progressInterval);
       setUploadProgress(prev => ({ ...prev, [id]: 100 }));
@@ -266,7 +266,7 @@ export default function Ocorrencias() {
     }
 
     try {
-      const novoComentario = await api.adicionarComentario(issueId, text, user.token);
+      const novoComentario = await apiService.adicionarComentario(issueId, text);
       
       // Atualizar a lista local com o novo comentário
       setMyIssues(prev => prev.map(it => 
@@ -321,7 +321,7 @@ export default function Ocorrencias() {
       for (const attachment of attachments) {
         try {
           if (attachment.uri) {
-            const urlAnexo = await api.uploadAnexo(attachment.uri, user.token);
+            const urlAnexo = await apiService.uploadAnexo(attachment.uri);
             uploadedAttachments.push(urlAnexo);
           }
         } catch (e) {
@@ -352,7 +352,7 @@ export default function Ocorrencias() {
         token: user?.token ? 'presente' : 'ausente' 
       });
       
-      const novaOcorrencia = await api.criarOcorrencia(dadosOcorrencia, user.token);
+      const novaOcorrencia = await apiService.criarOcorrencia(dadosOcorrencia);
       
       // pegar protocolo retornado pela API, se houver
       const protocoloRetornado = novaOcorrencia?.oco_protocolo || novaOcorrencia?.protocolo;

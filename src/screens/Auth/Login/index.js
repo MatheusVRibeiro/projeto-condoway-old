@@ -21,7 +21,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useAuth } from '../../../contexts/AuthContext';
 import Help from '../../../screens/App/Perfil/Help';
-import { api } from '../../services/api'; // Importando a API (caminho corrigido)
 
 // Função simples de validação de e-mail
 function validateEmail(email) {
@@ -56,9 +55,8 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      const userData = await api.login(email, password);
+      const userData = await login(email, password);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      login(userData);
     } catch (error) {
       console.error('Erro no login:', error); // Log para debug
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

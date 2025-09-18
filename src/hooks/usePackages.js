@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../services/api'; // Importando a API real
+import { apiService } from '../services/api'; // Importando a API real com axios
 
 export function usePackages() {
   const { user } = useAuth();
@@ -16,7 +16,7 @@ export function usePackages() {
 
   // Função para buscar as encomendas da API
   const fetchPackages = useCallback(async () => {
-    if (!user?.token) {
+    if (!user?.user_id) {
       Toast.show({ type: 'error', text1: 'Usuário não autenticado.' });
       setLoading(false);
       setRefreshing(false);
@@ -24,19 +24,22 @@ export function usePackages() {
     }
 
     try {
-      const packagesFromApi = await api.getEncomendas(user.token);
+      const packagesFromApi = await apiService.getEncomendas();
       // Mapear os dados da API para o formato que o frontend espera
-      const mappedPackages = packagesFromApi.map(pkg => ({
-        id: pkg.enc_id,
-        store: pkg.enc_remetente,
-        trackingCode: pkg.enc_cod_rastreio,
-        arrivalDate: pkg.enc_data_chegada,
-        status: pkg.enc_status,
-        description: `Destinatário: ${pkg.enc_destinatario}`,
-        recipient: pkg.enc_destinatario,
-        retirada_por: pkg.enc_retirada_por,
-        retirada_data: pkg.enc_retirada_data,
-      }));
+      const mappedPackages = packagesFromApi
+        .filter(pkg => pkg.userap_id === user.user_id) // Mostrar somente encomendas do morador logado
+        .map(pkg => ({
+          id: pkg.enc_id,
+          store: pkg.enc_nome_loja || '',
+          trackingCode: pkg.enc_codigo_rastreio || pkg.enc_cod_rastreio || '',
+          arrivalDate: pkg.enc_data_chegada,
+          status: pkg.enc_status || 'Aguardando',
+          description: '',
+          recipient: user?.name || '',
+          retirada_por: pkg.enc_retirada_por || null,
+          retirada_data: pkg.enc_data_retirada || null,
+          raw: pkg, // manter o objeto bruto para casos específicos
+        }));
       setPackages(mappedPackages);
     } catch (error) {
       Toast.show({

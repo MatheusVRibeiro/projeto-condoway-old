@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
+import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 import AppStack from './AppStack';
 import Login from '../screens/Auth/Login';
 import SignUp from '../screens/Auth/SignUp';
@@ -9,37 +10,42 @@ import Help from '../screens/App/Help';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ROUTES } from './routeNames';
 
-const AuthStack = createNativeStackNavigator();
-
-// Navegador para o fluxo de autenticação (pré-login) — onboarding sempre antes do login
-function AuthRoutes() {
-  return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Onboarding">
-      <AuthStack.Screen name="Onboarding" component={Onboarding} />
-      <AuthStack.Screen name={ROUTES.LOGIN} component={Login} />
-      <AuthStack.Screen name={ROUTES.SIGNUP} component={SignUp} />
-      <AuthStack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPassword} />
-      <AuthStack.Screen name={ROUTES.RESET_PASSWORD} component={ResetPassword} />
-      <AuthStack.Screen name="Help" component={Help} />
-    </AuthStack.Navigator>
-  );
-}
-
-// O AuthProvider deve envolver a app no App.js, então aqui só consumimos o contexto
-// When logged in, show Onboarding first every time by using a small stack
-const LoggedInStack = createNativeStackNavigator();
-
-function LoggedInRoutes() {
-  return (
-    <LoggedInStack.Navigator screenOptions={{ headerShown: false }}>
-      <LoggedInStack.Screen name="Onboarding" component={Onboarding} />
-      <LoggedInStack.Screen name="AppStack" component={AppStack} />
-    </LoggedInStack.Navigator>
-  );
-}
+const RootStack = createNativeStackNavigator();
 
 export default function Routes() {
-  const { isLoggedIn } = useAuth();
-  if (isLoggedIn) return <LoggedInRoutes />; // always show Onboarding first after login
-  return <AuthRoutes />;
+  const { user, loading } = useAuth();
+  const { showOnboarding } = useOnboardingStatus();
+  
+  // Mostrar loading enquanto verifica estado de autenticação e onboarding
+  if (loading || showOnboarding === null) {
+    return null; // ou uma tela de loading
+  }
+  
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      {showOnboarding ? (
+        // 1. Primeira vez - mostrar Onboarding
+        <>
+          <RootStack.Screen name="Onboarding" component={Onboarding} />
+          <RootStack.Screen name={ROUTES.LOGIN} component={Login} />
+          <RootStack.Screen name={ROUTES.SIGNUP} component={SignUp} />
+          <RootStack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPassword} />
+          <RootStack.Screen name={ROUTES.RESET_PASSWORD} component={ResetPassword} />
+          <RootStack.Screen name="Help" component={Help} />
+        </>
+      ) : !user ? (
+        // 2. Onboarding concluído mas não logado - mostrar Auth
+        <>
+          <RootStack.Screen name={ROUTES.LOGIN} component={Login} />
+          <RootStack.Screen name={ROUTES.SIGNUP} component={SignUp} />
+          <RootStack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPassword} />
+          <RootStack.Screen name={ROUTES.RESET_PASSWORD} component={ResetPassword} />
+          <RootStack.Screen name="Help" component={Help} />
+        </>
+      ) : (
+        // 3. Logado - mostrar App direto
+        <RootStack.Screen name="MainTabs" component={AppStack} />
+      )}
+    </RootStack.Navigator>
+  );
 }

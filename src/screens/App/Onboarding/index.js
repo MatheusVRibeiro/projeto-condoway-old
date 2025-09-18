@@ -31,27 +31,13 @@ const Onboarding = () => {
 
   const handleStart = async () => {
     await completeOnboarding();
-    // Use reset para garantir que a rota exista no estado da navegação
-    if (user) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'AppStack' }],
-        })
-      );
-    } else {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: ROUTES.LOGIN }],
-        })
-      );
-    }
+    // Após completar o onboarding, navegar para Login
+    navigation.navigate(ROUTES.LOGIN);
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.slide}>
-      <View style={styles.slideContent} pointerEvents="box-none">
+      <View style={[styles.slideContent, { pointerEvents: 'box-none' }]}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.subtitle}>{item.subtitle}</Text>
       </View>
@@ -61,7 +47,7 @@ const Onboarding = () => {
   return (
     <View style={styles.container}>
       {/* Full-screen background image driven by currentIndex */}
-      <ImageBackground source={onboardingSlides[currentIndex].image} style={styles.illustration} imageStyle={{ resizeMode: 'cover' }} accessibilityLabel="Ilustração de fundo">
+      <ImageBackground source={onboardingSlides[currentIndex].image} style={styles.illustration} resizeMode="cover" accessibilityLabel="Ilustração de fundo">
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.logoContainer}>
             <Image source={require('../../../../assets/condo.png')} style={styles.logo} accessibilityLabel="Logo" />
