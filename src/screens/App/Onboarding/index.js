@@ -38,14 +38,14 @@ const Onboarding = () => {
   const renderItem = ({ item }) => (
     <View style={styles.slide}>
       <View style={[styles.slideContent, { pointerEvents: 'box-none' }]}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.subtitle}>{item.subtitle}</Text>
+        <Text style={[styles.title, { color: '#fff' }]}>{item.title}</Text>
+        <Text style={[styles.subtitle, { color: '#e0e7ef' }]}>{item.subtitle}</Text>
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.primary }]}>
       {/* Full-screen background image driven by currentIndex */}
       <ImageBackground source={onboardingSlides[currentIndex].image} style={styles.illustration} resizeMode="cover" accessibilityLabel="Ilustração de fundo">
         <SafeAreaView style={{ flex: 1 }}>
