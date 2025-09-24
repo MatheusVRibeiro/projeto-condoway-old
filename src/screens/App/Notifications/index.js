@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, SectionList, TouchableOpacity, Alert, RefreshControl } from 'react-native';
-import { Bell, AlertTriangle, Box, Info, Trash2, Settings } from 'lucide-react-native';
+// 1. TROCAR 'SectionList' POR 'ScrollView'
+import { View, Text, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { Bell, AlertTriangle, Box, Info, Trash2 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import styles from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useNotifications } from '../../../contexts/NotificationProvider';
 
-// Prioridades serão renderizadas dinamicamente com o tema
 const priorities = [
   { key: 'todos', label: 'Todos' },
   { key: 'baixa', label: 'Baixa' },
@@ -46,61 +46,35 @@ export default function Notifications() {
     markAsRead, 
     markAllAsRead, 
     removeNotification,
-    addTestNotification,
     refreshNotifications
   } = useNotifications();
   
   const [filter, setFilter] = useState('todos');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Atualização automática quando a tela se torna visível
   useFocusEffect(
     React.useCallback(() => {
-      console.log('📱 Tela de notificações entrou em foco - carregando notificações...');
       refreshNotifications();
     }, [refreshNotifications])
   );
 
-  // Função para pull-to-refresh (atualização manual)
   const onRefresh = async () => {
     setRefreshing(true);
-    try {
-      console.log('🔄 Pull-to-refresh: Forçando atualização das notificações...');
-      await refreshNotifications(true); // forceRefresh = true
-    } catch (error) {
-      console.error('❌ Erro ao atualizar notificações:', error);
-    } finally {
-      setRefreshing(false);
-    }
+    await refreshNotifications(true);
+    setRefreshing(false);
   };
 
-  const filtered = useMemo(() => {
-    if (filter === 'todos') return notifications;
-    
-    return notifications.filter(n => {
-      // Mapear tipos antigos para prioridades
-      const priority = getPriorityFromType(n.type);
-      return priority === filter;
-    });
+  // 1. FILTRA AS NOTIFICAÇÕES PELA PRIORIDADE SELECIONADA
+  const filteredNotifications = useMemo(() => {
+    if (filter === 'todos') {
+      return notifications;
+    }
+    // Usa o novo campo 'priority'
+    return notifications.filter(n => n.priority === filter);
   }, [filter, notifications]);
   
-  const sections = useMemo(() => groupByDate(filtered), [filtered]);
-
-  // Função para mapear tipos para prioridades
-  function getPriorityFromType(type) {
-    switch (type?.toLowerCase()) {
-      case 'error':
-      case 'critical':
-        return 'alta';
-      case 'warning':
-      case 'alert':
-        return 'media';
-      case 'info':
-      case 'success':
-      default:
-        return 'baixa';
-    }
-  }
+  // 2. AGRUPA POR DATA A LISTA QUE JÁ FOI FILTRADA
+  const sections = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
 
   function handleMarkAllAsRead() {
     markAllAsRead();
@@ -110,7 +84,7 @@ export default function Notifications() {
   function handleDeleteNotification(id) {
     Alert.alert(
       'Excluir Notificação',
-      'Esta notificação será removida apenas da sua visualização local. Ela não será excluída do servidor.',
+      'Esta notificação será removida apenas da sua visualização local.',
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Excluir', style: 'destructive', onPress: () => removeNotification(id) },
@@ -125,64 +99,98 @@ export default function Notifications() {
     default: { bg: theme.colors.card, text: theme.colors.textSecondary },
   };
 
-  function getPriorityDotColor(type) {
-    const priority = getPriorityFromType(type);
+  function getPriorityDotColor(priority) {
+    // Usa a prioridade diretamente
     return (priorityColors[priority] || priorityColors.default).text;
   }
 
-  function renderIcon(type) {
-    const color = getPriorityDotColor(type);
+  function renderIcon(type, priority) {
+    // Usa a prioridade para a cor
+    const color = getPriorityDotColor(priority);
     switch (type) {
-      case 'error': return <AlertTriangle color={color} size={22} strokeWidth={2.2} />;
-      case 'warning': return <AlertTriangle color={color} size={22} strokeWidth={2.2} />;
-      case 'success': return <Box color={color} size={22} strokeWidth={2.2} />;
-      default: return <Info color={color} size={22} strokeWidth={2.2} />;
+      case 'entrega': return <Box color={color} size={22} strokeWidth={2.2} />;
+      case 'aviso': return <Info color={color} size={22} strokeWidth={2.2} />;
+      case 'mensagem': return <Bell color={color} size={22} strokeWidth={2.2} />;
+      default: return <AlertTriangle color={color} size={22} strokeWidth={2.2} />;
     }
   }
 
-  function renderItem({ item, index }) {
-    const dotColor = getPriorityDotColor(item.type);
-    return (
-      <Animatable.View animation="fadeInUp" duration={500} delay={index * 80}>
-        <View style={[
-          styles.card,
-          { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow, borderColor: theme.colors.border },
-          !item.read && { borderLeftWidth: 4, borderLeftColor: dotColor }
-        ]}>
-          <TouchableOpacity 
-            activeOpacity={0.8} 
-            style={{ flex: 1 }}
-            onPress={() => markAsRead(item.id)}
-          >
-            <View style={styles.cardRow}>
-              {renderIcon(item.type)}
-              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{item.title}</Text>
-              {!item.read && (
-                <Animatable.View animation="pulse" iterationCount="infinite" style={[styles.dot, { backgroundColor: dotColor }]} />
-              )}
-              <TouchableOpacity onPress={() => handleDeleteNotification(item.id)} style={styles.trashIcon} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                <Trash2 color={theme.colors.textSecondary} size={18} />
+  // 2. FUNÇÃO PARA RENDERIZAR O CONTEÚDO DA LISTA
+  const renderListContent = () => {
+    if (loading && !refreshing) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>Carregando...</Text>
+        </View>
+      );
+    }
+
+    if (sections.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Bell color={theme.colors.textSecondary} size={48} />
+          <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>Nenhuma notificação encontrada</Text>
+          <Text style={[styles.emptyHint, { color: theme.colors.textSecondary }]}>Puxe para baixo para atualizar</Text>
+        </View>
+      );
+    }
+
+    return sections.map((section) => (
+      <View key={section.title}>
+        <View style={styles.sectionHeaderWrapper}>
+          <Text style={[styles.sectionHeader, { color: theme.colors.textSecondary }]}>{section.title.toUpperCase()}</Text>
+          <View style={[styles.sectionLine, { backgroundColor: theme.colors.border }]} />
+        </View>
+        {section.data.map((item, index) => (
+          <Animatable.View key={item.id} animation="fadeInUp" duration={500} delay={index * 80}>
+            <View style={[
+              styles.card,
+              { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow, borderColor: theme.colors.border },
+              // Usa a prioridade para a cor da borda
+              !item.read && { borderLeftWidth: 4, borderLeftColor: getPriorityDotColor(item.priority) }
+            ]}>
+              <TouchableOpacity activeOpacity={0.8} style={{ flex: 1 }} onPress={() => markAsRead(item.id)}>
+                <View style={styles.cardRow}>
+                  {/* Passa o tipo e a prioridade para o ícone */}
+                  {renderIcon(item.type, item.priority)}
+                  <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{item.title}</Text>
+                  {/* Usa a prioridade para a cor do ponto */}
+                  {!item.read && <Animatable.View animation="pulse" iterationCount="infinite" style={[styles.dot, { backgroundColor: getPriorityDotColor(item.priority) }]} />}
+                  <TouchableOpacity onPress={() => handleDeleteNotification(item.id)} style={styles.trashIcon} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                    <Trash2 color={theme.colors.textSecondary} size={18} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.cardMessage, { color: theme.colors.textSecondary }]}>{item.message}</Text>
+                <Text style={[styles.cardDate, { color: theme.colors.textSecondary, fontSize: 12, marginTop: 4 }]}>{item.timestamp.toLocaleString('pt-BR')}</Text>
               </TouchableOpacity>
             </View>
-            <Text style={[styles.cardMessage, { color: theme.colors.textSecondary }]}>{item.message}</Text>
-            <Text style={[styles.cardDate, { color: theme.colors.textSecondary, fontSize: 12, marginTop: 4 }]}>
-              {item.timestamp.toLocaleString('pt-BR')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Animatable.View>
-    );
-  }
+          </Animatable.View>
+        ))}
+      </View>
+    ));
+  };
 
+  // 3. O RETURN PRINCIPAL AGORA É UM SCROLLVIEW
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>      
-      {/* Header */}
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={theme.colors.primary}
+          colors={[theme.colors.primary]}
+        />
+      }
+    >
+      {/* 4. TODOS OS ELEMENTOS ESTÃO DENTRO DO SCROLLVIEW */}
       <View style={styles.headerRow}>
         <Bell color={theme.colors.primary} size={24} />
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Notificações</Text>
       </View>
       
-      {/* Stats */}
       <View style={styles.statsContainer}>
         <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
           {unreadCount > 0 ? `${unreadCount} não lidas` : 'Todas as notificações lidas'}
@@ -197,7 +205,6 @@ export default function Notifications() {
         )}
       </View>
 
-      {/* Mark all as read button */}
       {unreadCount > 0 && (
         <TouchableOpacity onPress={handleMarkAllAsRead} style={styles.markAllButton}>
           <Text style={[styles.markAllText, { color: theme.colors.primary }]}>
@@ -206,11 +213,10 @@ export default function Notifications() {
         </TouchableOpacity>
       )}
       
-      {/* Filters */}
       <View style={styles.filterRow}>
         {priorities.map(p => {
           const isActive = filter === p.key;
-            const pc = priorityColors[p.key] || priorityColors.default;
+          const pc = priorityColors[p.key] || priorityColors.default;
           return (
             <TouchableOpacity
               key={p.key}
@@ -229,45 +235,8 @@ export default function Notifications() {
         })}
       </View>
       
-      {loading ? (
-        <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
-          <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>Carregando notificações...</Text>
-        </View>
-      ) : sections.length === 0 ? (
-        <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
-          <Bell color={theme.colors.textSecondary} size={48} />
-          <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-            {filter === 'todos' ? 'Nenhuma notificação encontrada' : `Nenhuma notificação do tipo "${filter}" encontrada`}
-          </Text>
-          <Text style={[styles.emptyHint, { color: theme.colors.textSecondary }]}>
-            Atualiza automaticamente quando você abre a tela
-          </Text>
-        </View>
-      ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          renderSectionHeader={({ section: { title } }) => (
-            <View style={styles.sectionHeaderWrapper}>
-              <Text style={[styles.sectionHeader, { color: theme.colors.textSecondary }]}>{title.toUpperCase()}</Text>
-              <View style={[styles.sectionLine, { backgroundColor: theme.colors.border }]} />
-            </View>
-          )}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          SectionSeparatorComponent={() => <View style={{ height: 8 }} />}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.colors.primary}
-              colors={[theme.colors.primary]}
-              title="Puxe para atualizar"
-              titleColor={theme.colors.textSecondary}
-            />
-          }
-        />
-      )}
-    </View>
+      {/* 5. A LISTA É RENDERIZADA AQUI DENTRO */}
+      {renderListContent()}
+    </ScrollView>
   );
 }

@@ -23,6 +23,7 @@ export const NotificationProvider = ({ children }) => {
       title: raw.not_tipo === 'Entrega' ? 'Encomenda Chegou' : (raw.not_tipo === 'Aviso' ? 'Aviso' : (raw.not_tipo === 'Mensagem' ? 'Nova Mensagem' : 'Notificação')),
       message: raw.not_mensagem || raw.message || '',
       type: raw.not_tipo?.toLowerCase() || (raw.type && raw.type.toLowerCase()) || 'info',
+      priority: raw.not_prioridade?.toLowerCase() || 'baixa', // Adicionado para usar a prioridade da API
       timestamp: raw.not_data_envio ? new Date(raw.not_data_envio) : (raw.created_at ? new Date(raw.created_at) : new Date()),
       read: raw.not_lida === 1 || raw.not_lida === true || raw.read === true || false,
       raw,
