@@ -12,7 +12,7 @@ import * as Animatable from 'react-native-animatable';
 
 // Componente de ação principal
 const ActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onPress, variant = 'default', theme }) => {
-  const bgColor = iconBg || (theme.isDark ? '#1e293b' : '#eff6ff');
+  const bgColor = iconBg || (theme.isDark ? theme.colors.card : `${theme.colors.info}15`);
   const iColor = iconColor || theme.colors.primary;
   
   return (
@@ -37,22 +37,25 @@ const ActionCard = ({ icon: Icon, iconBg, iconColor, title, subtitle, onPress, v
           ]}>{title}</Text>
           {subtitle && <Text style={[styles.actionSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>}
         </View>
-        <ChevronRight size={20} color={variant === 'danger' ? '#dc2626' : theme.colors.textSecondary} />
+  <ChevronRight size={20} color={variant === 'danger' ? theme.colors.error : theme.colors.textSecondary} />
       </TouchableOpacity>
     </Animatable.View>
   );
 };
 
 // Card de estatística do usuário
-const StatsCard = ({ icon: Icon, value, label, color = '#2563eb' }) => (
-  <View style={styles.statsCardContainer}>
-    <View style={[styles.statsIconWrapper, { backgroundColor: `${color}15` }]}>
-      <Icon size={18} color={color} />
+const StatsCard = ({ icon: Icon, value, label, color = null, theme }) => {
+  const c = color || theme.colors.primary;
+  return (
+    <View style={styles.statsCardContainer}>
+      <View style={[styles.statsIconWrapper, { backgroundColor: `${c}15` }]}>
+        <Icon size={18} color={c} />
+      </View>
+      <Text style={styles.statsValue}>{value}</Text>
+      <Text style={styles.statsLabel}>{label}</Text>
     </View>
-    <Text style={styles.statsValue}>{value}</Text>
-    <Text style={styles.statsLabel}>{label}</Text>
-  </View>
-);
+  );
+};
 
 export default function Perfil() {
   const navigation = useNavigation();
@@ -113,9 +116,9 @@ export default function Perfil() {
               </View>
               <Text style={[styles.locationText, { color: theme.colors.textSecondary }]}>{profile.apartment} - {profile.block}</Text>
             </View>
-            <View style={[styles.roleBadge, { backgroundColor: theme.isDark ? '#78350f33' : '#fef3c7' }] }>
-              <Star size={12} color="#f59e0b" fill="#f59e0b" />
-              <Text style={[styles.roleText, { color: theme.isDark ? '#fbbf24' : '#92400e' }]}>{getUserTypeLabel(profile.userType)}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: theme.isDark ? `${theme.colors.warning}33` : `${theme.colors.warning}15` }] }>
+              <Star size={12} color={theme.colors.warning} fill={theme.colors.warning} />
+              <Text style={[styles.roleText, { color: theme.colors.text }]}>{getUserTypeLabel(profile.userType)}</Text>
             </View>
           </View>
         </Animatable.View>
@@ -125,7 +128,7 @@ export default function Perfil() {
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>CONTA</Text>
           <View style={[styles.menuGroup, { backgroundColor: theme.colors.card }]}>
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+              <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.info}15` }]}>
                 <Edit size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
@@ -138,7 +141,7 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('Security')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+              <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.info}15` }]}>
                 <Shield size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
@@ -151,7 +154,7 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem, { backgroundColor: theme.colors.card }]} onPress={() => navigation.navigate('UnitDetails')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+              <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.info}15` }]}>
                 <Home size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
@@ -169,7 +172,7 @@ export default function Perfil() {
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>GERAL</Text>
           <View style={[styles.menuGroup, { backgroundColor: theme.colors.card }]}>
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('NotificationPreferences')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+              <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.info}15` }]}>
                 <Bell size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
@@ -182,7 +185,7 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Documents')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}> 
+              <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.info}15` }]}> 
                 <FileText size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
@@ -195,7 +198,7 @@ export default function Perfil() {
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.lastMenuItem, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]} onPress={() => navigation.navigate('Help')} activeOpacity={0.7}>
-              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}> 
+              <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.info}15` }]}> 
                 <HelpCircle size={20} color={theme.colors.primary} />
               </View>
               <View style={styles.menuContent}>
@@ -211,16 +214,16 @@ export default function Perfil() {
 
         {/* Logout */}
         <Animatable.View animation="fadeInUp" duration={400} delay={300} style={styles.dangerSection}>
-          <TouchableOpacity style={[styles.menuItem, styles.dangerItem, { backgroundColor: theme.colors.card, borderColor: theme.isDark ? '#7f1d1d' : '#fee2e2' }]} onPress={handleLogout} activeOpacity={0.7}>
-            <View style={[styles.menuIcon, { backgroundColor: '#fef2f2' }]}>
-              <LogOut size={20} color="#dc2626" />
+          <TouchableOpacity style={[styles.menuItem, styles.dangerItem, { backgroundColor: theme.colors.card, borderColor: theme.isDark ? `${theme.colors.error}33` : `${theme.colors.error}15` }]} onPress={handleLogout} activeOpacity={0.7}>
+            <View style={[styles.menuIcon, { backgroundColor: `${theme.colors.error}15` }]}>
+              <LogOut size={20} color={theme.colors.error} />
             </View>
             <View style={styles.menuContent}>
               <Text style={[styles.menuTitle, styles.dangerText]}>Sair da Conta</Text>
               <Text style={[styles.menuSubtitle, { color: theme.colors.textSecondary }]}>Fazer logout do aplicativo</Text>
             </View>
             <View style={styles.chevronContainer}>
-              <ChevronRight size={18} color="#dc2626" />
+              <ChevronRight size={18} color={theme.colors.error} />
             </View>
           </TouchableOpacity>
         </Animatable.View>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning, Moon, Sun } from 'lucide-react-native';
+import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning, Moon, Sun, Video, MessageSquare, UserCheck, Car, Tag, Plus } from 'lucide-react-native';
 import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';
@@ -43,6 +44,48 @@ const AcaoCard = React.memo(({ icon: Icon, title, badgeCount, onPress, theme }) 
       )}
       <Icon color={theme.colors.primary} size={32} style={styles.actionCardIcon} />
       <Text style={dynamicStyles.actionCardTitle}>{title}</Text>
+    </TouchableOpacity>
+  );
+});
+
+const CondominioCard = React.memo(({ icon: Icon, title, badgeCount, onPress, theme, iconColor, inDevelopment }) => {
+  const handlePress = React.useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onPress();
+  }, [onPress]);
+
+  const dynamicStyles = {
+    condominioCard: {
+      ...styles.condominioCard,
+      backgroundColor: theme.colors.card,
+      shadowColor: theme.colors.shadow,
+    },
+    condominioCardTitle: {
+      ...styles.condominioCardTitle,
+      color: theme.colors.text,
+    },
+    condominioCardBadgeText: {
+      ...styles.condominioCardBadgeText,
+      color: '#ffffff',
+    }
+  };
+
+  return (
+    <TouchableOpacity onPress={handlePress} style={dynamicStyles.condominioCard}>
+      {badgeCount > 0 && (
+        <View style={[styles.condominioCardBadge, { backgroundColor: theme.colors.error }]}>
+          <Text style={dynamicStyles.condominioCardBadgeText}>{badgeCount}</Text>
+        </View>
+      )}
+      
+      {inDevelopment && (
+        <View style={[styles.developmentBadge, { backgroundColor: theme.colors.warning }]}>
+          <Text style={styles.developmentBadgeText}>Em Breve</Text>
+        </View>
+      )}
+      
+      <Icon color={iconColor || theme.colors.primary} size={32} style={styles.condominioCardIcon} />
+      <Text style={dynamicStyles.condominioCardTitle}>{title}</Text>
     </TouchableOpacity>
   );
 });
@@ -88,6 +131,67 @@ export default function Dashboard() {
   const handleLiberarVisitante = React.useCallback(() => navigation.navigate('Visitantes'), [navigation]);
   const handleAbrirOcorrencia = React.useCallback(() => navigation.navigate('OcorrenciasTab'), [navigation]);
   const handleVerNotificacoes = React.useCallback(() => navigation.navigate('Notifications'), [navigation]);
+
+  // Funções para "Meu Condomínio"
+  const handleCamerasSeguranca = React.useCallback(() => {
+    // Implementação futura - mostrar tela de câmeras ao vivo
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Toast.show({
+      type: 'info',
+      text1: 'Câmeras de Segurança',
+      text2: 'Funcionalidade em desenvolvimento! Em breve você poderá visualizar as câmeras ao vivo.',
+      position: 'bottom',
+      visibilityTime: 4000,
+    });
+  }, []);
+
+  const handleMuralAvisos = React.useCallback(() => {
+    // Implementação futura - mostrar mural de avisos
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Toast.show({
+      type: 'info',
+      text1: 'Mural de Avisos',
+      text2: 'Em breve você poderá visualizar todos os comunicados oficiais do condomínio.',
+      position: 'bottom',
+      visibilityTime: 4000,
+    });
+  }, []);
+
+  const handleAcessoFacial = React.useCallback(() => {
+    // Implementação futura - gerenciar acesso facial
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Toast.show({
+      type: 'info',
+      text1: 'Acesso Facial',
+      text2: 'Em desenvolvimento! Gerencie acessos faciais da sua unidade e visitantes.',
+      position: 'bottom',
+      visibilityTime: 4000,
+    });
+  }, []);
+
+  const handleTagVeicular = React.useCallback(() => {
+    // Implementação futura - gerenciar tags veiculares
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Toast.show({
+      type: 'info',
+      text1: 'Tags Veiculares',
+      text2: 'Em desenvolvimento! Gerencie as tags veiculares dos seus veículos.',
+      position: 'bottom',
+      visibilityTime: 4000,
+    });
+  }, []);
+
+  const handleConvidadoRapido = React.useCallback(() => {
+    // Ação secundária - cadastro rápido de convidado
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Toast.show({
+      type: 'success',
+      text1: 'Cadastro Rápido',
+      text2: 'Funcionalidade para cadastrar visitante com acesso facial temporário.',
+      position: 'bottom',
+      visibilityTime: 3000,
+    });
+  }, []);
 
   // Função para calcular o slide ativo com base na posição do scroll
   const onScroll = React.useCallback((event) => {
@@ -188,6 +292,52 @@ export default function Dashboard() {
                 <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={handleMinhasEncomendas} theme={theme} />
                 <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={handleLiberarVisitante} theme={theme} />
                 <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={handleAbrirOcorrencia} theme={theme} />
+            </View>
+          </Animatable.View>
+
+          {/* === MEU CONDOMÍNIO === */}
+          <Animatable.View animation="fadeInUp" duration={500} delay={250} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Meu Condomínio</Text>
+            <View style={styles.actionsGrid}>
+              {/* Câmeras de Segurança */}
+              <CondominioCard 
+                icon={Video}
+                title="Câmeras"
+                onPress={handleCamerasSeguranca}
+                theme={theme}
+                iconColor={theme.colors.primary}
+                inDevelopment={true}
+              />
+
+              {/* Mural de Avisos */}
+              <CondominioCard 
+                icon={MessageSquare}
+                title="Mural de Avisos"
+                onPress={handleMuralAvisos}
+                theme={theme}
+                iconColor={theme.colors.primary}
+                inDevelopment={true}
+              />
+
+              {/* Acesso Facial */}
+              <CondominioCard 
+                icon={UserCheck}
+                title="Acesso Facial"
+                onPress={handleAcessoFacial}
+                theme={theme}
+                iconColor={theme.colors.primary}
+                inDevelopment={true}
+              />
+
+              {/* Tag Veicular */}
+              <CondominioCard 
+                icon={Car}
+                title="Tags Veiculares"
+                onPress={handleTagVeicular}
+                theme={theme}
+                iconColor={theme.colors.primary}
+                inDevelopment={true}
+              />
             </View>
           </Animatable.View>
 
