@@ -7,7 +7,7 @@ export { useProfile } from './useProfile';
 
 // Legacy Hooks (manter compatibilidade)
 export { default as useAsync } from './useAsync';
-export { default as useBiometrics } from './useBiometrics';
+// export { default as useBiometrics } from './useBiometrics'; // removido: suporte a biometria/Face ID
 export { default as useOnboardingStatus } from './useOnboardingStatus';
 export { default as useTheme } from './useTheme';
 export { default as useUser } from './useUser';

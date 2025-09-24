@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
+import { useTheme } from '../../../contexts/ThemeProvider';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import { Mail, Lock, Eye, EyeOff, LogIn, Check, Info, ArrowRight } from 'lucide-react-native';
@@ -29,6 +30,7 @@ function validateEmail(email) {
 
 export default function Login() {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,7 +76,7 @@ export default function Login() {
   return (
     <>
       <View style={styles.container}>
-        <LinearGradient colors={['rgb(37, 99, 235)', '#1e3a8a']} style={styles.gradient}>
+        <LinearGradient colors={[theme.colors.primary, theme.colors.info]} style={styles.gradient}>
           {/* Elementos decorativos de fundo */}
           <View style={styles.backgroundElements}>
             <Animatable.View animation="pulse" iterationCount="infinite" duration={4000} style={[styles.circle, styles.circle1]} />
@@ -107,12 +109,12 @@ export default function Login() {
                       <Text style={styles.inputLabel}>E-mail</Text>
                       <View style={styles.inputContainer}>
                         <View style={styles.inputIconContainer}>
-                          <Mail color="rgb(37, 99, 235)" size={20} />
+                          <Mail color={theme.colors.primary} size={20} />
                         </View>
                         <TextInput
                           style={styles.input}
                           placeholder="Digite seu e-mail"
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={theme.colors.textSecondary}
                           value={email}
                           onChangeText={setEmail}
                           keyboardType="email-address"
@@ -131,12 +133,12 @@ export default function Login() {
                       <Text style={styles.inputLabel}>Senha</Text>
                       <View style={styles.inputContainer}>
                         <View style={styles.inputIconContainer}>
-                          <Lock color="rgb(37, 99, 235)" size={20} />
+                          <Lock color={theme.colors.primary} size={20} />
                         </View>
                         <TextInput
                           style={styles.input}
                           placeholder="Digite sua senha"
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={theme.colors.textSecondary}
                           value={password}
                           onChangeText={setPassword}
                           secureTextEntry={!showPassword}
@@ -151,9 +153,9 @@ export default function Login() {
                           onPress={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff color="#9CA3AF" size={20} />
+                            <EyeOff color={theme.colors.textSecondary} size={20} />
                           ) : (
-                            <Eye color="#9CA3AF" size={20} />
+                            <Eye color={theme.colors.textSecondary} size={20} />
                           )}
                         </TouchableOpacity>
                       </View>
@@ -186,7 +188,7 @@ export default function Login() {
                         importantForAccessibility="yes"
                       >
                         <LinearGradient
-                          colors={['rgb(37, 99, 235)', '#1e3a8a']}
+                          colors={[theme.colors.primary, theme.colors.info]}
                           style={styles.loginButtonGradient}
                         >
                           {isLoading ? (
