@@ -88,6 +88,75 @@ const styles = (theme) => StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  // Novo VisitorCard
+  visitorCard: {
+    backgroundColor: theme.colors.card,
+    borderRadius: 12,
+    marginVertical: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.small,
+  },
+  visitorCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  visitorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  visitorName: {
+    fontSize: RFValue(16),
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginLeft: 8,
+  },
+  visitorCardBody: {
+    marginBottom: 12,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  detailText: {
+    fontSize: RFValue(12),
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
+  },
+  visitorCardFooter: {
+    borderTopWidth: 1,
+    borderColor: theme.colors.border,
+    paddingTop: 12,
+    marginTop: 4,
+  },
+  // Badge
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeText: {
+    marginLeft: 4,
+    fontSize: RFValue(11),
+    fontWeight: '600',
+  },
+  // Section Header
+  sectionHeader: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginTop: 10,
+  },
+  sectionTitle: {
+    fontSize: RFValue(16),
+    fontWeight: 'bold',
+    color: theme.colors.text,
+  },
   cardContent: {
     flex: 1,
   },

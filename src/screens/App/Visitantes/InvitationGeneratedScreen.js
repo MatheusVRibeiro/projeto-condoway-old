@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Share, SafeAreaView } from 'react-native'
 import { ArrowLeft, CheckCircle, Share2 } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
+import { formatSmartDate } from '../../../utils/dateFormatter';
 
 import { useTheme } from '../../../contexts/ThemeProvider';
 import styles from './InvitationGeneratedScreenStyles';
@@ -14,7 +15,7 @@ export default function InvitationGeneratedScreen() {
   const route = useRoute();
   const { visitorName = "Visitante" } = route.params || {};
 
-  const qrCodeValue = `CONVITE_CONDOMINIO_XYZ_VISITANTE_${visitorName.replace(/\s/g, '_').toUpperCase()}_VALIDADE_2025-09-25`;
+  const qrCodeValue = `CONVITE_CONDOMINIO_XYZ_VISITANTE_${visitorName.replace(/\s/g, '_').toUpperCase()}_VALIDADE_${new Date().toISOString().slice(0,10)}`;
 
   const handleShare = async () => {
     try {
@@ -51,17 +52,16 @@ export default function InvitationGeneratedScreen() {
         </Text>
 
         {/* QR Code */}
-        <View style={[styles.qrCodeContainer, { backgroundColor: 'white' }]}>
+        <View style={[styles.qrCodeContainer, { backgroundColor: theme.colors.card }]}>
           <QRCode
             value={qrCodeValue}
             size={220}
             logoBackgroundColor='transparent'
+            color={theme.colors.text}
           />
         </View>
         
-        <Text style={[styles.details, { color: theme.colors.textSecondary }]}>
-          Validade: Apenas hoje (25/09/2025)
-        </Text>
+        <Text style={[styles.details, { color: theme.colors.textSecondary }]}>Validade: {formatSmartDate(new Date())}</Text>
       </View>
 
       {/* Botões de Ação */}
@@ -71,6 +71,8 @@ export default function InvitationGeneratedScreen() {
           onPress={handleShare}
           icon={Share2}
           fullWidth
+          style={{ backgroundColor: theme.colors.primary }}
+          textStyle={{ color: '#FFF' }}
         />
         <TouchableOpacity onPress={handleFinish} style={styles.finishButton}>
           <Text style={[styles.finishButtonText, { color: theme.colors.textSecondary }]}>Concluir</Text>

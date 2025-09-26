@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Calendar, ArrowLeft, User, FileText } from 'lucide-react-native';
+import { Calendar, ArrowLeft, User, FileText, Clock } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import { useTheme } from '../../../contexts/ThemeProvider';
@@ -60,21 +60,28 @@ export default function AuthorizeVisitorScreen() {
 
       {/* Formulário */}
       <View style={styles.form}>
-        <FormField
-          label="Nome do Visitante"
-          icon={User}
-          placeholder="Digite o nome completo"
-          value={name}
-          onChangeText={setName}
-        />
-        <FormField
-          label="Documento (CPF/RG)"
-          icon={FileText}
-          placeholder="Opcional"
-          value={document}
-          onChangeText={setDocument}
-          keyboardType="numeric"
-        />
+        <View style={{ marginBottom: 12 }}>
+          <FormField
+            label="Nome do Visitante"
+            icon={User}
+            placeholder="Digite o nome completo"
+            value={name}
+            onChangeText={setName}
+            theme={theme}
+          />
+        </View>
+
+        <View style={{ marginBottom: 12 }}>
+          <FormField
+            label="Documento (CPF/RG)"
+            icon={FileText}
+            placeholder="Opcional"
+            value={document}
+            onChangeText={setDocument}
+            keyboardType="numeric"
+            theme={theme}
+          />
+        </View>
 
         <View style={styles.section}>
           <Calendar color={theme.colors.textSecondary} size={20} />
@@ -82,11 +89,11 @@ export default function AuthorizeVisitorScreen() {
         </View>
 
         <View style={styles.validityContainer}>
-          <ValidityOption label="Apenas hoje" selected={validity === 'today'} onPress={() => setValidity('today')} theme={theme} />
-          <ValidityOption label="Fim de semana" selected={validity === 'weekend'} onPress={() => setValidity('weekend')} theme={theme} />
-          <ValidityOption label="Período específico" selected={validity === 'period'} onPress={() => setValidity('period')} theme={theme} />
+          <ValidityOption label={<Text><Clock size={14} />  Apenas hoje</Text>} selected={validity === 'today'} onPress={() => setValidity('today')} theme={theme} />
+          <ValidityOption label={<Text>Fim de semana</Text>} selected={validity === 'weekend'} onPress={() => setValidity('weekend')} theme={theme} />
+          <ValidityOption label={<Text>Período específico</Text>} selected={validity === 'period'} onPress={() => setValidity('period')} theme={theme} />
         </View>
-        
+
         {validity === 'period' && (
           <View style={styles.dateRangeContainer}>
             <Text style={{color: theme.colors.textSecondary}}>Seletor de data de início e fim apareceria aqui.</Text>
@@ -100,6 +107,8 @@ export default function AuthorizeVisitorScreen() {
           title="Gerar Convite com QR Code"
           onPress={handleGenerateInvite}
           fullWidth
+          style={{ backgroundColor: theme.colors.primary }}
+          textStyle={{ color: '#FFF' }}
         />
       </View>
     </ScrollView>

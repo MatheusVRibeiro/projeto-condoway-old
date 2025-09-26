@@ -26,6 +26,8 @@ const styles = (theme) => StyleSheet.create({
   },
   form: {
     paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
   section: {
     flexDirection: 'row',
@@ -44,19 +46,26 @@ const styles = (theme) => StyleSheet.create({
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     marginBottom: 8,
+    gap: 8,
   },
   validityOption: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     alignItems: 'center',
     marginBottom: 12,
     width: '48%',
     backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   validityOptionSelected: {
-    backgroundColor: theme.colors.primary + '20',
+    backgroundColor: theme.colors.primary + '12',
     borderColor: theme.colors.primary,
   },
   validityOptionUnselected: {
@@ -82,8 +91,9 @@ const styles = (theme) => StyleSheet.create({
     borderColor: theme.colors.border,
   },
   buttonContainer: {
-    marginTop: 40,
+    marginTop: 24,
     paddingHorizontal: 20,
+    paddingBottom: 32,
   },
 });
 
