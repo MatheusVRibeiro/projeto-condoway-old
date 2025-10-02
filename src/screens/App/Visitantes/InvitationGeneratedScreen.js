@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Share, SafeAreaView } from 'react-native'
 import { ArrowLeft, CheckCircle, Share2 } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';
+import { DateTime } from 'luxon';
 
 import { useTheme } from '../../../contexts/ThemeProvider';
 import styles from './InvitationGeneratedScreenStyles';
@@ -12,16 +13,40 @@ export default function InvitationGeneratedScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const { visitorName = "Visitante" } = route.params || {};
+  
+  // Recebe os parâmetros enviados da tela anterior
+  const { 
+    visitorName = "Visitante",
+    qrCodeHash = "",
+    visitorId = "",
+    visitorData = {}
+  } = route.params || {};
 
-  const qrCodeValue = `CONVITE_CONDOMINIO_XYZ_VISITANTE_${visitorName.replace(/\s/g, '_').toUpperCase()}_VALIDADE_2025-09-25`;
+  console.log('📋 Dados recebidos na tela de convite:', { visitorName, qrCodeHash, visitorId, visitorData });
+
+  // Usa o hash do QR Code gerado pelo backend
+  const qrCodeValue = qrCodeHash || `VISITOR_${visitorId}_${Date.now()}`;
+  
+  // Formata a data de validade
+  const getValidityText = () => {
+    const validadeFim = visitorData?.vst_validade_fim || visitorData?.dados?.vst_validade_fim;
+    if (!validadeFim) return 'Válido apenas hoje';
+    
+    const dt = DateTime.fromSQL(validadeFim);
+    if (!dt.isValid) return 'Válido apenas hoje';
+    
+    const today = DateTime.local().startOf('day');
+    if (dt.hasSame(today, 'day')) {
+      return `Válido até hoje às ${dt.toFormat('HH:mm')}`;
+    }
+    
+    return `Válido até ${dt.toFormat('dd/MM/yyyy')} às ${dt.toFormat('HH:mm')}`;
+  };
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Olá! Você foi convidado para visitar o Condomínio CondoWay. Apresente este QR Code na portaria. Convite para: ${visitorName}.`,
-        // Você pode adicionar uma URL aqui se o QR Code representar uma URL
-        // url: 'https://seusite.com/convite/123'
+        message: `Olá ${visitorName}! Você foi autorizado a visitar o Condomínio CondoWay. Apresente este QR Code na portaria.\n\n${getValidityText()}`,
       });
     } catch (error) {
       console.error('Erro ao compartilhar:', error.message);
@@ -29,8 +54,8 @@ export default function InvitationGeneratedScreen() {
   };
 
   const handleFinish = () => {
-    // Voltar para a tela principal de visitantes, limpando o histórico de navegação do fluxo de criação
-    navigation.popToTop(); 
+    // Volta para a tela principal de visitantes
+    navigation.navigate('Visitantes');
   };
 
   return (
@@ -52,15 +77,21 @@ export default function InvitationGeneratedScreen() {
 
         {/* QR Code */}
         <View style={[styles.qrCodeContainer, { backgroundColor: 'white' }]}>
-          <QRCode
-            value={qrCodeValue}
-            size={220}
-            logoBackgroundColor='transparent'
-          />
+          {qrCodeValue ? (
+            <QRCode
+              value={qrCodeValue}
+              size={220}
+              logoBackgroundColor='transparent'
+            />
+          ) : (
+            <Text style={{ color: theme.colors.textSecondary }}>
+              Erro ao gerar QR Code
+            </Text>
+          )}
         </View>
         
         <Text style={[styles.details, { color: theme.colors.textSecondary }]}>
-          Validade: Apenas hoje (25/09/2025)
+          {getValidityText()}
         </Text>
       </View>
 

@@ -1,107 +1,199 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Calendar, ArrowLeft, User, FileText } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { User, FileText, Clock, ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { DateTime } from 'luxon';
 
 import { useTheme } from '../../../contexts/ThemeProvider';
+import { useAuth } from '../../../contexts/AuthContext';
 import createStyles from './AuthorizeVisitorScreenStyles';
-import FormField from '../../../components/FormField'; // Usando FormField que já parece existir
-import Button from '../../../components/Button'; // Usando o Button que já existe
-
-const ValidityOption = ({ label, selected, onPress, theme }) => {
-  const styles = createStyles(theme);
-  return (
-    <TouchableOpacity
-      style={[
-        styles.validityOption,
-        selected ? styles.validityOptionSelected : styles.validityOptionUnselected
-      ]}
-      onPress={onPress}
-    >
-      <Text style={[styles.validityText, selected ? styles.validityTextSelected : styles.validityTextUnselected]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-};
+import FormField from '../../../components/FormField';
+import Button from '../../../components/Button';
+import { apiService } from '../../../services/api';
 
 export default function AuthorizeVisitorScreen() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const navigation = useNavigation();
   const styles = createStyles(theme);
-
+  // Estados do formulário
   const [name, setName] = useState('');
   const [document, setDocument] = useState('');
-  const [validity, setValidity] = useState('today'); // 'today', 'weekend', 'period'
+  const [loading, setLoading] = useState(false);
   
-  const handleGenerateInvite = () => {
+  const formatDocument = (text) => {
+    const numbers = text.replace(/\D/g, '');
+    // Formata CPF se tiver 11 dígitos, senão deixa livre para RG
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    return numbers.substring(0, 20); // Limite de 20 caracteres conforme banco
+  };
+
+  const calculateEndDateTime = () => {
+    const now = DateTime.local();
+    // A partir de agora até 23:59 do mesmo dia
+    return {
+      start: now.toFormat('yyyy-MM-dd HH:mm:ss'),
+      end: now.set({ hour: 23, minute: 59, second: 59 }).toFormat('yyyy-MM-dd HH:mm:ss')
+    };
+  };
+  const handleGenerateInvite = async () => {
+    // Validações
     if (!name.trim()) {
       Alert.alert('Campo Obrigatório', 'Por favor, informe o nome do visitante.');
       return;
     }
+
+    if (name.trim().length > 60) {
+      Alert.alert('Nome muito longo', 'O nome deve ter no máximo 60 caracteres.');
+      return;
+    }
+
+    if (document && document.replace(/\D/g, '').length < 8) {
+      Alert.alert('Documento Inválido', 'Por favor, informe um documento válido.');
+      return;
+    }
+
+    const validity = calculateEndDateTime();
     
-    // Navegar para a tela de convite gerado
-    navigation.navigate('InvitationGenerated', { visitorName: name });
+    // Validar se data fim é maior que data início
+    const start = DateTime.fromSQL(validity.start);
+    const end = DateTime.fromSQL(validity.end);
+    
+    if (end <= start) {
+      Alert.alert('Datas Inválidas', 'A data/hora final deve ser posterior à data/hora inicial.');
+      return;
+    }
+    
+    // Dados para enviar à API conforme estrutura do banco
+    const visitorData = {
+      userap_id: user?.userap_id || user?.Userap_ID || user?.id, // ID do usuário autenticado
+      vst_nome: name.trim(),
+      vst_documento: document.replace(/\D/g, '') || null,
+      vst_validade_inicio: validity.start,
+      vst_validade_fim: validity.end,
+      vst_status: 'Aguardando'
+      // vst_qrcode_hash será gerado pelo backend
+      // vst_data_entrada e vst_data_saida serão NULL até portaria registrar
+    };
+
+    console.log('📤 Enviando dados do visitante:', visitorData);
+    
+    setLoading(true);
+    
+    try {
+      // Chama a API para criar autorização
+      const response = await apiService.criarVisitante(visitorData);
+      
+      console.log('✅ Resposta da API (completa):', JSON.stringify(response, null, 2));
+      
+      // A API pode retornar: { dados: { vst_id, vst_qrcode_hash, ... } } ou direto os dados
+      const dadosVisitante = response.dados || response.data || response;
+      
+      console.log('✅ Dados do visitante criado:', dadosVisitante);
+      
+      // Limpa os campos do formulário
+      setName('');
+      setDocument('');
+      
+      // Navega para tela de convite gerado
+      navigation.navigate('InvitationGenerated', { 
+        visitorName: name,
+        qrCodeHash: dadosVisitante.vst_qrcode_hash,
+        visitorId: dadosVisitante.vst_id,
+        visitorData: dadosVisitante
+      });
+      
+      // Exibe mensagem de sucesso (após navegação)
+      // Alert.alert(
+      //   'Sucesso! ✅',
+      //   `Autorização criada para ${name}`
+      // );
+    } catch (error) {
+      console.error('❌ Erro ao criar autorização:', error);
+      Alert.alert(
+        'Erro',
+        error.message || 'Não foi possível criar a autorização. Verifique sua conexão e tente novamente.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 40 }}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Cabeçalho */}
+    <View style={styles.container}>
+      {/* Header com botão voltar */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft color={theme.colors.primary} size={24} />
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <ChevronLeft color={theme.colors.text} size={24} />
         </TouchableOpacity>
-        <Text style={styles.title}>Autorizar Novo Visitante</Text>
+        <Text style={styles.headerTitle}>Autorizar Visitante</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      {/* Formulário */}
-      <View style={styles.form}>
-        <FormField
-          label="Nome do Visitante"
-          icon={User}
-          placeholder="Digite o nome completo"
-          value={name}
-          onChangeText={setName}
-        />
-        <FormField
-          label="Documento (CPF/RG)"
-          icon={FileText}
-          placeholder="Opcional"
-          value={document}
-          onChangeText={setDocument}
-          keyboardType="numeric"
-        />
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Formulário Simplificado */}
+        <View style={styles.form}>
+          {/* Dados do Visitante */}
+          <Text style={styles.sectionTitle}>Dados do Visitante</Text>
+          
+          <FormField
+            label="Nome Completo *"
+            icon={User}
+            placeholder="Ex: João da Silva"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            maxLength={60}
+          />
 
-        <View style={styles.section}>
-          <Calendar color={theme.colors.textSecondary} size={20} />
-          <Text style={styles.sectionTitle}>Validade da Autorização</Text>
-        </View>
+          <FormField
+            label="Documento (CPF/RG)"
+            icon={FileText}
+            placeholder="000.000.000-00 ou RG"
+            value={document}
+            onChangeText={(text) => setDocument(formatDocument(text))}
+            keyboardType="numeric"
+            maxLength={20}
+          />
 
-        <View style={styles.validityContainer}>
-          <ValidityOption label="Apenas hoje" selected={validity === 'today'} onPress={() => setValidity('today')} theme={theme} />
-          <ValidityOption label="Fim de semana" selected={validity === 'weekend'} onPress={() => setValidity('weekend')} theme={theme} />
-          <ValidityOption label="Período específico" selected={validity === 'period'} onPress={() => setValidity('period')} theme={theme} />
-        </View>
-        
-        {validity === 'period' && (
-          <View style={styles.dateRangeContainer}>
-            <Text style={{color: theme.colors.textSecondary}}>Seletor de data de início e fim apareceria aqui.</Text>
+          {/* Aviso simplificado */}
+          <View style={styles.simpleAlert}>
+            <Text style={styles.simpleAlertText}>
+              💡 A portaria registrará automaticamente a entrada e saída do visitante ao escanear o QR Code.
+            </Text>
           </View>
-        )}
-      </View>
+        </View>
 
-      {/* Botão Principal */}
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Gerar Convite com QR Code"
-          onPress={handleGenerateInvite}
-          fullWidth
-        />
-      </View>
-    </ScrollView>
+        {/* Botão Principal */}
+        <View style={styles.buttonContainer}>
+          <Button
+            title={loading ? "Criando..." : "Gerar Autorização"}
+            onPress={handleGenerateInvite}
+            fullWidth
+            disabled={loading}
+          />
+          {loading && (
+            <ActivityIndicator 
+              size="small" 
+              color={theme.colors.primary} 
+              style={{ marginTop: 8 }}
+            />
+          )}
+        </View>
+      </ScrollView>
+    </View>
   );
 }

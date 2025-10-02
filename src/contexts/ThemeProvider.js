@@ -144,7 +144,12 @@ export const ThemeProvider = ({ children }) => {
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Instead of throwing, return undefined and warn — components should guard against missing theme.
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('useTheme: ThemeProvider is missing. Returning undefined context. Wrap your app with ThemeProvider.');
+    }
+    return undefined;
   }
   return context;
 };
