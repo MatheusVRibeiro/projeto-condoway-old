@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, Alert, FlatList, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, Alert, FlatList, ActivityIndicator, Pressable, RefreshControl, Share, Clipboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { categories } from './mock';
-import { MessageSquareWarning, ArrowLeft, CheckCircle, Paperclip, XCircle } from 'lucide-react-native';
+import { MessageSquareWarning, ArrowLeft, CheckCircle, Paperclip, XCircle, Share2, Copy, MessageCircle, Plus, FileText } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import Toast from 'react-native-toast-message';
@@ -13,6 +13,15 @@ import ActionSheet from 'react-native-actions-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiService } from '../../../services/api'; // Importando a API centralizada com axios
+import * as Haptics from 'expo-haptics';
+import * as Animatable from 'react-native-animatable';
+import CategoryCard from '../../../components/CategoryCard';
+import OccurrenceHeader from '../../../components/OccurrenceHeader';
+import StepProgress from '../../../components/StepProgress';
+import PriorityChips from '../../../components/PriorityChips';
+import OccurrenceCard from '../../../components/OccurrenceCard';
+import OccurrenceEmptyState from '../../../components/OccurrenceEmptyState';
+import OccurrenceModal from '../../../components/OccurrenceModal';
 
 export default function Ocorrencias() {
   const { theme } = useTheme();
@@ -36,6 +45,12 @@ export default function Ocorrencias() {
   const [uploadProgress, setUploadProgress] = useState({}); // {uri: percent}
   const [expandedId, setExpandedId] = useState(null);
   const [messageDrafts, setMessageDrafts] = useState({}); // { [issueId]: text }
+  
+  // Estados para filtros
+  const [filterStatus, setFilterStatus] = useState('todas'); // 'todas', 'abertas', 'analise', 'resolvidas'
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedOccurrence, setSelectedOccurrence] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const DRAFT_KEY = '@condoway_occurrence_draft_v1';
 
@@ -366,7 +381,7 @@ export default function Ocorrencias() {
         description,
         location,
         date: new Date().toLocaleString('pt-BR'),
-        status: 'Em Análise', // Status inicial mais apropriado
+        status: 'Aberta', // Status inicial - será movido para 'Em Análise' pelo síndico
         priority,
         attachments: uploadedAttachments,
         comments: [{ author: 'Morador', text: description, date: new Date().toLocaleString('pt-BR') }],
@@ -404,6 +419,7 @@ export default function Ocorrencias() {
 
   const getStatusStyle = (status) => {
     switch (status) {
+      case 'Aberta': return { backgroundColor: theme.colors.primary + '22', color: theme.colors.primary };
       case 'Em Análise': return { backgroundColor: theme.colors.warning + '22', color: theme.colors.warning };
       case 'Resolvida': return { backgroundColor: theme.colors.success + '22', color: theme.colors.success };
       default: return { backgroundColor: theme.colors.info + '22', color: theme.colors.info };
@@ -455,228 +471,494 @@ export default function Ocorrencias() {
     }
   };
 
+  // Contar ocorrências por categoria
+  const getCategoryCount = (categoryId) => {
+    if (!myIssues || myIssues.length === 0) return 0;
+    return myIssues.filter(issue => 
+      issue?.category?.toLowerCase() === categoryId.toLowerCase() ||
+      issue?.title?.toLowerCase() === categoryId.toLowerCase()
+    ).length;
+  };
+
+  // Calcular estatísticas das ocorrências
+  const getOccurrenceStats = () => {
+    if (!myIssues || myIssues.length === 0) {
+      return { total: 0, open: 0, inProgress: 0, resolved: 0 };
+    }
+
+    const stats = {
+      total: myIssues.length,
+      open: myIssues.filter(issue => issue?.status === 'Aberta' || issue?.status === 'Pendente').length,
+      inProgress: myIssues.filter(issue => issue?.status === 'Em Análise' || issue?.status === 'Em Andamento').length,
+      resolved: myIssues.filter(issue => issue?.status === 'Resolvida' || issue?.status === 'Concluída').length,
+    };
+
+    return stats;
+  };
+
   const renderRegisterContent = () => {
     if (step === 1) {
       return (
-        <View style={[styles.categoryGrid]}>
-          {categories.map(cat => (
-            <TouchableOpacity
-              key={cat.id}
-              style={[
-                styles.categoryCard,
-                { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
-              ]}
-              onPress={() => handleCategorySelect(cat)}
-            >
-              <cat.icon color={theme.colors.primary} size={32} />
-              <Text style={[styles.categoryTitle, { color: theme.colors.text }]}>{cat.title}</Text>
-            </TouchableOpacity>
-          ))}
+        <View>
+          {/* Grid de categorias */}
+          <View style={[styles.categoryGrid]}>
+            {categories.map((cat, index) => (
+              <CategoryCard
+                key={cat.id}
+                category={cat}
+                count={getCategoryCount(cat.id)}
+                onPress={handleCategorySelect}
+                index={index}
+              />
+            ))}
+          </View>
         </View>
       );
     }
 
     if (step === 2) {
+      const charCount = description.length;
+      const maxChars = 500;
+      const isDescriptionValid = description.trim().length >= 10;
+      const isLocationValid = location.trim().length >= 3;
+
       return (
-        <View>
+        <View style={styles.formContainer}>
+          {/* Step Progress Indicator */}
+          <StepProgress currentStep={2} totalSteps={3} />
+
+          {/* Header com botão voltar */}
           <TouchableOpacity onPress={resetForm} style={styles.formHeader}>
             <ArrowLeft color={theme.colors.textSecondary} size={20} />
-            <Text style={{ marginLeft: 8, color: theme.colors.textSecondary }}>Voltar</Text>
+            <Text style={{ marginLeft: 8, color: theme.colors.textSecondary, fontWeight: '600' }}>Voltar</Text>
           </TouchableOpacity>
-          <Text style={[styles.formTitle, { color: theme.colors.text }]}>Detalhes da Ocorrência - {category?.title}</Text>
+          
+          <Animatable.View animation="fadeInRight" duration={400}>
+            <Text style={[styles.formTitle, { color: theme.colors.text }]}>
+              Detalhes da Ocorrência
+            </Text>
+            <Text style={[styles.formSubtitle, { color: theme.colors.textSecondary }]}>
+              {category?.title}
+            </Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>{getCategoryLabels(category?.title).label}</Text>
-            <TextInput
-              style={[
-                styles.input,
-                styles.textarea,
-                {
-                  backgroundColor: theme.colors.card,
-                  borderColor: theme.colors.border,
-                  color: theme.colors.text
-                }
-              ]}
-              placeholder={getCategoryLabels(category?.title).placeholder}
-              placeholderTextColor={theme.colors.textSecondary}
-              multiline
-              value={description}
-              onChangeText={setDescription}
-            />
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Local Específico</Text>
-            <TextInput
-              style={[
-                styles.input,
-                { backgroundColor: theme.colors.card, borderColor: theme.colors.border, color: theme.colors.text }
-              ]}
-              placeholder="Ex: Piscina, Garagem Bloco B..."
-              placeholderTextColor={theme.colors.textSecondary}
-              value={location}
-              onChangeText={setLocation}
-            />
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Anexos (opcional)</Text>
-            <TouchableOpacity
-              accessibilityLabel="Adicionar anexo"
-              accessibilityHint="Abre opções para tirar foto ou escolher da galeria"
-              style={[styles.attachmentButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}
-              onPress={openImageOptions}
-            >
-              <Paperclip size={18} color={theme.colors.primary} />
-              <Text style={[styles.attachmentButtonText, { color: theme.colors.primary }]}>Adicionar Anexo</Text>
-            </TouchableOpacity>
-
-            {attachments.length > 0 && (
-              <View style={styles.attachmentsRow}>
-                {attachments.map(a => (
-                  <View key={a.id} style={styles.thumbnailWrapper}>
-                    <Image source={{ uri: a.uri }} style={styles.thumbnail} />
-                    {uploadProgress[a.id] ? (
-                      <View style={styles.progressBarContainer}>
-                        <View style={[styles.progressBar, { width: `${uploadProgress[a.id]}%`, backgroundColor: theme.colors.primary }]} />
-                      </View>
-                    ) : null}
-                    <TouchableOpacity onPress={() => handleRemoveAttachment(a.id)} style={styles.removeAttachmentButton} accessibilityLabel={`Remover anexo ${a.name}`}>
-                      <XCircle size={20} color={theme.colors.error} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
+            {/* Descrição com contador de caracteres */}
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                  {getCategoryLabels(category?.title).label}
+                </Text>
+                <Text style={[styles.charCounter, { 
+                  color: charCount > maxChars ? theme.colors.error : theme.colors.textSecondary 
+                }]}>
+                  {charCount}/{maxChars}
+                </Text>
               </View>
-            )}
-            <Text style={{ marginTop: 6, color: theme.colors.textSecondary }}>{attachments.length}/{ATTACHMENT_LIMIT} anexos</Text>
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Prioridade</Text>
-            <View style={styles.radioGroup}>
-              {['baixa', 'media', 'alta'].map(p => (
-                <TouchableOpacity key={p} style={styles.radioButton} onPress={() => setPriority(p)}>
-                  <View style={[styles.radioCircle, { borderColor: theme.colors.primary }]}>
-                    {priority === p && <View style={[styles.radioDot, { backgroundColor: theme.colors.primary }]} />}
-                  </View>
-                  <Text style={[styles.radioLabel, { color: theme.colors.text }]}>{p.charAt(0).toUpperCase() + p.slice(1)}</Text>
-                </TouchableOpacity>
-              ))}
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.textarea,
+                  {
+                    backgroundColor: theme.colors.card,
+                    borderColor: isDescriptionValid ? theme.colors.border : '#fbbf24',
+                    color: theme.colors.text
+                  }
+                ]}
+                placeholder={getCategoryLabels(category?.title).placeholder}
+                placeholderTextColor={theme.colors.textSecondary}
+                multiline
+                maxLength={maxChars}
+                value={description}
+                onChangeText={setDescription}
+              />
+              {!isDescriptionValid && description.length > 0 && (
+                <Text style={[styles.validationText, { color: '#f59e0b' }]}>
+                  Mínimo de 10 caracteres
+                </Text>
+              )}
             </View>
-          </View>
-          <TouchableOpacity style={[styles.submitButton, { backgroundColor: theme.colors.primary }]} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Enviar Ocorrência</Text>
-          </TouchableOpacity>
+
+            {/* Local com validação */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                Local Específico
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  { 
+                    backgroundColor: theme.colors.card, 
+                    borderColor: isLocationValid ? theme.colors.border : '#fbbf24',
+                    color: theme.colors.text 
+                  }
+                ]}
+                placeholder="Ex: Piscina, Garagem Bloco B..."
+                placeholderTextColor={theme.colors.textSecondary}
+                value={location}
+                onChangeText={setLocation}
+              />
+              {!isLocationValid && location.length > 0 && (
+                <Text style={[styles.validationText, { color: '#f59e0b' }]}>
+                  Mínimo de 3 caracteres
+                </Text>
+              )}
+            </View>
+
+            {/* Prioridade com Chips */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                Nível de Prioridade
+              </Text>
+              <PriorityChips
+                selectedPriority={priority}
+                onSelectPriority={setPriority}
+              />
+            </View>
+
+            {/* Anexos */}
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
+                Anexos (opcional)
+              </Text>
+              <TouchableOpacity
+                accessibilityLabel="Adicionar anexo"
+                accessibilityHint="Abre opções para tirar foto ou escolher da galeria"
+                style={[styles.attachmentButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}
+                onPress={openImageOptions}
+              >
+                <Paperclip size={18} color={theme.colors.primary} />
+                <Text style={[styles.attachmentButtonText, { color: theme.colors.primary }]}>
+                  Adicionar Anexo
+                </Text>
+              </TouchableOpacity>
+
+              {attachments.length > 0 && (
+                <View style={styles.attachmentsRow}>
+                  {attachments.map(a => (
+                    <View key={a.id} style={styles.thumbnailWrapper}>
+                      <Image source={{ uri: a.uri }} style={styles.thumbnail} />
+                      {uploadProgress[a.id] ? (
+                        <View style={styles.progressBarContainer}>
+                          <View style={[styles.progressBar, { width: `${uploadProgress[a.id]}%`, backgroundColor: theme.colors.primary }]} />
+                        </View>
+                      ) : null}
+                      <TouchableOpacity 
+                        onPress={() => handleRemoveAttachment(a.id)} 
+                        style={styles.removeAttachmentButton} 
+                        accessibilityLabel={`Remover anexo ${a.name}`}
+                      >
+                        <XCircle size={20} color={theme.colors.error} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+              <Text style={{ marginTop: 6, color: theme.colors.textSecondary, fontSize: 12 }}>
+                {attachments.length}/{ATTACHMENT_LIMIT} anexos
+              </Text>
+            </View>
+
+            {/* Botão de envio melhorado */}
+            <TouchableOpacity 
+              style={[
+                styles.submitButton, 
+                { 
+                  backgroundColor: theme.colors.primary,
+                  opacity: (isDescriptionValid && isLocationValid) ? 1 : 0.6
+                }
+              ]} 
+              onPress={handleSubmit}
+              disabled={!isDescriptionValid || !isLocationValid}
+            >
+              <CheckCircle size={20} color="#ffffff" style={{ marginRight: 8 }} />
+              <Text style={styles.submitButtonText}>Enviar Ocorrência</Text>
+            </TouchableOpacity>
+          </Animatable.View>
         </View>
       );
     }
 
     if (step === 3) {
+      const lastOccurrence = myIssues[0];
+      
+      const handleCopyProtocol = () => {
+        if (lastOccurrence?.protocol) {
+          Clipboard.setString(lastOccurrence.protocol);
+          Toast.show({
+            type: 'success',
+            text1: 'Protocolo copiado!',
+            text2: `${lastOccurrence.protocol} copiado para a área de transferência`,
+            position: 'bottom',
+            visibilityTime: 2000,
+          });
+        }
+      };
+
+      const handleShareOccurrence = async () => {
+        if (!lastOccurrence) return;
+        try {
+          await Share.share({
+            message: `📋 Ocorrência Registrada!\n\n` +
+                     `Protocolo: ${lastOccurrence.protocol}\n` +
+                     `Categoria: ${category?.title}\n` +
+                     `Local: ${location}\n` +
+                     `Prioridade: ${priority.charAt(0).toUpperCase() + priority.slice(1)}\n\n` +
+                     `Descrição: ${description}`,
+          });
+        } catch (error) {
+          console.error('Erro ao compartilhar:', error);
+        }
+      };
+
       return (
-        <View style={styles.confirmationContainer}>
-          <CheckCircle color={theme.colors.success} size={64} />
-          <Text style={[styles.confirmationTitle, { color: theme.colors.text }]}>Ocorrência Enviada!</Text>
+        <Animatable.View animation="fadeIn" duration={600} style={styles.confirmationContainer}>
+          {/* Animação de sucesso */}
+          <Animatable.View animation="bounceIn" delay={200} duration={800}>
+            <View style={[styles.successIconContainer, { backgroundColor: '#d1fae5' }]}>
+              <CheckCircle color="#10b981" size={40} strokeWidth={2.5} />
+            </View>
+          </Animatable.View>
+
+          <Animatable.Text animation="fadeInUp" delay={400} style={[styles.confirmationTitle, { color: theme.colors.text }]}>
+            Ocorrência Enviada!
+          </Animatable.Text>
           
-          {/* Exibir o protocolo de forma destacada */}
-          <View style={[styles.protocolContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]}>
-            <Text style={[styles.protocolLabel, { color: theme.colors.textSecondary }]}>Protocolo</Text>
-            <Text style={[styles.protocolNumber, { color: theme.colors.primary }]}>
-              {myIssues[0]?.protocol || 'Gerando...'}
-            </Text>
-          </View>
+          {/* Protocolo copiável */}
+          <Animatable.View animation="fadeInUp" delay={600} style={{ width: '100%', alignItems: 'center' }}>
+            <TouchableOpacity 
+              onPress={handleCopyProtocol}
+              style={[styles.protocolContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.protocolLabel, { color: theme.colors.textSecondary }]}>
+                Protocolo
+              </Text>
+              <View style={styles.protocolRow}>
+                <Text style={[styles.protocolNumber, { color: theme.colors.primary }]}>
+                  {lastOccurrence?.protocol || 'Gerando...'}
+                </Text>
+                <Copy size={20} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.protocolHint, { color: theme.colors.textSecondary }]}>
+                Toque para copiar
+              </Text>
+            </TouchableOpacity>
+          </Animatable.View>
+
+          {/* Resumo da ocorrência */}
+          <Animatable.View 
+            animation="fadeInUp" 
+            delay={800}
+            style={[styles.summaryCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+          >
+            <Text style={[styles.summaryTitle, { color: theme.colors.text }]}>Resumo da Ocorrência</Text>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>Categoria:</Text>
+              <Text style={[styles.summaryValue, { color: theme.colors.text }]}>{category?.title}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>Local:</Text>
+              <Text style={[styles.summaryValue, { color: theme.colors.text }]}>{location}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>Prioridade:</Text>
+              <Text style={[styles.summaryValue, { color: theme.colors.text }]}>
+                {priority.charAt(0).toUpperCase() + priority.slice(1)}
+              </Text>
+            </View>
+          </Animatable.View>
+
+          {/* Timeline de próximos passos */}
+          <Animatable.View 
+            animation="fadeInUp" 
+            delay={1000}
+            style={[styles.timelineCard, { backgroundColor: '#eff6ff', borderColor: '#3b82f6' }]}
+          >
+            <Text style={[styles.timelineTitle, { color: '#1e40af' }]}>Próximos Passos</Text>
+            <View style={styles.timelineStep}>
+              <View style={[styles.timelineDot, { backgroundColor: '#10b981' }]} />
+              <Text style={[styles.timelineText, { color: '#334155' }]}>Ocorrência registrada ✓</Text>
+            </View>
+            <View style={styles.timelineStep}>
+              <View style={[styles.timelineDot, { backgroundColor: '#f59e0b' }]} />
+              <Text style={[styles.timelineText, { color: '#334155' }]}>Síndico será notificado</Text>
+            </View>
+            <View style={styles.timelineStep}>
+              <View style={[styles.timelineDot, { backgroundColor: '#6b7280' }]} />
+              <Text style={[styles.timelineText, { color: '#334155' }]}>Aguarde análise e resposta</Text>
+            </View>
+          </Animatable.View>
           
-          <Text style={[styles.confirmationText, { color: theme.colors.textSecondary }]}>
-            O síndico foi notificado. Guarde o número do protocolo para acompanhar sua ocorrência.
-          </Text>
-          <TouchableOpacity style={[styles.submitButton, { backgroundColor: theme.colors.primary }]} onPress={() => { resetForm(); setActiveTab('minhas'); }}>
-            <Text style={styles.submitButtonText}>Ver Minhas Ocorrências</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Botões de ação */}
+          <Animatable.View animation="fadeInUp" delay={1200} style={styles.confirmationActions}>
+            <TouchableOpacity 
+              style={[styles.actionButtonOutline, { borderColor: theme.colors.primary }]} 
+              onPress={handleShareOccurrence}
+              activeOpacity={0.7}
+            >
+              <Share2 size={14} color={theme.colors.primary} />
+              <Text style={[styles.actionButtonOutlineText, { color: theme.colors.primary }]}>Compartilhar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButtonPrimary}
+              onPress={() => { resetForm(); setActiveTab('minhas'); }}
+              activeOpacity={0.8}
+            >
+              <MessageCircle size={16} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text style={styles.actionButtonPrimaryText}>Ver Minhas Ocorrências</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionButtonGhost}
+              onPress={resetForm}
+              activeOpacity={0.6}
+            >
+              <Text style={[styles.actionButtonGhostText, { color: theme.colors.textSecondary }]}>
+                Registrar Nova Ocorrência
+              </Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        </Animatable.View>
       );
     }
   };
 
-  const renderMyIssues = () => (
-    <FlatList
-      data={myIssues.filter(item => item && item.id)} // Filtra itens válidos
-      keyExtractor={(item, index) => item?.id?.toString() || `item-${index}`}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
-      renderItem={({ item }) => {
-        // Validação de segurança
-        if (!item || !item.id) {
-          return null;
+  // Função de refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await buscarMinhasOcorrencias();
+    setRefreshing(false);
+  };
+
+  // Filtrar ocorrências por status
+  const getFilteredIssues = () => {
+    let filtered = myIssues.filter(item => item && item.id); // Validação de segurança
+
+    // Filtrar por status
+    if (filterStatus !== 'todas') {
+      filtered = filtered.filter(issue => {
+        const status = issue.status?.toLowerCase();
+        switch (filterStatus) {
+          case 'abertas':
+            return status === 'aberta' || status === 'pendente';
+          case 'analise':
+            return status === 'em análise' || status === 'em andamento';
+          case 'resolvidas':
+            return status === 'resolvida' || status === 'concluída';
+          default:
+            return true;
         }
-        
-        const issue = item;
-        const statusStyle = getStatusStyle(issue.status);
-        const isExpanded = expandedId === issue.id;
-        return (
-          <View style={[styles.accordionItem, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-            <TouchableOpacity style={styles.accordionTrigger} onPress={() => { setExpandedId(isExpanded ? null : issue.id); if (!isExpanded) setTimeout(() => commentsScrollRef.current?.scrollToEnd({ animated: true }), 300); }}>
-              <View style={styles.triggerLeft}>
-                <Text style={[styles.accordionTitle, { color: theme.colors.text }]}>{issue.title}</Text>
-                <Text style={[styles.accordionSubtitle, { color: theme.colors.textSecondary }]}>Protocolo: {issue.protocol}</Text>
-              </View>
-              <View style={[styles.statusBadge, { backgroundColor: statusStyle.backgroundColor }]}>
-                <Text style={[styles.statusBadgeText, { color: statusStyle.color }]}>{issue.status}</Text>
-              </View>
-            </TouchableOpacity>
-            {isExpanded && (
-              <View style={[styles.accordionContent, { borderTopColor: theme.colors.border }]}>
-                {issue.attachments && issue.attachments.length > 0 && (
-                  <View style={{ marginBottom: 12 }}>
-                    <Text style={[styles.label, { color: theme.colors.textSecondary, marginBottom: 8 }]}>Anexos:</Text>
-                    {issue.attachments.map((att, idx) => (
-                      <Image key={idx} source={{ uri: att }} style={{ width: '100%', height: 200, borderRadius: 8, marginBottom: 8 }} />
-                    ))}
-                  </View>
-                )}
+      });
+    }
 
-                {/* comments + autoscroll */}
-                <ScrollView ref={commentsScrollRef} style={{ maxHeight: 320, marginBottom: 8 }} onContentSizeChange={() => commentsScrollRef.current?.scrollToEnd({ animated: true })}>
-                  {issue.comments.map((comment, index) => (
-                    <View
-                      key={index}
-                      style={[
-                        styles.commentBubble,
-                        comment.author === 'Morador'
-                          ? [styles.moradorBubble, { backgroundColor: theme.colors.primary }]
-                          : [styles.sindicoBubble, { backgroundColor: theme.colors.background }]
-                      ]}
-                    >
-                      <Text style={comment.author === 'Morador' ? styles.moradorText : [styles.sindicoText, { color: theme.colors.text }]}>{comment.text}</Text>
-                      <Text style={[styles.commentDate, { color: comment.author === 'Morador' ? theme.colors.textSecondary : theme.colors.textSecondary }]}>{comment.date}</Text>
-                    </View>
-                  ))}
-                </ScrollView>
+    return filtered;
+  };
 
-                {/* Message input to send a message in this issue */}
-                <View style={{ marginTop: 8 }}>
-                  <View style={[styles.messageContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-                    <TextInput
-                      placeholder="Escreva uma mensagem para o síndico..."
-                      placeholderTextColor={theme.colors.textSecondary}
-                      value={messageDrafts[issue.id] || ''}
-                      onChangeText={(t) => setMessageDrafts(prev => ({ ...prev, [issue.id]: t }))}
-                      style={[styles.messageInput, { color: theme.colors.text }]}
-                      multiline
-                    />
-                    <TouchableOpacity
-                      accessibilityLabel={`Enviar mensagem para a ocorrência ${issue.protocol}`}
-                      style={[styles.sendButton, { backgroundColor: theme.colors.primary }]}
-                      onPress={() => {
-                        const text = (messageDrafts[issue.id] || '').trim();
-                        handleSendComment(issue.id, text);
-                      }}
-                    >
-                      <Text style={[styles.sendButtonText, { color: '#fff' }]}>Enviar</Text>
-                    </TouchableOpacity>
-                  </View>
+  const renderMyIssues = () => {
+    const filteredIssues = getFilteredIssues();
+    const stats = getOccurrenceStats();
+
+    return (
+      <View style={{ flex: 1 }}>
+        {/* Header com estatísticas */}
+        {stats.total > 0 && (
+          <OccurrenceHeader
+            total={stats.total}
+            open={stats.open}
+            inProgress={stats.inProgress}
+            resolved={stats.resolved}
+          />
+        )}
+
+        {/* Tabs de filtro por status */}
+        <View style={styles.statusFilterContainer}>
+          {[
+            { key: 'todas', label: 'Todas', count: myIssues.length },
+            { key: 'abertas', label: 'Abertas', count: stats.open },
+            { key: 'analise', label: 'Análise', count: stats.inProgress },
+            { key: 'resolvidas', label: 'Resolvidas', count: stats.resolved },
+          ].map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[
+                styles.statusFilterTab,
+                {
+                  backgroundColor: filterStatus === tab.key ? theme.colors.primary : theme.colors.card,
+                  borderColor: filterStatus === tab.key ? theme.colors.primary : theme.colors.border,
+                },
+              ]}
+              onPress={() => setFilterStatus(tab.key)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.statusFilterText,
+                  { color: filterStatus === tab.key ? '#ffffff' : theme.colors.textSecondary },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {tab.label}
+              </Text>
+              {tab.count > 0 && (
+                <View
+                  style={[
+                    styles.statusFilterBadge,
+                    {
+                      backgroundColor: filterStatus === tab.key ? 'rgba(255, 255, 255, 0.3)' : theme.colors.primary,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusFilterBadgeText,
+                      { color: filterStatus === tab.key ? '#ffffff' : '#ffffff' },
+                    ]}
+                  >
+                    {tab.count}
+                  </Text>
                 </View>
-               </View>
-             )}
-           </View>
-         );
-       }}
-     />
-   );
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Lista de ocorrências */}
+        <FlatList
+          data={filteredIssues}
+          keyExtractor={(item, index) => item?.id?.toString() || `item-${index}`}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+            />
+          }
+          renderItem={({ item, index }) => (
+            <OccurrenceCard
+              item={item}
+              index={index}
+              onPress={(issue) => {
+                setSelectedOccurrence(issue);
+                setShowModal(true);
+              }}
+            />
+          )}
+          ListEmptyComponent={
+            <OccurrenceEmptyState
+              message={
+                filterStatus !== 'todas'
+                  ? `Nenhuma ocorrência ${filterStatus}`
+                  : 'Você ainda não tem ocorrências registradas'
+              }
+            />
+          }
+        />
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
@@ -687,27 +969,60 @@ export default function Ocorrencias() {
         </View>
 
         {step === 1 && (
-          <View style={[styles.tabsContainer, { backgroundColor: theme.colors.card }]}>
+          <View style={styles.tabsContainer}>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'registrar' && [styles.tabButtonActive, { backgroundColor: theme.colors.primary + '22' }]]}
+              style={[
+                styles.tabButton,
+                activeTab === 'registrar' && styles.tabButtonActive
+              ]}
               onPress={() => setActiveTab('registrar')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.tabText, { color: activeTab === 'registrar' ? theme.colors.primary : theme.colors.textSecondary }]}>Registrar Nova</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Plus 
+                  size={18} 
+                  color={activeTab === 'registrar' ? '#3b82f6' : '#64748b'} 
+                  strokeWidth={2.5} 
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeTab === 'registrar' && styles.tabTextActive
+                ]}>
+                  Registrar Nova
+                </Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'minhas' && [styles.tabButtonActive, { backgroundColor: theme.colors.primary + '22' }]]}
+              style={[
+                styles.tabButton,
+                activeTab === 'minhas' && styles.tabButtonActive
+              ]}
               onPress={() => setActiveTab('minhas')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.tabText, { color: activeTab === 'minhas' ? theme.colors.primary : theme.colors.textSecondary }]}>Minhas Ocorrências</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <FileText 
+                  size={18} 
+                  color={activeTab === 'minhas' ? '#3b82f6' : '#64748b'} 
+                  strokeWidth={2.5} 
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeTab === 'minhas' && styles.tabTextActive
+                ]}>
+                  Minhas Ocorrências
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
         )}
 
         {activeTab === 'registrar' ? (
           <ScrollView 
-            style={[styles.tabContent, { flex: 1 }]} 
-            contentContainerStyle={{ paddingBottom: insets.bottom + 32 }} 
+            style={styles.scrollView}
+            contentContainerStyle={step === 2 ? styles.formScrollContent : styles.scrollContent}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             {renderRegisterContent()}
           </ScrollView>
@@ -732,6 +1047,13 @@ export default function Ocorrencias() {
           </TouchableOpacity>
         </View>
       </ActionSheet>
+
+      <OccurrenceModal 
+        visible={showModal}
+        occurrence={selectedOccurrence}
+        onClose={() => setShowModal(false)}
+        onSendMessage={handleSendComment}
+      />
     </SafeAreaView>
   );
 }

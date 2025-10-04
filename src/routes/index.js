@@ -16,13 +16,27 @@ export default function Routes() {
   const { user, loading } = useAuth();
   const { showOnboarding } = useOnboardingStatus();
   
+  console.log('🚦 Routes - user:', user ? `${user.user_nome} (ID: ${user.user_id})` : 'null', 'loading:', loading, 'showOnboarding:', showOnboarding);
+  
   // Mostrar loading enquanto verifica estado de autenticação e onboarding
   if (loading || showOnboarding === null) {
+    console.log('⏳ Routes - Aguardando... loading:', loading, 'showOnboarding:', showOnboarding);
     return null; // ou uma tela de loading
   }
   
+  if (user) {
+    console.log('✅ Routes - Usuário autenticado, mostrando AppStack');
+  } else if (showOnboarding) {
+    console.log('👋 Routes - Mostrando Onboarding');
+  } else {
+    console.log('🔐 Routes - Mostrando telas de Auth');
+  }
+  
   return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+    <RootStack.Navigator 
+      key={user ? 'authenticated' : 'unauthenticated'} 
+      screenOptions={{ headerShown: false }}
+    >
       {showOnboarding ? (
         // 1. Primeira vez - mostrar Onboarding
         <>
@@ -44,7 +58,7 @@ export default function Routes() {
         </>
       ) : (
         // 3. Logado - mostrar App direto
-        <RootStack.Screen name="MainTabs" component={AppStack} />
+        <RootStack.Screen name={ROUTES.MAINTABS} component={AppStack} />
       )}
     </RootStack.Navigator>
   );

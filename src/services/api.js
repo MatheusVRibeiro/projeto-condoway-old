@@ -225,4 +225,81 @@ export const apiService = {
       handleError(error, 'registrarDeviceToken');
     }
   },
+
+  // === VISITANTES ===
+  
+  // Criar nova autorização de visitante
+  criarVisitante: async (dadosVisitante) => {
+    try {
+      console.log('🔄 [API] Criando autorização de visitante...', dadosVisitante);
+      const response = await api.post('/visitantes', dadosVisitante);
+      console.log('✅ [API] Visitante autorizado com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao criar visitante:', error.response?.status, error.response?.data);
+      handleError(error, 'criarVisitante');
+    }
+  },
+
+  // Listar visitantes do usuário
+  listarVisitantes: async (filtros = {}) => {
+    try {
+      console.log('🔄 [API] Buscando lista de visitantes...');
+      const params = new URLSearchParams();
+      
+      // Adiciona filtros se fornecidos
+      if (filtros.status) params.append('status', filtros.status);
+      if (filtros.dataInicio) params.append('data_inicio', filtros.dataInicio);
+      if (filtros.dataFim) params.append('data_fim', filtros.dataFim);
+      
+      const queryString = params.toString();
+      const endpoint = queryString ? `/visitantes?${queryString}` : '/visitantes';
+      
+      const response = await api.get(endpoint);
+      console.log('✅ [API] Visitantes carregados:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao listar visitantes:', error.response?.status, error.response?.data);
+      handleError(error, 'listarVisitantes');
+    }
+  },
+
+  // Buscar detalhes de um visitante específico
+  buscarVisitante: async (visitanteId) => {
+    try {
+      console.log(`🔄 [API] Buscando detalhes do visitante ${visitanteId}...`);
+      const response = await api.get(`/visitantes/${visitanteId}`);
+      console.log('✅ [API] Detalhes do visitante carregados:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar visitante:', error.response?.status, error.response?.data);
+      handleError(error, 'buscarVisitante');
+    }
+  },
+
+  // Cancelar autorização de visitante
+  cancelarVisitante: async (visitanteId) => {
+    try {
+      console.log(`🔄 [API] Cancelando autorização do visitante ${visitanteId}...`);
+      const response = await api.patch(`/visitantes/${visitanteId}/cancelar`);
+      console.log('✅ [API] Visitante cancelado com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao cancelar visitante:', error.response?.status, error.response?.data);
+      handleError(error, 'cancelarVisitante');
+    }
+  },
+
+  // Reenviar convite para visitante
+  reenviarConviteVisitante: async (visitanteId) => {
+    try {
+      console.log(`🔄 [API] Reenviando convite para visitante ${visitanteId}...`);
+      const response = await api.post(`/visitantes/${visitanteId}/reenviar`);
+      console.log('✅ [API] Convite reenviado com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao reenviar convite:', error.response?.status, error.response?.data);
+      handleError(error, 'reenviarConviteVisitante');
+    }
+  },
 };
