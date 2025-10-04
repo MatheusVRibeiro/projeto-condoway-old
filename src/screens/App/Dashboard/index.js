@@ -6,10 +6,13 @@ import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
-import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
+import { avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useNotifications } from '../../../contexts/NotificationProvider';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useProfile } from '../../../hooks/useProfile';
+import { useCondominio } from '../../../hooks/useCondominio';
 import { ROUTES } from '../../../routes/routeNames';
 
 // --- Componentes Internos da Tela ---
@@ -123,9 +126,19 @@ const DashboardSkeleton = () => {
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const { unreadCount } = useNotifications();
+  const { user } = useAuth();
+  const { profileData } = useProfile();
+  const { condominioData } = useCondominio();
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
+
+  // Dados do morador vindos da API ou fallback
+  const morador = {
+    nome: profileData?.user_nome || user?.user_nome || 'Usuário',
+    condominio: condominioData?.cond_nome || profileData?.cond_nome || 'Condomínio',
+    avatarUrl: profileData?.user_foto || user?.user_foto || 'https://via.placeholder.com/150',
+  };
 
   const handleReservarEspaco = React.useCallback(() => navigation.navigate('ReservasTab'), [navigation]);
   const handleMinhasEncomendas = React.useCallback(() => navigation.navigate(ROUTES.PACKAGES || 'Packages'), [navigation]);
