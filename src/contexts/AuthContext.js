@@ -49,12 +49,17 @@ export const AuthProvider = ({ children }) => {
       const userData = await apiService.login(email, password);
       console.log('✅ Login realizado com sucesso:', userData);
       
-      setUser(userData);
       // O setAuthToken já é chamado dentro do apiService.login, mas podemos garantir aqui também.
       setAuthToken(userData.token);
       
+      // Salvar primeiro no AsyncStorage
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       console.log('💾 Usuário salvo no AsyncStorage');
+      
+      // Depois atualizar o estado (isso deve forçar re-render)
+      console.log('🔄 Atualizando estado do usuário no contexto...');
+      setUser(userData);
+      console.log('✅ Estado atualizado - user:', userData);
       
       return userData; // Retornar os dados do usuário para a tela de login, se necessário
     } catch (error) {
@@ -90,7 +95,7 @@ export const AuthProvider = ({ children }) => {
   if (loading) return <SplashScreen />;
 
   const isLoggedIn = !!user;
-  console.log('🔍 AuthContext state - user:', user, 'isLoggedIn:', isLoggedIn);
+  console.log('🔍 AuthContext render - user:', user?.user_nome || 'null', 'isLoggedIn:', isLoggedIn);
 
   return (
     <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout, updateUser }}>

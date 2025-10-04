@@ -1,19 +1,19 @@
 // src/components/ui/Skeleton.js
 import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, Platform } from 'react-native';
 
 const Skeleton = ({ width, height, borderRadius }) => {
-  const animatedValue = new Animated.Value(0);
+  const animatedValue = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     Animated.loop(
       Animated.timing(animatedValue, {
         toValue: 1,
         duration: 1000,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       })
     ).start();
-  }, []);
+  }, [animatedValue]);
 
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],

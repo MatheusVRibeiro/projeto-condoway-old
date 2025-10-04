@@ -10,6 +10,7 @@ import { morador, avisosImportantes, encomendas, ultimasAtualizacoes } from './m
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useNotifications } from '../../../contexts/NotificationProvider';
+import { ROUTES } from '../../../routes/routeNames';
 
 // --- Componentes Internos da Tela ---
 
@@ -127,8 +128,8 @@ export default function Dashboard() {
   const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
 
   const handleReservarEspaco = React.useCallback(() => navigation.navigate('ReservasTab'), [navigation]);
-  const handleMinhasEncomendas = React.useCallback(() => navigation.navigate('Packages'), [navigation]);
-  const handleLiberarVisitante = React.useCallback(() => navigation.navigate('Visitantes'), [navigation]);
+  const handleMinhasEncomendas = React.useCallback(() => navigation.navigate(ROUTES.PACKAGES || 'Packages'), [navigation]);
+  const handleLiberarVisitante = React.useCallback(() => navigation.navigate(ROUTES.VISITANTES || 'Visitantes'), [navigation]);
   const handleAbrirOcorrencia = React.useCallback(() => navigation.navigate('OcorrenciasTab'), [navigation]);
   const handleVerNotificacoes = React.useCallback(() => navigation.navigate('Notifications'), [navigation]);
 
