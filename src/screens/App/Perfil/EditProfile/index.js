@@ -1,24 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Camera, Edit3, Save, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
-import { userProfile } from '../mock';
 import { useTheme } from '../../../../contexts/ThemeProvider';
+import { useProfile } from '../../../../hooks/useProfile';
+import { Loading } from '../../../../components/Loading';
 
 export default function EditProfile() {
   const navigation = useNavigation();
   const { theme } = useTheme();
-  const [profile, setProfile] = useState(userProfile);
+  const { 
+    user, 
+    profileData, 
+    loading, 
+    updateProfile, 
+    uploadProfilePhoto,
+    loadProfile 
+  } = useProfile();
+
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    apartment: '',
+    block: '',
+    condominium: '',
+    avatarUrl: null,
+    userType: 'morador'
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [editingField, setEditingField] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
-    setIsEditing(false);
-    setEditingField(null);
+  // Carrega dados do perfil quando disponível
+  useEffect(() => {
+    if (profileData) {
+      setProfile({
+        name: profileData.user_nome || user?.user_nome || '',
+        email: profileData.user_email || user?.user_email || '',
+        phone: profileData.user_telefone || user?.user_telefone || '',
+        apartment: profileData.apto_numero || '',
+        block: profileData.bloco_nome || '',
+        condominium: profileData.cond_nome || '',
+        avatarUrl: profileData.user_foto || user?.user_foto || null,
+        userType: profileData.userap_tipo || 'morador'
+      });
+    } else if (user) {
+      // Se não há profileData, usa os dados básicos do user
+      setProfile(prev => ({
+        ...prev,
+        name: user.user_nome || '',
+        email: user.user_email || '',
+        phone: user.user_telefone || '',
+        avatarUrl: user.user_foto || null,
+      }));
+    }
+  }, [profileData, user]);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      
+      const dadosAtualizados = {
+        user_nome: profile.name,
+        user_email: profile.email,
+        user_telefone: profile.phone,
+      };
+
+      await updateProfile(dadosAtualizados);
+      
+      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+      setIsEditing(false);
+      setEditingField(null);
+    } catch (error) {
+      Alert.alert('Erro', error.message || 'Erro ao atualizar perfil');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePickImage = async () => {
@@ -36,7 +97,23 @@ export default function EditProfile() {
     });
 
     if (!pickerResult.canceled) {
-      setProfile(prev => ({ ...prev, avatarUrl: pickerResult.assets[0].uri }));
+      const fileUri = pickerResult.assets[0].uri;
+      
+      // Atualiza localmente primeiro para feedback visual imediato
+      setProfile(prev => ({ ...prev, avatarUrl: fileUri }));
+      
+      try {
+        // Faz upload para o servidor
+        await uploadProfilePhoto(fileUri);
+        Alert.alert('Sucesso', 'Foto de perfil atualizada com sucesso!');
+      } catch (error) {
+        Alert.alert('Erro', error.message || 'Erro ao atualizar foto de perfil');
+        // Reverte em caso de erro
+        setProfile(prev => ({ 
+          ...prev, 
+          avatarUrl: profileData?.user_foto || user?.user_foto || null 
+        }));
+      }
     }
   };
 
@@ -65,6 +142,10 @@ export default function EditProfile() {
     </Animatable.View>
   );
 
+  if (loading && !profileData) {
+    return <Loading />;
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>      
       <KeyboardAvoidingView 
@@ -77,7 +158,11 @@ export default function EditProfile() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Editar Perfil</Text>
-          <TouchableOpacity onPress={handleSave} style={[styles.saveButton, { backgroundColor: theme.colors.primary + '22' }]}>            
+          <TouchableOpacity 
+            onPress={handleSave} 
+            style={[styles.saveButton, { backgroundColor: theme.colors.primary + '22' }]}
+            disabled={isSaving}
+          >            
             <Save size={20} color={theme.colors.primary} />
           </TouchableOpacity>
         </Animatable.View>
@@ -86,10 +171,18 @@ export default function EditProfile() {
           {/* Avatar Section */}
           <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.avatarSection}>
             <TouchableOpacity onPress={handlePickImage} style={styles.avatarContainer}>
-              <Image 
-                source={typeof profile.avatarUrl === 'string' ? { uri: profile.avatarUrl } : profile.avatarUrl} 
-                style={[styles.avatar, { borderColor: theme.colors.card, shadowColor: theme.colors.primary }]} 
-              />
+              {profile.avatarUrl ? (
+                <Image 
+                  source={{ uri: profile.avatarUrl }} 
+                  style={[styles.avatar, { borderColor: theme.colors.card, shadowColor: theme.colors.primary }]} 
+                />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: theme.colors.primary, borderColor: theme.colors.card }]}>
+                  <Text style={{ color: 'white', fontSize: 32, fontWeight: 'bold' }}>
+                    {profile.name.charAt(0).toUpperCase() || 'U'}
+                  </Text>
+                </View>
+              )}
               <View style={[styles.avatarOverlay, { backgroundColor: theme.colors.primary, borderColor: theme.colors.card, shadowColor: theme.colors.primary }]}>                
                 <Camera size={24} color="white" />
               </View>
@@ -113,9 +206,36 @@ export default function EditProfile() {
           <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.section}>
             <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>LOCALIZAÇÃO</Text>
             <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>              
-              <ProfileField label="Apartamento" field="apartment" value={profile.apartment} placeholder="Ex: Apto 72" />
-              <ProfileField label="Bloco" field="block" value={profile.block} placeholder="Ex: Bloco B" />
-              <ProfileField label="Condomínio" field="condominium" value={profile.condominium} placeholder="Nome do condomínio" />
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Apartamento</Text>
+                <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                  <Text style={[styles.fieldInput, { color: theme.colors.textSecondary }]}>
+                    {profile.apartment || 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Bloco</Text>
+                <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                  <Text style={[styles.fieldInput, { color: theme.colors.textSecondary }]}>
+                    {profile.block || 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.fieldContainer}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Condomínio</Text>
+                <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                  <Text style={[styles.fieldInput, { color: theme.colors.textSecondary }]}>
+                    {profile.condominium || 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+              
+              <Text style={[styles.fieldHint, { color: theme.colors.textSecondary, fontSize: 12, marginTop: 8 }]}>
+                Entre em contato com a administração para alterar dados da unidade
+              </Text>
             </View>
           </Animatable.View>
 

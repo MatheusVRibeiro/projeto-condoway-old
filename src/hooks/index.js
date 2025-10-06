@@ -4,6 +4,7 @@ export { useAnimation } from './useAnimation';
 
 // Business Logic Hooks
 export { useProfile } from './useProfile';
+export { useCondominio } from './useCondominio';
 
 // Legacy Hooks (manter compatibilidade)
 export { default as useAsync } from './useAsync';

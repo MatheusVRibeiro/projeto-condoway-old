@@ -302,4 +302,177 @@ export const apiService = {
       handleError(error, 'reenviarConviteVisitante');
     }
   },
+
+  // === USUÁRIO APARTAMENTO (PERFIL E UNIDADE) ===
+  
+  // Buscar dados do perfil do usuário e unidade
+  buscarPerfilUsuario: async (userId) => {
+    try {
+      console.log(`🔄 [API] Buscando perfil do usuário ${userId}...`);
+      const response = await api.get(`/usuario_apartamento/${userId}`);
+      console.log('✅ [API] Perfil do usuário carregado:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar perfil:', error.response?.status, error.response?.data);
+      handleError(error, 'buscarPerfilUsuario');
+    }
+  },
+
+  // Atualizar dados do perfil do usuário
+  atualizarPerfilUsuario: async (userId, dadosPerfil) => {
+    try {
+      console.log(`🔄 [API] Atualizando perfil do usuário ${userId}...`, dadosPerfil);
+      const response = await api.put(`/usuario_apartamento/${userId}`, dadosPerfil);
+      console.log('✅ [API] Perfil atualizado com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao atualizar perfil:', error.response?.status, error.response?.data);
+      handleError(error, 'atualizarPerfilUsuario');
+    }
+  },
+
+  // Buscar detalhes da unidade (apartamento)
+  buscarDetalhesUnidade: async (unidadeId) => {
+    try {
+      console.log(`🔄 [API] Buscando detalhes da unidade ${unidadeId}...`);
+      const response = await api.get(`/apartamento/${unidadeId}`);
+      console.log('✅ [API] Detalhes da unidade carregados:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar detalhes da unidade:', error.response?.status, error.response?.data);
+      handleError(error, 'buscarDetalhesUnidade');
+    }
+  },
+
+  // Listar todos os usuários de uma unidade
+  listarUsuariosUnidade: async (unidadeId) => {
+    try {
+      console.log(`🔄 [API] Listando usuários da unidade ${unidadeId}...`);
+      const response = await api.get(`/apartamento/${unidadeId}/usuarios`);
+      console.log('✅ [API] Usuários da unidade carregados:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao listar usuários da unidade:', error.response?.status, error.response?.data);
+      handleError(error, 'listarUsuariosUnidade');
+    }
+  },
+
+  // Alterar senha do usuário
+  alterarSenha: async (userId, senhaAtual, novaSenha) => {
+    try {
+      console.log(`🔄 [API] Alterando senha do usuário ${userId}...`);
+      const response = await api.patch(`/usuario/${userId}/senha`, {
+        senha_atual: senhaAtual,
+        nova_senha: novaSenha,
+      });
+      console.log('✅ [API] Senha alterada com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao alterar senha:', error.response?.status, error.response?.data);
+      handleError(error, 'alterarSenha');
+    }
+  },
+
+  // Upload de foto de perfil
+  uploadFotoPerfil: async (userId, fileUri) => {
+    try {
+      console.log(`🔄 [API] Fazendo upload da foto de perfil para usuário ${userId}...`);
+      const formData = new FormData();
+      formData.append('file', {
+        uri: fileUri,
+        type: 'image/jpeg',
+        name: `perfil_${userId}.jpg`,
+      });
+      
+      const response = await api.post(`/usuario/${userId}/foto`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      console.log('✅ [API] Foto de perfil atualizada:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao fazer upload da foto:', error.response?.status, error.response?.data);
+      handleError(error, 'uploadFotoPerfil');
+      return fileUri; // Fallback em caso de erro
+    }
+  },
+
+  // === CONDOMÍNIO ===
+  
+  // Buscar informações do condomínio
+  buscarCondominio: async (condominioId) => {
+    try {
+      console.log(`🔄 [API] Buscando informações do condomínio ${condominioId}...`);
+      const response = await api.get(`/condominio/${condominioId}`);
+      console.log('✅ [API] Condomínio carregado:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar condomínio:', error.response?.status, error.response?.data);
+      handleError(error, 'buscarCondominio');
+    }
+  },
+
+  // Listar todos os condomínios
+  listarCondominios: async () => {
+    try {
+      console.log('🔄 [API] Listando condomínios...');
+      const response = await api.get('/condominio');
+      console.log('✅ [API] Condomínios carregados:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao listar condomínios:', error.response?.status, error.response?.data);
+      handleError(error, 'listarCondominios');
+    }
+  },
+
+  // Criar novo condomínio (apenas admin/sindico)
+  criarCondominio: async (dadosCondominio) => {
+    try {
+      console.log('🔄 [API] Criando novo condomínio...', dadosCondominio);
+      const response = await api.post('/condominio', dadosCondominio);
+      console.log('✅ [API] Condomínio criado com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao criar condomínio:', error.response?.status, error.response?.data);
+      handleError(error, 'criarCondominio');
+    }
+  },
+
+  // Atualizar informações do condomínio (apenas admin/sindico)
+  atualizarCondominio: async (condominioId, dadosCondominio) => {
+    try {
+      console.log(`🔄 [API] Atualizando condomínio ${condominioId}...`, dadosCondominio);
+      const response = await api.put(`/condominio/${condominioId}`, dadosCondominio);
+      console.log('✅ [API] Condomínio atualizado com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao atualizar condomínio:', error.response?.status, error.response?.data);
+      handleError(error, 'atualizarCondominio');
+    }
+  },
+
+  // Deletar condomínio (apenas admin)
+  deletarCondominio: async (condominioId) => {
+    try {
+      console.log(`🔄 [API] Deletando condomínio ${condominioId}...`);
+      const response = await api.delete(`/condominio/${condominioId}`);
+      console.log('✅ [API] Condomínio deletado com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao deletar condomínio:', error.response?.status, error.response?.data);
+      handleError(error, 'deletarCondominio');
+    }
+  },
+
+  // Buscar estatísticas do condomínio
+  buscarEstatisticasCondominio: async (condominioId) => {
+    try {
+      console.log(`🔄 [API] Buscando estatísticas do condomínio ${condominioId}...`);
+      const response = await api.get(`/condominio/${condominioId}/estatisticas`);
+      console.log('✅ [API] Estatísticas carregadas:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar estatísticas:', error.response?.status, error.response?.data);
+      handleError(error, 'buscarEstatisticasCondominio');
+    }
+  },
 };
