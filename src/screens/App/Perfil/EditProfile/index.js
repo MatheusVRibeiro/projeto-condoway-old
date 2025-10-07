@@ -8,6 +8,13 @@ import { styles } from './styles';
 import { useTheme } from '../../../../contexts/ThemeProvider';
 import { useProfile } from '../../../../hooks/useProfile';
 import { Loading } from '../../../../components/Loading';
+import { 
+  validateFullName, 
+  validateEmail, 
+  validatePhone, 
+  validateRequired,
+  formatPhone 
+} from '../../../../utils/validation';
 
 export default function EditProfile() {
   const navigation = useNavigation();
@@ -34,6 +41,7 @@ export default function EditProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // Carrega dados do perfil quando disponível
   useEffect(() => {
@@ -61,13 +69,43 @@ export default function EditProfile() {
   }, [profileData, user]);
 
   const handleSave = async () => {
+    const newErrors = {};
+
+    // Validação de nome completo
+    if (!validateRequired(profile.name)) {
+      newErrors.name = 'Nome é obrigatório';
+    } else if (!validateFullName(profile.name)) {
+      newErrors.name = 'Digite seu nome completo (mínimo 2 partes)';
+    }
+
+    // Validação de e-mail
+    if (!validateRequired(profile.email)) {
+      newErrors.email = 'E-mail é obrigatório';
+    } else if (!validateEmail(profile.email)) {
+      newErrors.email = 'Digite um e-mail válido';
+    }
+
+    // Validação de telefone (se preenchido)
+    if (profile.phone && !validatePhone(profile.phone)) {
+      newErrors.phone = 'Telefone inválido. Use formato: (11) 98765-4321';
+    }
+
+    setErrors(newErrors);
+
+    // Se houver erros, exibe o primeiro
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      Alert.alert('Erro de validação', firstError);
+      return;
+    }
+
     try {
       setIsSaving(true);
       
       const dadosAtualizados = {
         user_nome: profile.name,
         user_email: profile.email,
-        user_telefone: profile.phone,
+        user_telefone: profile.phone ? profile.phone.replace(/\D/g, '') : null,
       };
 
       await updateProfile(dadosAtualizados);
@@ -75,6 +113,7 @@ export default function EditProfile() {
       Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
       setIsEditing(false);
       setEditingField(null);
+      setErrors({});
     } catch (error) {
       Alert.alert('Erro', error.message || 'Erro ao atualizar perfil');
     } finally {
@@ -118,13 +157,32 @@ export default function EditProfile() {
   };
 
   const updateField = (field, value) => {
+    // Limpa erro do campo quando usuário começa a digitar
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+
+    // Formata telefone automaticamente
+    if (field === 'phone') {
+      const numbers = value.replace(/\D/g, '');
+      if (numbers.length <= 11) {
+        value = formatPhone(numbers);
+      }
+    }
+
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
   const ProfileField = ({ label, field, value, placeholder, keyboardType = 'default', multiline = false }) => (
     <Animatable.View animation="fadeInUp" duration={400} style={styles.fieldContainer}>
       <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>{label}</Text>
-      <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>        
+      <View style={[
+        styles.fieldInputContainer, 
+        { 
+          backgroundColor: theme.colors.background, 
+          borderColor: errors[field] ? '#dc2626' : theme.colors.border 
+        }
+      ]}>        
         <TextInput
           style={[styles.fieldInput, multiline && styles.fieldInputMultiline, { color: theme.colors.text }]}
           value={value}
@@ -139,6 +197,11 @@ export default function EditProfile() {
           <Edit3 size={16} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
+      {errors[field] && (
+        <Text style={{ color: '#dc2626', fontSize: 12, marginTop: 4 }}>
+          {errors[field]}
+        </Text>
+      )}
     </Animatable.View>
   );
 

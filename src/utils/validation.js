@@ -505,6 +505,106 @@ export const formatPlate = (plate) => {
   return clean;
 };
 
+/**
+ * Formata um valor monetário para o padrão brasileiro (R$)
+ * @param {string|number} value - Valor a ser formatado
+ * @returns {string} - Valor formatado (ex: "R$ 1.234,56")
+ * 
+ * @example
+ * formatMoney('123456') // 'R$ 1.234,56'
+ * formatMoney(1234.56) // 'R$ 1.234,56'
+ */
+export const formatMoney = (value) => {
+  if (!value && value !== 0) return '';
+  
+  // Remove tudo exceto números
+  const numbers = String(value).replace(/\D/g, '');
+  
+  if (numbers.length === 0) return '';
+  
+  // Converte para centavos
+  const cents = parseInt(numbers, 10);
+  
+  // Formata com separadores
+  const formatted = (cents / 100).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+  
+  return formatted;
+};
+
+/**
+ * Formata uma data para o padrão DD/MM/YYYY
+ * @param {string} value - Data a ser formatada (somente números)
+ * @returns {string} - Data formatada (ex: "31/12/2023")
+ * 
+ * @example
+ * formatDate('31122023') // '31/12/2023'
+ * formatDate('010120') // '01/01/2020'
+ */
+export const formatDate = (value) => {
+  if (!value) return '';
+  
+  const numbers = value.replace(/\D/g, '');
+  
+  if (numbers.length <= 2) {
+    return numbers;
+  }
+  
+  if (numbers.length <= 4) {
+    return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+  }
+  
+  return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+};
+
+/**
+ * Remove a formatação de um valor monetário
+ * @param {string} value - Valor formatado
+ * @returns {number} - Valor numérico
+ * 
+ * @example
+ * unformatMoney('R$ 1.234,56') // 1234.56
+ */
+export const unformatMoney = (value) => {
+  if (!value) return 0;
+  
+  const numbers = String(value).replace(/\D/g, '');
+  return parseInt(numbers, 10) / 100;
+};
+
+/**
+ * Formata um valor percentual
+ * @param {string|number} value - Valor a ser formatado
+ * @returns {string} - Valor formatado (ex: "25,5%")
+ * 
+ * @example
+ * formatPercentage('255') // '25,5%'
+ * formatPercentage(50) // '50%'
+ */
+export const formatPercentage = (value) => {
+  if (!value && value !== 0) return '';
+  
+  const numbers = String(value).replace(/\D/g, '');
+  
+  if (numbers.length === 0) return '';
+  
+  const num = parseInt(numbers, 10);
+  
+  if (num >= 1000) {
+    return '100%';
+  }
+  
+  if (num >= 100) {
+    return `${Math.floor(num / 10)},${num % 10}%`;
+  }
+  
+  return `${num}%`;
+};
+
 // Export default com todas as funções
 export default {
   // Validações
@@ -531,7 +631,11 @@ export default {
   formatPhone,
   formatCEP,
   formatPlate,
+  formatMoney,
+  formatDate,
+  formatPercentage,
   
   // Utilitários
   removeNonNumeric,
+  unformatMoney,
 };
