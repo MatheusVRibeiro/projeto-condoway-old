@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, RefreshControl, Modal, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Plus, UserCheck, Clock, Calendar, ArrowRight, QrCode, Users, X, Phone, Car, FileText, MapPin } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import SearchBar from '../../../components/SearchBar';
 
 import { useTheme } from '../../../contexts/ThemeProvider';
+import { usePaginatedVisitantes } from '../../../hooks';
 import createStyles from './styles';
 import { apiService } from '../../../services/api';
 
@@ -417,37 +418,31 @@ const VisitantesScreen = () => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
 
+  // ✅ Hook de paginação para visitantes
+  const {
+    visitantes,
+    loading,
+    loadingMore,
+    refreshing,
+    error: loadError,
+    pagination,
+    loadMore,
+    refresh,
+    updateFilters
+  } = usePaginatedVisitantes({}, 20);
+
   const [selectedTab, setSelectedTab] = useState('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [upcomingVisitors, setUpcomingVisitors] = useState([]);
-  const [historyVisitors, setHistoryVisitors] = useState([]);
-
-  // Carregar visitantes da API
-  const carregarVisitantes = async (mostrarLoading = true) => {
-    try {
-      if (mostrarLoading) setLoading(true);
-      
-      console.log('🔄 Carregando visitantes da API...');
-      const response = await apiService.listarVisitantes();
-      
-      console.log('✅ Visitantes carregados:', response);
-      
-      // Separa visitantes por status
-      // A API retorna: { sucesso: true, message: '...', nItens: 4, dados: [...] }
-      const dados = response.dados || response.data?.dados || response.data || response;
-      const proximos = dados.filter(v => 
-        ['Aguardando', 'Entrou'].includes(v.vst_status || v.status)
-      );
-      const historico = dados.filter(v => 
-        ['Finalizado', 'Cancelado'].includes(v.vst_status || v.status)
-      );
-      
-      // Mapeia para o formato esperado pelos componentes
-      setUpcomingVisitors(proximos.map(v => {
+  
+  // ✅ Mapear visitantes do hook para formato esperado e separar por status
+  const upcomingVisitors = useMemo(() => {
+    if (!visitantes || !Array.isArray(visitantes)) return [];
+    
+    return visitantes
+      .filter(v => ['Aguardando', 'Entrou'].includes(v.vst_status || v.status))
+      .map(v => {
         const validadeInicio = v.vst_validade_inicio || v.visit_date;
         const dataEntrada = v.vst_data_entrada;
         const dataSaida = v.vst_data_saida;
@@ -467,9 +462,15 @@ const VisitantesScreen = () => {
           entry_time: dataEntrada ? DateTime.fromSQL(dataEntrada).toFormat('HH:mm') : null,
           exit_time: dataSaida ? DateTime.fromSQL(dataSaida).toFormat('HH:mm') : null,
         };
-      }));
-      
-      setHistoryVisitors(historico.map(v => {
+      });
+  }, [visitantes]);
+
+  const historyVisitors = useMemo(() => {
+    if (!visitantes || !Array.isArray(visitantes)) return [];
+    
+    return visitantes
+      .filter(v => ['Finalizado', 'Cancelado'].includes(v.vst_status || v.status))
+      .map(v => {
         const validadeInicio = v.vst_validade_inicio || v.visit_date;
         const dataEntrada = v.vst_data_entrada;
         const dataSaida = v.vst_data_saida;
@@ -484,28 +485,20 @@ const VisitantesScreen = () => {
           status: v.vst_status || v.status,
           qr_code: v.vst_qrcode_hash || v.qr_code
         };
-      }));
-      
-    } catch (error) {
-      console.error('❌ Erro ao carregar visitantes:', error);
-      Alert.alert(
-        'Erro',
-        'Não foi possível carregar os visitantes. Usando dados locais.'
-      );
-      // Mantém dados mock em caso de erro
-      setUpcomingVisitors(upcomingVisitorsData);
-      setHistoryVisitors(accessHistoryData);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+      });
+  }, [visitantes]);
+
+  // ✅ Função simplificada - hook já gerencia carregamento
+  const carregarVisitantes = refresh;
 
   // Carrega visitantes ao abrir a tela
   useFocusEffect(
     useCallback(() => {
-      carregarVisitantes();
-    }, [])
+      // Hook já carrega automaticamente, só refresh se necessário
+      if (visitantes.length === 0 && !loading) {
+        refresh();
+      }
+    }, [visitantes.length, loading, refresh])
   );
 
   const handleAddVisitor = () => {
@@ -522,11 +515,8 @@ const VisitantesScreen = () => {
     setTimeout(() => setSelectedVisitor(null), 300);
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    carregarVisitantes(false);
-  }, []);
-
+  // ✅ onRefresh agora usa o refresh do hook
+  
   const filteredData = selectedTab === 'upcoming' 
     ? upcomingVisitors.filter(v => 
         v.visitor_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -628,16 +618,49 @@ const VisitantesScreen = () => {
             styles.listContainer,
             filteredData.length === 0 && styles.listContainerEmpty
           ]}
-          ListEmptyComponent={<EmptyState />}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={onRefresh}
+              onRefresh={refresh}
               tintColor={theme.colors.primary}
               colors={[theme.colors.primary]}
             />
           }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={() => {
+            if (!loadingMore) return null;
+            return (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={{ color: theme.colors.textSecondary, marginTop: 8, fontSize: 12 }}>
+                  Carregando mais visitantes...
+                </Text>
+              </View>
+            );
+          }}
+          ListEmptyComponent={() => {
+            if (loadError) {
+              return (
+                <View style={styles.errorContainer}>
+                  <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                    {loadError}
+                  </Text>
+                  <TouchableOpacity 
+                    style={[styles.retryButton, { backgroundColor: theme.colors.primary }]}
+                    onPress={refresh}
+                  >
+                    <Text style={styles.retryButtonText}>Tentar novamente</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            }
+            return <EmptyState />;
+          }}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={10}
         />
       )}
 

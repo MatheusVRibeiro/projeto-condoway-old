@@ -11,10 +11,19 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [lastCheck, setLastCheck] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false); // Controle para evitar múltiplas chamadas
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+    hasMore: true,
+    perPage: 20
+  });
   const notificationsRef = useRef([]); // Ref para acessar notificações sem criar dependência
   const lastFetchTime = useRef(0); // Cache simples para evitar requisições muito frequentes
+  const allNotificationsRef = useRef([]); // Ref para armazenar TODAS as notificações (para paginação)
 
   const normalize = (raw) => {
     console.log('🔄 Normalizando notificação:', raw);
@@ -32,13 +41,13 @@ export const NotificationProvider = ({ children }) => {
     return normalized;
   };
 
-  const loadServerNotifications = useCallback(async () => {
+  const loadServerNotifications = useCallback(async (page = 1) => {
     if (!user?.user_id) {
       console.log('❌ User não disponível para carregar notificações:', user);
       return;
     }
 
-    if (isRefreshing) {
+    if (isRefreshing && page === 1) {
       console.log('⏳ Já há uma requisição em andamento, pulando...');
       return;
     }
@@ -47,9 +56,14 @@ export const NotificationProvider = ({ children }) => {
     const userId = user.userap_id || user.user_id;
     
     try {
-      setIsRefreshing(true);
-      setLoading(true);
-      console.log(`🔄 Carregando notificações do servidor para userId: ${userId}`);
+      if (page === 1) {
+        setIsRefreshing(true);
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      console.log(`🔄 Carregando notificações do servidor para userId: ${userId}, página: ${page}`);
       
       const serverList = await apiService.getNotificacoes(userId);
       console.log('📦 Notificações recebidas do servidor:', serverList?.length || 0);
@@ -57,49 +71,86 @@ export const NotificationProvider = ({ children }) => {
       if (Array.isArray(serverList)) {
         const mapped = serverList.map(normalize);
         
-        // Detectar novas notificações para mostrar toast
-        if (notificationsRef.current.length > 0) {
-          const existingIds = new Set(notificationsRef.current.map(n => n.id));
-          const newNotifications = mapped.filter(n => !existingIds.has(n.id));
-          
-          // Mostrar toast para cada nova notificação
-          newNotifications.forEach(notification => {
-            console.log('🔔 Nova notificação detectada:', notification.title);
-            Toast.show({
-              type: 'info',
-              text1: notification.title,
-              text2: notification.message,
-              position: 'top',
-              visibilityTime: 4000,
-            });
+        // Armazenar TODAS as notificações
+        allNotificationsRef.current = mapped;
+        
+        // Aplicar paginação
+        const limit = 20;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedData = mapped.slice(startIndex, endIndex);
+        
+        // Atualizar metadados de paginação
+        const newPagination = {
+          currentPage: page,
+          totalPages: Math.ceil(mapped.length / limit),
+          total: mapped.length,
+          hasMore: endIndex < mapped.length,
+          perPage: limit
+        };
+        setPagination(newPagination);
+        
+        // Se for página 1, substituir. Senão, adicionar
+        if (page === 1) {
+          // Detectar novas notificações para mostrar toast
+          if (notificationsRef.current.length > 0) {
+            const existingIds = new Set(notificationsRef.current.map(n => n.id));
+            const newNotifications = paginatedData.filter(n => !existingIds.has(n.id));
             
-            // Vibração para nova notificação
-            if (Platform.OS === 'ios') {
-              Vibration.vibrate();
-            } else {
-              Vibration.vibrate(200);
-            }
-          });
+            // Mostrar toast para cada nova notificação
+            newNotifications.forEach(notification => {
+              console.log('🔔 Nova notificação detectada:', notification.title);
+              Toast.show({
+                type: 'info',
+                text1: notification.title,
+                text2: notification.message,
+                position: 'top',
+                visibilityTime: 4000,
+              });
+              
+              // Vibração para nova notificação
+              if (Platform.OS === 'ios') {
+                Vibration.vibrate();
+              } else {
+                Vibration.vibrate(200);
+              }
+            });
+          }
+          
+          setNotifications(paginatedData);
+          notificationsRef.current = paginatedData;
+        } else {
+          // Infinite scroll - adicionar aos existentes
+          setNotifications(prev => [...prev, ...paginatedData]);
+          notificationsRef.current = [...notificationsRef.current, ...paginatedData];
         }
         
-        setNotifications(mapped);
-        notificationsRef.current = mapped; // Atualizar ref
         const unread = mapped.filter(n => !n.read).length;
         setUnreadCount(unread);
         setLastCheck(new Date());
         
-        console.log(`✅ ${mapped.length} notificações carregadas, ${unread} não lidas`);
+        console.log(`✅ ${paginatedData.length} notificações carregadas (página ${page}/${newPagination.totalPages}), ${unread} não lidas no total`);
       } else {
         console.log('⚠️ Resposta do servidor não é um array:', serverList);
         setNotifications([]);
         setUnreadCount(0);
+        setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          total: 0,
+          hasMore: false,
+          perPage: 20
+        });
       }
     } catch (error) {
       console.error('❌ Erro ao carregar notificações:', error);
-      setNotifications([]);
-      setUnreadCount(0);
+      if (page === 1) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       setIsRefreshing(false);
     }
   }, [user?.user_id, user?.userap_id, isRefreshing]);
@@ -308,8 +359,23 @@ export const NotificationProvider = ({ children }) => {
 
     console.log('🔄 Refresh das notificações solicitado');
     lastFetchTime.current = now;
-    return await loadServerNotifications();
+    return await loadServerNotifications(1); // Sempre volta para página 1
   }, [isRefreshing, loadServerNotifications]);
+
+  const loadMoreNotifications = useCallback(async () => {
+    if (loadingMore || loading || !pagination.hasMore) {
+      console.log('⏸️ Carregamento de mais notificações ignorado:', {
+        loadingMore,
+        loading,
+        hasMore: pagination.hasMore
+      });
+      return;
+    }
+    
+    const nextPage = pagination.currentPage + 1;
+    console.log(`📄 Carregando página ${nextPage} de notificações...`);
+    return await loadServerNotifications(nextPage);
+  }, [loadingMore, loading, pagination, loadServerNotifications]);
 
   const getNotificationsByType = (type) => {
     return notifications.filter(notification => notification.type === type);
@@ -332,6 +398,8 @@ export const NotificationProvider = ({ children }) => {
     notifications,
     unreadCount,
     loading,
+    loadingMore,
+    pagination,
     lastCheck,
     showNotification,
     markAsRead,
@@ -343,6 +411,7 @@ export const NotificationProvider = ({ children }) => {
     getRecentNotifications,
     loadServerNotifications,
     refreshNotifications,
+    loadMore: loadMoreNotifications,
     registerDeviceToken,
   };
 

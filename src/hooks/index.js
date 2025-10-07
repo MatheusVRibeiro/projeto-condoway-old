@@ -6,6 +6,10 @@ export { useAnimation } from './useAnimation';
 export { useProfile } from './useProfile';
 export { useCondominio } from './useCondominio';
 
+// Pagination Hooks
+export { usePaginatedOcorrencias } from './usePaginatedOcorrencias';
+export { usePaginatedVisitantes } from './usePaginatedVisitantes';
+
 // Legacy Hooks (manter compatibilidade)
 export { default as useAsync } from './useAsync';
 // export { default as useBiometrics } from './useBiometrics'; // removido: suporte a biometria/Face ID

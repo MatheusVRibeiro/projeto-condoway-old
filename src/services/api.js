@@ -65,10 +65,28 @@ export const apiService = {
     }
   },
 
-  buscarOcorrencias: async () => {
+  buscarOcorrencias: async (page = 1, limit = 20) => {
     try {
+      // Buscar todos os dados (API atual não tem paginação no backend)
       const response = await api.get('/ocorrencias');
-      return response.data.dados || [];
+      const allData = response.data.dados || [];
+      
+      // Simular paginação no frontend
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedData = allData.slice(startIndex, endIndex);
+      
+      // Retornar com metadados de paginação
+      return {
+        dados: paginatedData,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(allData.length / limit),
+          total: allData.length,
+          hasMore: endIndex < allData.length,
+          perPage: limit
+        }
+      };
     } catch (error) {
       handleError(error, 'buscarOcorrencias');
     }
@@ -241,8 +259,8 @@ export const apiService = {
     }
   },
 
-  // Listar visitantes do usuário
-  listarVisitantes: async (filtros = {}) => {
+  // Listar visitantes do usuário (com paginação)
+  listarVisitantes: async (filtros = {}, page = 1, limit = 20) => {
     try {
       console.log('🔄 [API] Buscando lista de visitantes...');
       const params = new URLSearchParams();
@@ -257,7 +275,24 @@ export const apiService = {
       
       const response = await api.get(endpoint);
       console.log('✅ [API] Visitantes carregados:', response.data);
-      return response.data;
+      
+      // Paginação simulada no frontend
+      // A API retorna: {sucesso, message, nItens, dados: [...]}
+      const allData = response.data?.dados || [];
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedData = allData.slice(startIndex, endIndex);
+      
+      return {
+        dados: paginatedData,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(allData.length / limit),
+          total: allData.length,
+          hasMore: endIndex < allData.length,
+          perPage: limit
+        }
+      };
     } catch (error) {
       console.error('❌ [API] Erro ao listar visitantes:', error.response?.status, error.response?.data);
       handleError(error, 'listarVisitantes');
