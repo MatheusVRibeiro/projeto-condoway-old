@@ -1,51 +1,69 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Package as PackageIcon } from 'lucide-react-native';
+import { Package, Clock, CheckCircle } from 'lucide-react-native';
+import * as Animatable from 'react-native-animatable';
 import { useTheme } from '../../contexts/ThemeProvider';
+import styles from './styles';
 
-const PackageHeader = ({ 
-  awaitingCount, 
-  deliveredCount, 
-  totalCount, 
-  styles 
-}) => {
+const PackageHeader = ({ awaitingCount, deliveredCount, totalCount }) => {
   const { theme } = useTheme();
 
+  const stats = [
+    {
+      icon: Clock,
+      label: 'Aguardando',
+      value: awaitingCount,
+      color: '#3b82f6',
+      lightColor: '#dbeafe',
+      delay: 0
+    },
+    {
+      icon: CheckCircle,
+      label: 'Retiradas',
+      value: deliveredCount,
+      color: '#10b981',
+      lightColor: '#d1fae5',
+      delay: 100
+    },
+    {
+      icon: Package,
+      label: 'Total',
+      value: totalCount,
+      color: '#64748b',
+      lightColor: '#f1f5f9',
+      delay: 200
+    }
+  ];
+
   return (
-    <View style={styles.header}>
-      <View style={styles.headerTitle}>
-        {PackageIcon ? (
-          <PackageIcon color={theme.colors.primary} size={28} />
-        ) : (
-          <Text style={{ fontSize: 24 }}>📦</Text>
-        )}
-
-        <Text style={[styles.headerTitleText, { color: theme.colors.text }]}> 
-          Minhas Encomendas
-        </Text>
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          const isLast = index === stats.length - 1;
+          return (
+            <React.Fragment key={stat.label}>
+              <Animatable.View
+                animation="fadeInUp"
+                delay={stat.delay}
+                style={styles.statCard}
+              >
+                <View style={[styles.iconContainer, { backgroundColor: stat.lightColor }]}>
+                  <Icon size={20} color={stat.color} strokeWidth={2.5} />
+                </View>
+                <Text style={[styles.statValue, { color: theme.colors.text }]}>
+                  {stat.value}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+                  {stat.label}
+                </Text>
+              </Animatable.View>
+              {!isLast && <View style={styles.divider} />}
+            </React.Fragment>
+          );
+        })}
       </View>
-
-      <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}> 
-        Acompanhe os pacotes que chegaram para si.
-      </Text>
-
-      {/* StatsCard inline para evitar problemas de import */}
-      <View style={[styles.statsContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: theme.colors.primary }]}>{awaitingCount}</Text>
-          <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Aguardando</Text>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: theme.colors.success }]}>{deliveredCount}</Text>
-          <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Retiradas</Text>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
-        <View style={styles.statItem}>
-          <Text style={[styles.statNumber, { color: theme.colors.text }]}>{totalCount}</Text>
-          <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total</Text>
-        </View>
-      </View>
+      <View style={styles.separator} />
     </View>
   );
 };
