@@ -67,7 +67,8 @@ export default function Perfil() {
   const { 
     profileData, 
     loading,
-    uploadProfilePhoto 
+    uploadProfilePhoto,
+    loadProfile // ✅ Adicionar loadProfile para recarregar dados
   } = useProfile();
 
   // Dados para exibição (usa dados da API quando disponível, senão usa dados do user do contexto)
@@ -91,7 +92,7 @@ export default function Perfil() {
     }
     
     const pickerResult = await ImagePicker.launchImageLibraryAsync({ 
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+      mediaTypes: ['images'], // ✅ Corrigido: uso da nova API
       allowsEditing: true, 
       aspect: [1,1], 
       quality: 1 
@@ -102,6 +103,8 @@ export default function Perfil() {
       
       try {
         await uploadProfilePhoto(fileUri);
+        // ✅ Recarregar dados do perfil após upload bem-sucedido
+        await loadProfile();
         Alert.alert('Sucesso', 'Foto de perfil atualizada!');
       } catch (error) {
         Alert.alert('Erro', error.message || 'Erro ao atualizar foto de perfil');

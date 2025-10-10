@@ -83,12 +83,17 @@ export const AuthProvider = ({ children }) => {
   const updateUser = async (newUserData) => {
     try {
       if (user) {
+        console.log('🔄 [AuthContext] Atualizando usuário com:', newUserData);
         const updatedUser = { ...user, ...newUserData };
+        console.log('📦 [AuthContext] Usuário atualizado:', updatedUser);
         setUser(updatedUser);
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('✅ [AuthContext] Usuário salvo no AsyncStorage');
+      } else {
+        console.warn('⚠️ [AuthContext] Nenhum usuário para atualizar');
       }
     } catch (e) {
-      console.error("Failed to update user", e);
+      console.error("❌ [AuthContext] Failed to update user:", e);
     }
   };
 

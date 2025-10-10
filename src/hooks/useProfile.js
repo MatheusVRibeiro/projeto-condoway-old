@@ -18,8 +18,12 @@ export const useProfile = () => {
    * Carrega os dados do perfil do usuário
    */
   const loadProfile = async () => {
-    if (!user?.User_ID) {
+    // Tenta ambos os formatos de ID (User_ID e user_id)
+    const userId = user?.User_ID || user?.user_id;
+    
+    if (!userId) {
       console.warn('⚠️ [useProfile] Nenhum usuário logado');
+      console.log('👤 [useProfile] user disponível:', user);
       return;
     }
 
@@ -27,12 +31,17 @@ export const useProfile = () => {
       setLoading(true);
       setError(null);
       console.log('🔄 [useProfile] Carregando perfil do usuário...');
+      console.log('🆔 [useProfile] userId:', userId);
       
-      const response = await apiService.buscarPerfilUsuario(user.User_ID);
+      const response = await apiService.buscarPerfilUsuario(userId);
+      
+      console.log('📦 [useProfile] Resposta completa:', response);
       
       if (response.sucesso && response.dados) {
         setProfileData(response.dados);
         console.log('✅ [useProfile] Perfil carregado:', response.dados);
+      } else {
+        console.warn('⚠️ [useProfile] Resposta sem dados:', response);
       }
     } catch (err) {
       console.error('❌ [useProfile] Erro ao carregar perfil:', err);
@@ -153,25 +162,35 @@ export const useProfile = () => {
       setLoading(true);
       setError(null);
       console.log('🔄 [useProfile] Fazendo upload da foto de perfil...');
+      console.log('📸 [useProfile] URI da imagem:', fileUri);
       
       const response = await apiService.uploadFotoPerfil(user.User_ID, fileUri);
       
+      console.log('📦 [useProfile] Resposta do upload:', response);
+      
       if (response.sucesso && response.dados) {
+        const novaFotoUrl = response.dados.user_foto || response.dados.url;
+        console.log('✅ [useProfile] Nova URL da foto:', novaFotoUrl);
+        
         // Atualiza o profileData com a nova URL da foto
         setProfileData(prev => ({
           ...prev,
-          user_foto: response.dados.user_foto || response.dados.url
+          user_foto: novaFotoUrl
         }));
 
         // Atualiza também no contexto de autenticação
         if (updateUser) {
+          console.log('🔄 [useProfile] Atualizando contexto de autenticação...');
           await updateUser({
-            user_foto: response.dados.user_foto || response.dados.url
+            user_foto: novaFotoUrl
           });
+          console.log('✅ [useProfile] Contexto atualizado');
         }
         
-        console.log('✅ [useProfile] Foto de perfil atualizada');
+        console.log('✅ [useProfile] Foto de perfil atualizada com sucesso');
         return response.dados;
+      } else {
+        throw new Error('Resposta da API não contém dados');
       }
     } catch (err) {
       console.error('❌ [useProfile] Erro ao fazer upload da foto:', err);
@@ -193,7 +212,7 @@ export const useProfile = () => {
     }
     
     const pickerResult = await ImagePicker.launchImageLibraryAsync({ 
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+      mediaTypes: ['images'], // ✅ Corrigido: nova API
       allowsEditing: true, 
       aspect: [1, 1], 
       quality: 1 
@@ -225,10 +244,12 @@ export const useProfile = () => {
    * Carrega o perfil automaticamente quando o usuário está disponível
    */
   useEffect(() => {
-    if (user?.User_ID && !profileData) {
+    const userId = user?.User_ID || user?.user_id;
+    if (userId && !profileData) {
+      console.log('🔄 [useProfile] useEffect detectou usuário, carregando perfil...');
       loadProfile();
     }
-  }, [user?.User_ID]);
+  }, [user?.User_ID, user?.user_id]);
 
   return {
     // Estados

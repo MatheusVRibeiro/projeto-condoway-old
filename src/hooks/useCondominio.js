@@ -14,7 +14,15 @@ export const useCondominio = (condominioId = null) => {
   const [error, setError] = useState(null);
 
   // ID do condomínio pode vir do parâmetro ou do usuário logado
-  const condId = condominioId || user?.Cond_ID;
+  // Tenta todos os formatos possíveis: Cond_ID, cond_id, condId
+  const condId = condominioId || user?.Cond_ID || user?.cond_id || user?.condId;
+  
+  console.log('🏘️ [useCondominio] condId:', condId);
+  console.log('👤 [useCondominio] user disponível:', {
+    Cond_ID: user?.Cond_ID,
+    cond_id: user?.cond_id,
+    condId: user?.condId
+  });
 
   /**
    * Busca informações de um condomínio específico
@@ -28,13 +36,15 @@ export const useCondominio = (condominioId = null) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 [useCondominio] Carregando condomínio...');
+      console.log(`🔄 [useCondominio] Carregando condomínio com ID: ${id}...`);
       
       const response = await apiService.buscarCondominio(id);
       
       if (response.sucesso && response.dados) {
         setCondominioData(response.dados);
         console.log('✅ [useCondominio] Condomínio carregado:', response.dados);
+        console.log('📍 [useCondominio] Endereço:', response.dados.cond_endereco);
+        console.log('🏙️ [useCondominio] Cidade:', response.dados.cond_cidade);
       }
     } catch (err) {
       console.error('❌ [useCondominio] Erro ao carregar condomínio:', err);

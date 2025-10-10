@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning, Moon, Sun, Video, MessageSquare, UserCheck, Car, Tag, Plus } from 'lucide-react-native';
+import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning, Moon, Sun, Video, MessageSquare, UserCheck, Car, Tag, Plus, User } from 'lucide-react-native';
 import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
@@ -137,7 +137,7 @@ export default function Dashboard() {
   const morador = {
     nome: profileData?.user_nome || user?.user_nome || 'Usuário',
     condominio: condominioData?.cond_nome || profileData?.cond_nome || 'Condomínio',
-    avatarUrl: profileData?.user_foto || user?.user_foto || 'https://via.placeholder.com/150',
+    avatarUrl: profileData?.user_foto || user?.user_foto || null, // ✅ Corrigido: null em vez de URL quebrada
   };
 
   const handleReservarEspaco = React.useCallback(() => navigation.navigate('ReservasTab'), [navigation]);
@@ -145,6 +145,7 @@ export default function Dashboard() {
   const handleLiberarVisitante = React.useCallback(() => navigation.navigate(ROUTES.VISITANTES || 'Visitantes'), [navigation]);
   const handleAbrirOcorrencia = React.useCallback(() => navigation.navigate('OcorrenciasTab'), [navigation]);
   const handleVerNotificacoes = React.useCallback(() => navigation.navigate('Notifications'), [navigation]);
+  const handleAbrirPerfil = React.useCallback(() => navigation.navigate(ROUTES.PERFIL || 'PerfilTab'), [navigation]);
 
   // Funções para "Meu Condomínio"
   const handleCamerasSeguranca = React.useCallback(() => {
@@ -262,7 +263,19 @@ export default function Dashboard() {
                   </View>
                 )}
               </TouchableOpacity>
-              <Image source={{ uri: morador.avatarUrl }} style={styles.avatar} />
+              
+              <TouchableOpacity 
+                style={[styles.profileButton, { borderColor: theme.colors.border }]} 
+                onPress={handleAbrirPerfil}
+              >
+                {morador.avatarUrl ? (
+                  <Image source={{ uri: morador.avatarUrl }} style={styles.avatarButton} />
+                ) : (
+                  <View style={[styles.avatarButton, { backgroundColor: theme.colors.primary, justifyContent: 'center', alignItems: 'center' }]}>
+                    <User color="#ffffff" size={24} />
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
           </Animatable.View>
 

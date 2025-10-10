@@ -7,7 +7,7 @@ import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { useTheme } from '../../../../contexts/ThemeProvider';
 import { useProfile } from '../../../../hooks/useProfile';
-import { Loading } from '../../../../components/Loading';
+import Loading from '../../../../components/Loading';
 import { 
   validateFullName, 
   validateEmail, 
@@ -45,18 +45,27 @@ export default function EditProfile() {
 
   // Carrega dados do perfil quando disponível
   useEffect(() => {
+    console.log('📦 [EditProfile] profileData recebido:', profileData);
+    console.log('👤 [EditProfile] user recebido:', user);
+    
     if (profileData) {
+      console.log('✅ [EditProfile] Extraindo dados do profileData...');
+      console.log('  - Apartamento:', profileData.apto_numero || profileData.ap_numero || 'não encontrado');
+      console.log('  - Bloco:', profileData.bloco_nome || profileData.bloc_nome || 'não encontrado');
+      console.log('  - Condomínio:', profileData.cond_nome || 'não encontrado');
+      
       setProfile({
         name: profileData.user_nome || user?.user_nome || '',
         email: profileData.user_email || user?.user_email || '',
         phone: profileData.user_telefone || user?.user_telefone || '',
-        apartment: profileData.apto_numero || '',
-        block: profileData.bloco_nome || '',
+        apartment: profileData.apto_numero || profileData.ap_numero || '',
+        block: profileData.bloco_nome || profileData.bloc_nome || '',
         condominium: profileData.cond_nome || '',
         avatarUrl: profileData.user_foto || user?.user_foto || null,
         userType: profileData.userap_tipo || 'morador'
       });
     } else if (user) {
+      console.log('⚠️ [EditProfile] Sem profileData, usando dados do user');
       // Se não há profileData, usa os dados básicos do user
       setProfile(prev => ({
         ...prev,

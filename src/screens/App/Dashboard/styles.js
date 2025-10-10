@@ -52,6 +52,17 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
+  profileButton: {
+    borderRadius: 22,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  avatarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
   notificationButton: {
     position: 'relative',
     marginRight: 16,

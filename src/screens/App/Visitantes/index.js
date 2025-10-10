@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, SafeAreaView, RefreshControl, Modal, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { Plus, UserCheck, Clock, Calendar, ArrowRight, QrCode, Users, X, Phone, Car, FileText, MapPin } from 'lucide-react-native';
+import { Plus, UserCheck, Clock, Calendar, ArrowRight, QrCode, Users, X, Phone, FileText, MapPin } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
 import { DateTime } from 'luxon';
@@ -23,7 +23,6 @@ const upcomingVisitorsData = [
     status: 'Aguardando',
     created_at: '2025-10-01T10:00:00',
     phone: '(11) 98765-4321',
-    vehicle_plate: 'ABC-1234',
     notes: 'Visitante autorizado para entrega'
   },
   { 
@@ -36,7 +35,6 @@ const upcomingVisitorsData = [
     status: 'Aguardando',
     created_at: '2025-10-01T11:00:00',
     phone: '(11) 91234-5678',
-    vehicle_plate: null,
     notes: null
   },
   { 
@@ -49,7 +47,6 @@ const upcomingVisitorsData = [
     status: 'Entrou',
     created_at: '2025-09-28T09:00:00',
     phone: '(11) 99999-8888',
-    vehicle_plate: 'XYZ-9876',
     notes: 'Visitante frequente - funcionário'
   },
 ];
@@ -325,16 +322,6 @@ const VisitorDetailsModal = ({ visible, visitor, onClose, theme }) => {
                   </View>
                 </View>
               )}
-
-              {visitor.vehicle_plate && (
-                <View style={styles.modalInfoRow}>
-                  <Car size={18} color={theme.colors.textSecondary} />
-                  <View style={styles.modalInfoText}>
-                    <Text style={styles.modalInfoLabel}>Placa do Veículo</Text>
-                    <Text style={styles.modalInfoValue}>{visitor.vehicle_plate}</Text>
-                  </View>
-                </View>
-              )}
             </View>
 
             {/* Informações da Visita */}
@@ -457,7 +444,6 @@ const VisitantesScreen = () => {
           status: v.vst_status || v.status,
           created_at: v.created_at,
           phone: v.phone || null,
-          vehicle_plate: v.vehicle_plate || null,
           notes: v.notes || null,
           entry_time: dataEntrada ? DateTime.fromSQL(dataEntrada).toFormat('HH:mm') : null,
           exit_time: dataSaida ? DateTime.fromSQL(dataSaida).toFormat('HH:mm') : null,

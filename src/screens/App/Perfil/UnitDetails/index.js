@@ -6,45 +6,68 @@ import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { useTheme } from '../../../../contexts/ThemeProvider';
 import { useProfile } from '../../../../hooks/useProfile';
-import { useCondominio } from '../../../../hooks/useCondominio';
-import { Loading } from '../../../../components/Loading';
+import Loading from '../../../../components/Loading';
 
 export default function UnitDetails() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   
-  // Hooks para dados reais da API
-  const { 
-    profileData, 
-    unitData, 
-    loading: profileLoading, 
-    loadUnitDetails 
-  } = useProfile();
-  
-  const { 
-    condominioData, 
-    loading: condominioLoading 
-  } = useCondominio();
+  // Busca dados do perfil da API
+  const { profileData, loading } = useProfile();
 
-  // Carrega detalhes da unidade quando o profileData estiver disponível
-  useEffect(() => {
-    if (profileData?.Apto_ID) {
-      loadUnitDetails(profileData.Apto_ID);
+  // Formata a data de cadastro
+  const formatarDataCadastro = (dataString) => {
+    if (!dataString) return 'Não informado';
+    
+    try {
+      const data = new Date(dataString);
+      const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      return `${meses[data.getMonth()]} ${data.getFullYear()}`;
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return 'Não informado';
     }
-  }, [profileData?.Apto_ID]);
+  };
 
-  // Mock data como fallback (será substituído por dados reais quando disponível)
-  const [unitData_mock] = useState({
+  // Monta dados para exibição
+  // Monta dados para exibição
+  const displayData = {
+    // Título: "Nome do Condomínio"
+    title: profileData?.cond_nome || 'Carregando...',
+    
+    // Subtítulo: "Bloco A - Andar 10 - Apto 101"
+    subtitle: profileData?.bloc_nome && profileData?.ap_andar && profileData?.ap_numero
+      ? `${profileData.bloc_nome} - Andar ${profileData.ap_andar} - Apto ${profileData.ap_numero}`
+      : profileData?.bloc_nome && profileData?.ap_numero
+      ? `${profileData.bloc_nome} - Apto ${profileData.ap_numero}`
+      : 'Não informado',
+    
+    // Localização completa: "Rua Exemplo, 123 - São Paulo - SP"
+    endereco: profileData?.cond_endereco || 'Não informado',
+    cidade: profileData?.cond_cidade || 'Não informado',
+    estado: profileData?.cond_estado || '',
+    enderecoCompleto: profileData?.cond_endereco && profileData?.cond_cidade && profileData?.cond_estado
+      ? `${profileData.cond_endereco} - ${profileData.cond_cidade} - ${profileData.cond_estado}`
+      : profileData?.cond_endereco && profileData?.cond_cidade
+      ? `${profileData.cond_endereco} - ${profileData.cond_cidade}`
+      : profileData?.cond_endereco || profileData?.cond_cidade || 'Não informado',
+    
+    // Data de cadastro do usuário
+    registrationDate: formatarDataCadastro(profileData?.user_data_cadastro),
+    
+    // Tipo de usuário
+    userType: profileData?.user_tipo || 'Morador',
+    
+    // Mock data para campos futuros
     area: '85m²',
     bedrooms: 3,
     bathrooms: 2,
-    parkingSpots: 1,
-    registrationDate: 'Janeiro 2023',
     monthlyFee: 'R$ 485,00',
     emergencyContact: {
-      name: 'João Silva',
-      phone: '(11) 99876-5432',
-      relationship: 'Responsável'
+      name: 'Em breve',
+      phone: '-',
+      relationship: '-'
     },
     utilities: {
       water: 'Ativo',
@@ -60,47 +83,26 @@ export default function UnitDetails() {
       'Quadra de Tênis',
       'Sauna'
     ]
-  });
-
-  // Combina dados reais da API com mock para campos ainda não implementados
-  const displayData = {
-    apartment: profileData?.apto_numero || 'Carregando...',
-    block: profileData?.bloco_nome || 'Carregando...',
-    condominium: condominioData?.cond_nome || profileData?.cond_nome || 'Carregando...',
-    endereco: condominioData?.cond_endereco || 'Não informado',
-    cidade: condominioData?.cond_cidade || 'Não informado',
-    area: unitData?.apto_area || unitData_mock.area,
-    bedrooms: unitData?.apto_quartos || unitData_mock.bedrooms,
-    bathrooms: unitData?.apto_banheiros || unitData_mock.bathrooms,
-    parkingSpots: unitData?.apto_vagas || unitData_mock.parkingSpots,
-    registrationDate: profileData?.userap_data_cadastro || unitData_mock.registrationDate,
-    monthlyFee: unitData?.apto_taxa_condominio || unitData_mock.monthlyFee,
-    userType: profileData?.userap_tipo || 'morador',
-    emergencyContact: unitData_mock.emergencyContact,
-    utilities: unitData_mock.utilities,
-    amenities: unitData_mock.amenities,
   };
 
-  const loading = profileLoading || condominioLoading;
-
-  const InfoCard = ({ icon: Icon, title, value, subtitle, onEdit }) => (
-    <View style={styles.infoCard}>
-      <View style={styles.infoHeader}>
-        <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primary + '22' }]}>
-          <Icon size={20} color={theme.colors.primary} />
-        </View>
-        <View style={styles.infoTitleContainer}>
-          <Text style={[styles.infoTitle, { color: theme.colors.textSecondary }]}>{title}</Text>
-          {subtitle && <Text style={[styles.infoSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>}
-        </View>
-        {onEdit && (
-          <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-            <Edit3 size={16} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
+  // Componentes de UI modernos
+  const InfoCard = ({ icon: Icon, title, value, subtitle, color = theme.colors.primary }) => (
+    <Animatable.View animation="fadeIn" style={styles.modernInfoCard}>
+      <View style={[styles.modernIconContainer, { backgroundColor: color }]}>
+        <Icon size={26} color="#FFFFFF" strokeWidth={2.5} />
+      </View>
+      <View style={styles.modernInfoContent}>
+        <Text style={[styles.modernInfoTitle, { color: theme.colors.textSecondary }]}>{title}</Text>
+        <Text style={[styles.modernInfoValue, { color: theme.colors.text }]} numberOfLines={2}>
+          {value}
+        </Text>
+        {subtitle && (
+          <Text style={[styles.modernInfoSubtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+            {subtitle}
+          </Text>
         )}
       </View>
-      <Text style={[styles.infoValue, { color: theme.colors.text }]}>{value}</Text>
-    </View>
+    </Animatable.View>
   );
 
   const UtilityStatus = ({ icon: Icon, name, status }) => (
@@ -124,7 +126,7 @@ export default function UnitDetails() {
     </View>
   );
 
-  if (loading && !profileData) {
+  if (loading) {
     return <Loading />;
   }
 
@@ -147,8 +149,8 @@ export default function UnitDetails() {
               <Home size={32} color={theme.colors.primary} />
             </View>
             <View style={styles.overviewInfo}>
-              <Text style={[styles.overviewTitle, { color: theme.colors.text }]}>{displayData.apartment}</Text>
-              <Text style={[styles.overviewSubtitle, { color: theme.colors.primary }]}>{displayData.block} • {displayData.condominium}</Text>
+              <Text style={[styles.overviewTitle, { color: theme.colors.text }]}>{displayData.title}</Text>
+              <Text style={[styles.overviewSubtitle, { color: theme.colors.primary }]}>{displayData.subtitle}</Text>
               <Text style={[styles.overviewDetail, { color: theme.colors.textSecondary }]}>{displayData.area} • {displayData.bedrooms} quartos • {displayData.bathrooms} banheiros</Text>
             </View>
           </View>
@@ -157,13 +159,28 @@ export default function UnitDetails() {
         {/* Basic Information */}
         <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>INFORMAÇÕES BÁSICAS</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <View style={styles.infoGrid}>
-              <InfoCard icon={MapPin} title="Localização" value={`${displayData.apartment}, ${displayData.block}`} subtitle="Endereço da unidade" />
-              <InfoCard icon={Calendar} title="Desde" value={displayData.registrationDate} subtitle="Data de cadastro" />
-              <InfoCard icon={Users} title="Tipo" value={displayData.userType === 'morador' ? 'Morador' : displayData.userType === 'proprietario' ? 'Proprietário' : displayData.userType === 'sindico' ? 'Síndico' : 'Porteiro'} subtitle="Relação com o imóvel" />
-              <InfoCard icon={Car} title="Vagas" value={`${displayData.parkingSpots} vaga${displayData.parkingSpots > 1 ? 's' : ''}`} subtitle="Estacionamento" />
-            </View>
+          <View style={styles.modernInfoGrid}>
+            <InfoCard 
+              icon={MapPin} 
+              title="LOCALIZAÇÃO" 
+              value={displayData.enderecoCompleto} 
+              subtitle={displayData.subtitle}
+              color="#10B981"
+            />
+            <InfoCard 
+              icon={Calendar} 
+              title="DESDE" 
+              value={displayData.registrationDate} 
+              subtitle="Data de cadastro no app"
+              color="#F59E0B"
+            />
+            <InfoCard 
+              icon={Users} 
+              title="TIPO" 
+              value={displayData.userType === 'Morador' ? 'Morador' : displayData.userType === 'Proprietario' ? 'Proprietário' : displayData.userType === 'Sindico' ? 'Síndico' : displayData.userType === 'ADM' ? 'Administrador' : displayData.userType} 
+              subtitle="Relação com o imóvel"
+              color="#8B5CF6"
+            />
           </View>
         </Animatable.View>
 

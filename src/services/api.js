@@ -154,12 +154,19 @@ export const apiService = {
         throw new Error(response.data.mensagem || 'E-mail ou senha inválidos.');
       }
 
+      // Normaliza os campos para garantir compatibilidade
+      const dadosOriginais = response.data.dados;
       const userData = {
-        ...response.data.dados,
-        token: response.data.dados.token || 'temp_token_' + Date.now()
+        ...dadosOriginais,
+        // Garante que ambos os formatos existam (User_ID e user_id)
+        User_ID: dadosOriginais.User_ID || dadosOriginais.user_id,
+        user_id: dadosOriginais.user_id || dadosOriginais.User_ID,
+        // Garante userap_id
+        userap_id: dadosOriginais.userap_id,
+        token: dadosOriginais.token || 'temp_token_' + Date.now()
       };
 
-      console.log('✅ UserData processado:', JSON.stringify(userData, null, 2));
+      console.log('✅ UserData processado e normalizado:', JSON.stringify(userData, null, 2));
 
       // Se o login for bem-sucedido, configura o token para todas as futuras requisições
       if (userData.token) {
@@ -343,10 +350,10 @@ export const apiService = {
   // Buscar dados do perfil do usuário e unidade
   buscarPerfilUsuario: async (userId) => {
     try {
-      console.log(`🔄 [API] Buscando perfil do usuário ${userId}...`);
-      const response = await api.get(`/usuario_apartamento/${userId}`);
-      console.log('✅ [API] Perfil do usuário carregado:', response.data);
-      return response.data;
+      console.log(`🔄 [API] Buscando perfil completo para o usuário ID: ${userId}...`);
+      const response = await api.get(`/usuario/perfil/${userId}`);
+      console.log('✅ [API] Perfil recebido:', response.data.dados);
+      return response.data; // Retorna { sucesso, mensagem, dados }
     } catch (error) {
       console.error('❌ [API] Erro ao buscar perfil:', error.response?.status, error.response?.data);
       handleError(error, 'buscarPerfilUsuario');
@@ -508,6 +515,19 @@ export const apiService = {
     } catch (error) {
       console.error('❌ [API] Erro ao buscar estatísticas:', error.response?.status, error.response?.data);
       handleError(error, 'buscarEstatisticasCondominio');
+    }
+  },
+
+  // Buscar taxa condominial atual
+  buscarTaxaCondominio: async () => {
+    try {
+      console.log('🔄 [API] Buscando taxa condominial atual...');
+      const response = await api.get('/taxa');
+      console.log('✅ [API] Taxa condominial:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar taxa condominial:', error.response?.status, error.response?.data);
+      handleError(error, 'buscarTaxaCondominio');
     }
   },
 };
