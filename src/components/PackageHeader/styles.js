@@ -28,6 +28,7 @@ export default StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 0,
   },
   divider: {
     width: 1,
@@ -55,5 +56,7 @@ export default StyleSheet.create({
     color: '#64748b',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    textAlign: 'center',
+    width: '100%',
   },
 });

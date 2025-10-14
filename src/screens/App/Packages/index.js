@@ -46,13 +46,13 @@ export default function Packages() {
     openQRScanner();
   }, [openQRScanner]);
 
-  // Filtrar pacotes baseado na busca e status
+  // Filtrar pacotes baseado na busca por loja e código
   const filteredPackages = useMemo(() => {
     const basePackages = statusFilter === 'Aguardando' ? awaitingPickup : delivered;
     
     if (!searchTerm) return basePackages;
     
-    const query = searchTerm.toLowerCase();
+    const query = searchTerm.toLowerCase().trim();
     return basePackages.filter(pkg => 
       pkg.store?.toLowerCase().includes(query) ||
       pkg.trackingCode?.toLowerCase().includes(query)
@@ -129,19 +129,6 @@ export default function Packages() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Título e Descrição */}
-      <Animatable.View animation="fadeIn" duration={600} style={styles.titleSection}>
-        <View style={styles.titleRow}>
-          <Package size={24} color={theme.colors.primary} strokeWidth={2} />
-          <Text style={[styles.mainTitle, { color: theme.colors.text }]}>
-            Minhas Encomendas
-          </Text>
-        </View>
-        <Text style={[styles.mainDescription, { color: theme.colors.textSecondary }]}>
-          Acompanhe os pacotes que chegaram para você
-        </Text>
-      </Animatable.View>
-
       {/* Header com Estatísticas */}
       <PackageHeader 
         awaitingCount={awaitingPickup.length}
@@ -214,31 +201,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
-  },
-  titleSection: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    alignItems: 'center',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  mainTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1e293b',
-    letterSpacing: -0.3,
-  },
-  mainDescription: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#64748b',
-    textAlign: 'center',
-    lineHeight: 20,
   },
   contentWrapper: {
     flex: 1,

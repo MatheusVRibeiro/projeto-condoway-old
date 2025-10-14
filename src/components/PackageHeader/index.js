@@ -54,7 +54,11 @@ const PackageHeader = ({ awaitingCount, deliveredCount, totalCount }) => {
                 <Text style={[styles.statValue, { color: theme.colors.text }]}>
                   {stat.value}
                 </Text>
-                <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+                <Text 
+                  style={[styles.statLabel, { color: theme.colors.textSecondary }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
                   {stat.label}
                 </Text>
               </Animatable.View>
