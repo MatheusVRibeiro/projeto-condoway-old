@@ -550,4 +550,37 @@ export const apiService = {
       handleError(error, 'buscarUltimasAtualizacoes');
     }
   },
+
+  // Buscar avisos importantes para o dashboard (mensagens urgentes/alta)
+  buscarAvisosImportantes: async () => {
+    try {
+      console.log('🔄 [API] Buscando avisos importantes...');
+      console.log('🔄 [API] URL completa:', `${api.defaults.baseURL}/notificacoes/importantes`);
+      
+      const response = await api.get('/notificacoes/importantes');
+      
+      console.log('📦 [API] Response completa:', JSON.stringify(response.data, null, 2));
+      console.log('📦 [API] Status da resposta:', response.status);
+      
+      const data = response.data?.dados || response.data;
+      console.log('📦 [API] Dados extraídos:', JSON.stringify(data, null, 2));
+      console.log('📦 [API] É array?', Array.isArray(data));
+      
+      // Mapear campos do backend (not_id, not_titulo, not_mensagem) para o formato do frontend
+      const avisosMapeados = Array.isArray(data) ? data.map(aviso => ({
+        id: aviso.not_id,
+        titulo: aviso.not_titulo,
+        texto: aviso.not_mensagem,
+      })) : [];
+      
+      console.log('✅ [API] Avisos importantes carregados:', JSON.stringify(avisosMapeados, null, 2));
+      console.log('✅ [API] Total de avisos:', avisosMapeados.length);
+      return avisosMapeados;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar avisos importantes:', error.response?.status, error.response?.data);
+      console.error('❌ [API] Erro completo:', error.message);
+      // Não lançar aqui para permitir fallback no frontend
+      return [];
+    }
+  },
 };

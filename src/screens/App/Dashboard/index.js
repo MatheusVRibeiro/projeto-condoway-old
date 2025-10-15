@@ -6,7 +6,8 @@ import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
-import { avisosImportantes, encomendas } from './mock';
+import { avisosImportantes as avisosImportantesMock, encomendas } from './mock';
+import { apiService } from '../../../services/api';
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useNotifications } from '../../../contexts/NotificationProvider';
@@ -134,6 +135,7 @@ export default function Dashboard() {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
+  const [avisos, setAvisos] = useState(avisosImportantesMock || []);
 
   // Dados do morador vindos da API ou fallback
   const morador = {
@@ -261,9 +263,50 @@ export default function Dashboard() {
   }, [activeSlide]);
 
   useEffect(() => {
+    let mounted = true;
+
+    const loadAvisos = async () => {
+      try {
+        console.log('🔄 [DASHBOARD] Iniciando carregamento de avisos...');
+        console.log('🔄 [DASHBOARD] Mock disponível:', avisosImportantesMock);
+        
+        const data = await apiService.buscarAvisosImportantes();
+        
+        console.log('📦 [DASHBOARD] Dados recebidos da API:', data);
+        console.log('📦 [DASHBOARD] Mounted?', mounted);
+        console.log('📦 [DASHBOARD] É array?', Array.isArray(data));
+        console.log('📦 [DASHBOARD] Length:', data?.length);
+        
+        if (!mounted) return;
+        
+        if (Array.isArray(data) && data.length > 0) {
+          console.log('✅ [DASHBOARD] Usando dados da API');
+          setAvisos(data);
+        } else {
+          console.log('⚠️ [DASHBOARD] API retornou vazio, usando mock');
+          // Fallback para mock se a API não retornar dados
+          setAvisos(avisosImportantesMock || []);
+        }
+      } catch (err) {
+        console.error('❌ [DASHBOARD] Erro ao carregar avisos:', err);
+        if (!mounted) return;
+        console.log('⚠️ [DASHBOARD] Usando mock por erro');
+        setAvisos(avisosImportantesMock || []);
+      }
+    };
+
+    loadAvisos();
+
+    return () => { 
+      console.log('🧹 [DASHBOARD] Cleanup - desmontando componente');
+      mounted = false; 
+    };
+  }, []);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500); 
+    }, 500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -330,7 +373,7 @@ export default function Dashboard() {
               onScroll={onScroll}
               scrollEventThrottle={16}
             >
-              {avisosImportantes.map((aviso) => (
+              {avisos.map((aviso) => (
                 <View key={aviso.id} style={styles.avisoCardWrapper}>
                   <View style={[styles.avisoCard, { backgroundColor: theme.colors.error + '15', borderLeftColor: theme.colors.error }]}>
                       <AlertTriangle size={20} color={theme.colors.error} style={styles.avisoIcon} />
@@ -343,7 +386,7 @@ export default function Dashboard() {
               ))}
             </ScrollView>
             <View style={styles.paginationContainer}>
-              {avisosImportantes.map((_, index) => (
+              {avisos.map((_, index) => (
                 <View key={index} style={[
                   styles.paginationDot, 
                   { backgroundColor: theme.colors.border },
