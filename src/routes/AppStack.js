@@ -29,7 +29,7 @@ export default function AppStack() {
         headerShadowVisible: false,
       }}
     >
-      <AppStackNavigator.Screen name="AppTabs" component={AppTabs} />
+      <AppStackNavigator.Screen name="MainTabs" component={AppTabs} />
       <AppStackNavigator.Screen
         name="Packages"
         component={Packages}

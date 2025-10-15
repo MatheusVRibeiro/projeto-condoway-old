@@ -43,7 +43,7 @@ const ReservationHeader = ({ total = 0, pending = 0, confirmed = 0, cancelled = 
       duration={600}
       style={[styles.container, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
     >
-      <View style={styles.totalContainer}>
+      <View style={[styles.totalContainer, { borderBottomColor: theme.colors.border }]}>
         <Text style={[styles.totalLabel, { color: theme.colors.textSecondary }]}>
           Total de Reservas
         </Text>
@@ -61,7 +61,7 @@ const ReservationHeader = ({ total = 0, pending = 0, confirmed = 0, cancelled = 
               animation="bounceIn"
               delay={index * 150}
               duration={800}
-              style={styles.statItem}
+              style={[styles.statItem, { backgroundColor: theme.colors.background }]}
             >
               {/* Ícone circular colorido */}
               <View style={[styles.iconContainer, { backgroundColor: stat.lightColor }]}>
@@ -87,13 +87,10 @@ const ReservationHeader = ({ total = 0, pending = 0, confirmed = 0, cancelled = 
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 14,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#0f172a',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -103,7 +100,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
     marginBottom: 10,
   },
   totalLabel: {
@@ -112,12 +108,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 4,
-    color: '#64748b',
   },
   totalValue: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#1e293b',
     letterSpacing: -0.5,
   },
   statsContainer: {
@@ -128,7 +122,6 @@ const styles = StyleSheet.create({
   statItem: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
     borderRadius: 12,
     padding: 10,
   },
@@ -152,7 +145,6 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#64748b',
     textAlign: 'center',
   },
 });

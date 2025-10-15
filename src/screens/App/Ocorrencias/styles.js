@@ -33,7 +33,6 @@ export const styles = StyleSheet.create({
   // --- Tabs ---
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
     borderRadius: 12,
     padding: 4,
     gap: 6,
@@ -50,8 +49,6 @@ export const styles = StyleSheet.create({
     transition: 'all 0.3s ease',
   },
   tabButtonActive: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#3b82f6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -60,11 +57,9 @@ export const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748b',
     letterSpacing: 0.3,
   },
   tabTextActive: {
-    color: '#3b82f6',
     fontWeight: '700',
   },
   tabBadge: {

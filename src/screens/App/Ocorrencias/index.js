@@ -989,11 +989,14 @@ export default function Ocorrencias() {
         </View>
 
         {step === 1 && (
-          <View style={styles.tabsContainer}>
+          <View style={[styles.tabsContainer, { backgroundColor: theme.colors.border }]}>
             <TouchableOpacity
               style={[
                 styles.tabButton,
-                activeTab === 'registrar' && styles.tabButtonActive
+                activeTab === 'registrar' && [styles.tabButtonActive, { 
+                  backgroundColor: theme.colors.card,
+                  shadowColor: theme.colors.primary 
+                }]
               ]}
               onPress={() => setActiveTab('registrar')}
               activeOpacity={0.7}
@@ -1001,12 +1004,13 @@ export default function Ocorrencias() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Plus 
                   size={18} 
-                  color={activeTab === 'registrar' ? '#3b82f6' : '#64748b'} 
+                  color={activeTab === 'registrar' ? theme.colors.primary : theme.colors.textSecondary} 
                   strokeWidth={2.5} 
                 />
                 <Text style={[
                   styles.tabText,
-                  activeTab === 'registrar' && styles.tabTextActive
+                  { color: theme.colors.textSecondary },
+                  activeTab === 'registrar' && [styles.tabTextActive, { color: theme.colors.primary }]
                 ]}>
                   Registrar Nova
                 </Text>
@@ -1015,7 +1019,10 @@ export default function Ocorrencias() {
             <TouchableOpacity
               style={[
                 styles.tabButton,
-                activeTab === 'minhas' && styles.tabButtonActive
+                activeTab === 'minhas' && [styles.tabButtonActive, { 
+                  backgroundColor: theme.colors.card,
+                  shadowColor: theme.colors.primary 
+                }]
               ]}
               onPress={() => setActiveTab('minhas')}
               activeOpacity={0.7}
@@ -1023,12 +1030,13 @@ export default function Ocorrencias() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <FileText 
                   size={18} 
-                  color={activeTab === 'minhas' ? '#3b82f6' : '#64748b'} 
+                  color={activeTab === 'minhas' ? theme.colors.primary : theme.colors.textSecondary} 
                   strokeWidth={2.5} 
                 />
                 <Text style={[
                   styles.tabText,
-                  activeTab === 'minhas' && styles.tabTextActive
+                  { color: theme.colors.textSecondary },
+                  activeTab === 'minhas' && [styles.tabTextActive, { color: theme.colors.primary }]
                 ]}>
                   Minhas Ocorrências
                 </Text>

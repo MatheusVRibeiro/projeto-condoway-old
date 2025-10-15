@@ -65,28 +65,10 @@ export const apiService = {
     }
   },
 
-  buscarOcorrencias: async (page = 1, limit = 20) => {
+  buscarOcorrencias: async () => {
     try {
-      // Buscar todos os dados (API atual não tem paginação no backend)
       const response = await api.get('/ocorrencias');
-      const allData = response.data.dados || [];
-      
-      // Simular paginação no frontend
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedData = allData.slice(startIndex, endIndex);
-      
-      // Retornar com metadados de paginação
-      return {
-        dados: paginatedData,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(allData.length / limit),
-          total: allData.length,
-          hasMore: endIndex < allData.length,
-          perPage: limit
-        }
-      };
+      return response.data.dados || [];
     } catch (error) {
       handleError(error, 'buscarOcorrencias');
     }
@@ -154,19 +136,12 @@ export const apiService = {
         throw new Error(response.data.mensagem || 'E-mail ou senha inválidos.');
       }
 
-      // Normaliza os campos para garantir compatibilidade
-      const dadosOriginais = response.data.dados;
       const userData = {
-        ...dadosOriginais,
-        // Garante que ambos os formatos existam (User_ID e user_id)
-        User_ID: dadosOriginais.User_ID || dadosOriginais.user_id,
-        user_id: dadosOriginais.user_id || dadosOriginais.User_ID,
-        // Garante userap_id
-        userap_id: dadosOriginais.userap_id,
-        token: dadosOriginais.token || 'temp_token_' + Date.now()
+        ...response.data.dados,
+        token: response.data.dados.token || 'temp_token_' + Date.now()
       };
 
-      console.log('✅ UserData processado e normalizado:', JSON.stringify(userData, null, 2));
+      console.log('✅ UserData processado:', JSON.stringify(userData, null, 2));
 
       // Se o login for bem-sucedido, configura o token para todas as futuras requisições
       if (userData.token) {
@@ -266,8 +241,8 @@ export const apiService = {
     }
   },
 
-  // Listar visitantes do usuário (com paginação)
-  listarVisitantes: async (filtros = {}, page = 1, limit = 20) => {
+  // Listar visitantes do usuário
+  listarVisitantes: async (filtros = {}) => {
     try {
       console.log('🔄 [API] Buscando lista de visitantes...');
       const params = new URLSearchParams();
@@ -282,24 +257,7 @@ export const apiService = {
       
       const response = await api.get(endpoint);
       console.log('✅ [API] Visitantes carregados:', response.data);
-      
-      // Paginação simulada no frontend
-      // A API retorna: {sucesso, message, nItens, dados: [...]}
-      const allData = response.data?.dados || [];
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedData = allData.slice(startIndex, endIndex);
-      
-      return {
-        dados: paginatedData,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(allData.length / limit),
-          total: allData.length,
-          hasMore: endIndex < allData.length,
-          perPage: limit
-        }
-      };
+      return response.data;
     } catch (error) {
       console.error('❌ [API] Erro ao listar visitantes:', error.response?.status, error.response?.data);
       handleError(error, 'listarVisitantes');
@@ -333,6 +291,7 @@ export const apiService = {
   },
 
   // Reenviar convite para visitante
+  // Visitantes
   reenviarConviteVisitante: async (visitanteId) => {
     try {
       console.log(`🔄 [API] Reenviando convite para visitante ${visitanteId}...`);
@@ -345,242 +304,69 @@ export const apiService = {
     }
   },
 
-  // === USUÁRIO APARTAMENTO (PERFIL E UNIDADE) ===
-  
-  // Buscar dados do perfil do usuário e unidade
+  // Ambientes
+  listarAmbientes: async () => {
+    try {
+      console.log('🔄 [API] Buscando ambientes disponíveis...');
+      const response = await api.get('/ambientes');
+      console.log('✅ [API] Ambientes carregados:', response.data);
+      return response.data.dados || response.data || [];
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar ambientes:', error.response?.status, error.response?.data);
+      return []; // Retorna array vazio em caso de erro
+    }
+  },
+
+  // Dashboard
+  buscarAvisosImportantes: async () => {
+    try {
+      console.log('🔄 [API] Buscando avisos importantes...');
+      const response = await api.get('/notificacoes/importantes');
+      console.log('✅ [API] Avisos importantes recebidos:', response.data);
+      
+      // Mapeia os campos do backend para o formato esperado no frontend
+      const avisos = (response.data.dados || response.data || []).map(aviso => ({
+        id: aviso.not_id,
+        titulo: aviso.not_titulo,
+        texto: aviso.not_mensagem,
+      }));
+      
+      console.log('📋 [API] Avisos mapeados:', avisos);
+      return avisos;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar avisos importantes:', error.response?.status, error.response?.data);
+      return []; // Retorna array vazio em caso de erro (fallback para mock)
+    }
+  },
+
+  // Perfil do Usuário
   buscarPerfilUsuario: async (userId) => {
     try {
       console.log(`🔄 [API] Buscando perfil completo para o usuário ID: ${userId}...`);
       const response = await api.get(`/usuario/perfil/${userId}`);
-      console.log('✅ [API] Perfil recebido:', response.data.dados);
-      return response.data; // Retorna { sucesso, mensagem, dados }
+      console.log('✅ [API] Perfil recebido:', response.data);
+      return response.data; // { sucesso, mensagem, dados }
     } catch (error) {
       console.error('❌ [API] Erro ao buscar perfil:', error.response?.status, error.response?.data);
-      handleError(error, 'buscarPerfilUsuario');
+      return null; // Retorna null em caso de erro
     }
   },
 
-  // Atualizar dados do perfil do usuário
-  atualizarPerfilUsuario: async (userId, dadosPerfil) => {
+  // Últimas Atualizações / Atividades Recentes
+  buscarUltimasAtualizacoes: async (userapId) => {
     try {
-      console.log(`🔄 [API] Atualizando perfil do usuário ${userId}...`, dadosPerfil);
-      const response = await api.put(`/usuario_apartamento/${userId}`, dadosPerfil);
-      console.log('✅ [API] Perfil atualizado com sucesso:', response.data);
-      return response.data;
+      console.log(`🔄 [API] Buscando últimas atualizações para userap_id: ${userapId}...`);
+      const response = await api.get(`/atualizacoes/${userapId}`);
+      console.log('✅ [API] Atualizações recebidas:', response.data);
+      return response.data; // { sucesso, mensagem, dados }
     } catch (error) {
-      console.error('❌ [API] Erro ao atualizar perfil:', error.response?.status, error.response?.data);
-      handleError(error, 'atualizarPerfilUsuario');
-    }
-  },
-
-  // Buscar detalhes da unidade (apartamento)
-  buscarDetalhesUnidade: async (unidadeId) => {
-    try {
-      console.log(`🔄 [API] Buscando detalhes da unidade ${unidadeId}...`);
-      const response = await api.get(`/apartamento/${unidadeId}`);
-      console.log('✅ [API] Detalhes da unidade carregados:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao buscar detalhes da unidade:', error.response?.status, error.response?.data);
-      handleError(error, 'buscarDetalhesUnidade');
-    }
-  },
-
-  // Listar todos os usuários de uma unidade
-  listarUsuariosUnidade: async (unidadeId) => {
-    try {
-      console.log(`🔄 [API] Listando usuários da unidade ${unidadeId}...`);
-      const response = await api.get(`/apartamento/${unidadeId}/usuarios`);
-      console.log('✅ [API] Usuários da unidade carregados:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao listar usuários da unidade:', error.response?.status, error.response?.data);
-      handleError(error, 'listarUsuariosUnidade');
-    }
-  },
-
-  // Alterar senha do usuário
-  alterarSenha: async (userId, senhaAtual, novaSenha) => {
-    try {
-      console.log(`🔄 [API] Alterando senha do usuário ${userId}...`);
-      const response = await api.patch(`/usuario/${userId}/senha`, {
-        senha_atual: senhaAtual,
-        nova_senha: novaSenha,
-      });
-      console.log('✅ [API] Senha alterada com sucesso:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao alterar senha:', error.response?.status, error.response?.data);
-      handleError(error, 'alterarSenha');
-    }
-  },
-
-  // Upload de foto de perfil
-  uploadFotoPerfil: async (userId, fileUri) => {
-    try {
-      console.log(`🔄 [API] Fazendo upload da foto de perfil para usuário ${userId}...`);
-      const formData = new FormData();
-      formData.append('file', {
-        uri: fileUri,
-        type: 'image/jpeg',
-        name: `perfil_${userId}.jpg`,
-      });
-      
-      const response = await api.post(`/usuario/${userId}/foto`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      console.log('✅ [API] Foto de perfil atualizada:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao fazer upload da foto:', error.response?.status, error.response?.data);
-      handleError(error, 'uploadFotoPerfil');
-      return fileUri; // Fallback em caso de erro
-    }
-  },
-
-  // === CONDOMÍNIO ===
-  
-  // Buscar informações do condomínio
-  buscarCondominio: async (condominioId) => {
-    try {
-      console.log(`🔄 [API] Buscando informações do condomínio ${condominioId}...`);
-      const response = await api.get(`/condominio/${condominioId}`);
-      console.log('✅ [API] Condomínio carregado:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao buscar condomínio:', error.response?.status, error.response?.data);
-      handleError(error, 'buscarCondominio');
-    }
-  },
-
-  // Listar todos os condomínios
-  listarCondominios: async () => {
-    try {
-      console.log('🔄 [API] Listando condomínios...');
-      const response = await api.get('/condominio');
-      console.log('✅ [API] Condomínios carregados:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao listar condomínios:', error.response?.status, error.response?.data);
-      handleError(error, 'listarCondominios');
-    }
-  },
-
-  // Criar novo condomínio (apenas admin/sindico)
-  criarCondominio: async (dadosCondominio) => {
-    try {
-      console.log('🔄 [API] Criando novo condomínio...', dadosCondominio);
-      const response = await api.post('/condominio', dadosCondominio);
-      console.log('✅ [API] Condomínio criado com sucesso:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao criar condomínio:', error.response?.status, error.response?.data);
-      handleError(error, 'criarCondominio');
-    }
-  },
-
-  // Atualizar informações do condomínio (apenas admin/sindico)
-  atualizarCondominio: async (condominioId, dadosCondominio) => {
-    try {
-      console.log(`🔄 [API] Atualizando condomínio ${condominioId}...`, dadosCondominio);
-      const response = await api.put(`/condominio/${condominioId}`, dadosCondominio);
-      console.log('✅ [API] Condomínio atualizado com sucesso:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao atualizar condomínio:', error.response?.status, error.response?.data);
-      handleError(error, 'atualizarCondominio');
-    }
-  },
-
-  // Deletar condomínio (apenas admin)
-  deletarCondominio: async (condominioId) => {
-    try {
-      console.log(`🔄 [API] Deletando condomínio ${condominioId}...`);
-      const response = await api.delete(`/condominio/${condominioId}`);
-      console.log('✅ [API] Condomínio deletado com sucesso:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao deletar condomínio:', error.response?.status, error.response?.data);
-      handleError(error, 'deletarCondominio');
-    }
-  },
-
-  // Buscar estatísticas do condomínio
-  buscarEstatisticasCondominio: async (condominioId) => {
-    try {
-      console.log(`🔄 [API] Buscando estatísticas do condomínio ${condominioId}...`);
-      const response = await api.get(`/condominio/${condominioId}/estatisticas`);
-      console.log('✅ [API] Estatísticas carregadas:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao buscar estatísticas:', error.response?.status, error.response?.data);
-      handleError(error, 'buscarEstatisticasCondominio');
-    }
-  },
-
-  // Buscar taxa condominial atual
-  buscarTaxaCondominio: async () => {
-    try {
-      console.log('🔄 [API] Buscando taxa condominial atual...');
-      const response = await api.get('/taxa');
-      console.log('✅ [API] Taxa condominial:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao buscar taxa condominial:', error.response?.status, error.response?.data);
-      handleError(error, 'buscarTaxaCondominio');
-    }
-  },
-
-  // === DASHBOARD - ÚLTIMAS ATUALIZAÇÕES ===
-  
-  // Buscar últimas atualizações unificadas (notificações, encomendas, reservas, visitantes)
-  buscarUltimasAtualizacoes: async (userap_id) => {
-    try {
-      if (!userap_id) {
-        console.error('❌ [API] userap_id é necessário para buscar últimas atualizações.');
-        return { sucesso: false, mensagem: 'userap_id não fornecido', dados: [] };
+      // Endpoint ainda não implementado no backend - retornar dados vazios silenciosamente
+      if (error.response?.status === 404) {
+        console.warn('⚠️ [API] Endpoint de atualizações ainda não implementado no backend');
+        return { sucesso: true, mensagem: 'Endpoint em desenvolvimento', dados: [] };
       }
-
-      console.log(`🔄 [API] Buscando últimas atualizações para userap_id: ${userap_id}...`);
-      const response = await api.get(`/dashboard/updates/${userap_id}`);
-      console.log('✅ [API] Últimas atualizações carregadas:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao buscar últimas atualizações:', error.response?.status, error.response?.data);
-      handleError(error, 'buscarUltimasAtualizacoes');
-    }
-  },
-
-  // Buscar avisos importantes para o dashboard (mensagens urgentes/alta)
-  buscarAvisosImportantes: async () => {
-    try {
-      console.log('🔄 [API] Buscando avisos importantes...');
-      console.log('🔄 [API] URL completa:', `${api.defaults.baseURL}/notificacoes/importantes`);
-      
-      const response = await api.get('/notificacoes/importantes');
-      
-      console.log('📦 [API] Response completa:', JSON.stringify(response.data, null, 2));
-      console.log('📦 [API] Status da resposta:', response.status);
-      
-      const data = response.data?.dados || response.data;
-      console.log('📦 [API] Dados extraídos:', JSON.stringify(data, null, 2));
-      console.log('📦 [API] É array?', Array.isArray(data));
-      
-      // Mapear campos do backend (not_id, not_titulo, not_mensagem) para o formato do frontend
-      const avisosMapeados = Array.isArray(data) ? data.map(aviso => ({
-        id: aviso.not_id,
-        titulo: aviso.not_titulo,
-        texto: aviso.not_mensagem,
-      })) : [];
-      
-      console.log('✅ [API] Avisos importantes carregados:', JSON.stringify(avisosMapeados, null, 2));
-      console.log('✅ [API] Total de avisos:', avisosMapeados.length);
-      return avisosMapeados;
-    } catch (error) {
-      console.error('❌ [API] Erro ao buscar avisos importantes:', error.response?.status, error.response?.data);
-      console.error('❌ [API] Erro completo:', error.message);
-      // Não lançar aqui para permitir fallback no frontend
-      return [];
+      console.error('❌ [API] Erro ao buscar atualizações:', error.response?.status, error.response?.data);
+      return { sucesso: false, mensagem: 'Erro ao buscar atualizações', dados: [] };
     }
   },
 };
