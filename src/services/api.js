@@ -530,4 +530,24 @@ export const apiService = {
       handleError(error, 'buscarTaxaCondominio');
     }
   },
+
+  // === DASHBOARD - ÚLTIMAS ATUALIZAÇÕES ===
+  
+  // Buscar últimas atualizações unificadas (notificações, encomendas, reservas, visitantes)
+  buscarUltimasAtualizacoes: async (userap_id) => {
+    try {
+      if (!userap_id) {
+        console.error('❌ [API] userap_id é necessário para buscar últimas atualizações.');
+        return { sucesso: false, mensagem: 'userap_id não fornecido', dados: [] };
+      }
+
+      console.log(`🔄 [API] Buscando últimas atualizações para userap_id: ${userap_id}...`);
+      const response = await api.get(`/dashboard/updates/${userap_id}`);
+      console.log('✅ [API] Últimas atualizações carregadas:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar últimas atualizações:', error.response?.status, error.response?.data);
+      handleError(error, 'buscarUltimasAtualizacoes');
+    }
+  },
 };

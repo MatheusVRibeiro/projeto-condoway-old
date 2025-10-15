@@ -5,6 +5,7 @@ export { useAnimation } from './useAnimation';
 // Business Logic Hooks
 export { useProfile } from './useProfile';
 export { useCondominio } from './useCondominio';
+export { useLatestUpdates } from './useLatestUpdates';
 
 // Pagination Hooks
 export { usePaginatedOcorrencias } from './usePaginatedOcorrencias';

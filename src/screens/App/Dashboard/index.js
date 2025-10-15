@@ -6,13 +6,14 @@ import Skeleton from '../../../components/ui/Skeleton';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
-import { avisosImportantes, encomendas, ultimasAtualizacoes } from './mock';
+import { avisosImportantes, encomendas } from './mock';
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useNotifications } from '../../../contexts/NotificationProvider';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useProfile } from '../../../hooks/useProfile';
 import { useCondominio } from '../../../hooks/useCondominio';
+import { useLatestUpdates } from '../../../hooks/useLatestUpdates';
 import { ROUTES } from '../../../routes/routeNames';
 
 // --- Componentes Internos da Tela ---
@@ -129,6 +130,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { profileData } = useProfile();
   const { condominioData } = useCondominio();
+  const { updates: ultimasAtualizacoes, loading: updatesLoading, error: updatesError } = useLatestUpdates(5); // Limite de 5 itens
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0); // Estado para o carrossel
@@ -146,6 +148,46 @@ export default function Dashboard() {
   const handleAbrirOcorrencia = React.useCallback(() => navigation.navigate('OcorrenciasTab'), [navigation]);
   const handleVerNotificacoes = React.useCallback(() => navigation.navigate('Notifications'), [navigation]);
   const handleAbrirPerfil = React.useCallback(() => navigation.navigate(ROUTES.PERFIL || 'PerfilTab'), [navigation]);
+
+  // Função para navegar baseado no tipo de atualização
+  const handleUpdatePress = React.useCallback((update) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    switch (update.rawType) {
+      case 'PACKAGE_RECEIVED':
+        // Navega para a tela de Encomendas
+        navigation.navigate(ROUTES.PACKAGES || 'Packages');
+        break;
+      
+      case 'RESERVATION_CONFIRMED':
+        // Navega para a tela de Reservas
+        navigation.navigate('ReservasTab');
+        break;
+      
+      case 'VISITOR_ENTRY':
+      case 'VISITOR_EXIT':
+        // Navega para a tela de Visitantes
+        navigation.navigate(ROUTES.VISITANTES || 'Visitantes');
+        break;
+      
+      case 'OCCURRENCE_UPDATE':
+        // Navega para a tela de Ocorrências
+        navigation.navigate('OcorrenciasTab');
+        break;
+      
+      case 'GENERAL_ANNOUNCEMENT':
+      case 'MESSAGE':
+      case 'PAYMENT_SUCCESS':
+        // Navega para a tela de Notificações
+        navigation.navigate('Notifications');
+        break;
+      
+      default:
+        // Fallback: abre notificações
+        navigation.navigate('Notifications');
+        break;
+    }
+  }, [navigation]);
 
   // Funções para "Meu Condomínio"
   const handleCamerasSeguranca = React.useCallback(() => {
@@ -370,28 +412,89 @@ export default function Dashboard() {
 
           {/* === ÚLTIMAS ATUALIZAÇÕES === */}
           <Animatable.View animation="fadeInUp" duration={500} delay={300} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Últimas Atualizações</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Últimas Atualizações</Text>
+              <TouchableOpacity 
+                onPress={handleVerNotificacoes}
+                style={styles.seeAllButton}
+              >
+                <Text style={[styles.seeAllButtonText, { color: theme.colors.primary }]}>Ver todas</Text>
+              </TouchableOpacity>
+            </View>
             <View style={[styles.updatesCard, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-              {Object.entries(ultimasAtualizacoes).map(([data, itens]) => (
-                <View key={data} style={styles.updateGroup}>
-                  <Text style={[styles.updateDate, { color: theme.colors.textSecondary }]}>{data}</Text>
-                  {itens.map(item => {
-                    const Icone = item.icone;
-                    const isClickable = ['reservations', 'packages', 'notifications', 'issues', 'profile'].includes(item.tipo);
-                    return (
-                      <TouchableOpacity key={item.id} disabled={!isClickable} style={styles.updateItem}>
-                        <View style={[styles.updateIconContainer, { backgroundColor: theme.isDark ? theme.colors.background : theme.colors.background }]}>
-                          <Icone color={theme.colors.primary} size={20} />
-                        </View>
-                        <View style={styles.updateTextContainer}>
-                          <Text style={[styles.updateText, { color: theme.colors.text }]}>{item.texto}</Text>
-                        </View>
-                        <Text style={[styles.updateTime, { color: theme.colors.textSecondary }]}>{item.hora}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+              {updatesLoading ? (
+                <View style={styles.updatesLoading}>
+                  <Text style={[styles.updatesLoadingText, { color: theme.colors.textSecondary }]}>
+                    Carregando atualizações...
+                  </Text>
                 </View>
-              ))}
+              ) : updatesError ? (
+                <View style={styles.updatesError}>
+                  <Text style={[styles.updatesErrorText, { color: theme.colors.error }]}>
+                    {updatesError}
+                  </Text>
+                </View>
+              ) : Object.keys(ultimasAtualizacoes).length === 0 ? (
+                <View style={styles.updatesEmpty}>
+                  <Bell size={40} color={theme.colors.textSecondary} strokeWidth={1.5} />
+                  <Text style={[styles.updatesEmptyText, { color: theme.colors.textSecondary }]}>
+                    Nenhuma atualização recente
+                  </Text>
+                </View>
+              ) : (
+                Object.entries(ultimasAtualizacoes).map(([data, itens]) => (
+                  <View key={data} style={styles.updateGroup}>
+                    <Text style={[styles.updateDate, { color: theme.colors.textSecondary }]}>{data}</Text>
+                    {itens.map(item => {
+                      const Icone = item.icone;
+                      // Marcar mensagens importantes para negrito
+                      const isImportant = [
+                        'OCCURRENCE_UPDATE',
+                        'GENERAL_ANNOUNCEMENT',
+                        'PAYMENT_SUCCESS',
+                        'MESSAGE'
+                      ].includes(item.rawType);
+
+                      return (
+                        <TouchableOpacity 
+                          key={item.uniqueId} 
+                          onPress={() => handleUpdatePress(item)}
+                          style={styles.updateItem}
+                          activeOpacity={0.7}
+                        >
+                          <View style={[styles.updateIconContainer, { backgroundColor: theme.isDark ? theme.colors.background : theme.colors.background }]}>
+                            <Icone color={theme.colors.primary} size={20} />
+                          </View>
+                          <View style={styles.updateTextContainer}>
+                            {(() => {
+                              // Regex para capturar o identificador retornado pelo backend (ex: OCO-20225-)
+                              const idRegex = /([A-Z]{2,}-\d[\w-]*)/;
+                              const parts = item.texto.split(idRegex);
+
+                              if (parts.length > 1) {
+                                return (
+                                  <Text style={[styles.updateText, { color: theme.colors.text }]}> {
+                                    parts.map((part, idx) => (
+                                      // idx ímpar significa que é o grupo capturado pelo regex
+                                      idx % 2 === 1
+                                        ? <Text key={idx} style={{ fontWeight: '700' }}>{part}</Text>
+                                        : <Text key={idx}>{part}</Text>
+                                    ))
+                                  } </Text>
+                                );
+                              }
+
+                              // Se não encontrar identificador, renderiza normalmente
+                              return <Text style={[styles.updateText, { color: theme.colors.text }]}>{item.texto}</Text>;
+                            })()}
+                          </View>
+                          <Text style={[styles.updateTime, { color: theme.colors.textSecondary }]}>{item.hora}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))
+              )}
             </View>
           </Animatable.View>
 
