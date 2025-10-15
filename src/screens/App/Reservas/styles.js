@@ -10,257 +10,387 @@ export const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 100,
   },
-  header: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitleText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginLeft: 8,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    marginTop: 4,
-  },
 
-  // --- Abas (Tabs) ---
+  // --- Abas (Tabs) - Modernizadas ---
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#e2e8f0',
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 24,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 2,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 6,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    gap: 6,
   },
   tabButtonActive: {
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: '#eff6ff',
   },
   tabText: {
-    textAlign: 'center',
-    fontWeight: '600',
-    color: '#475569',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   tabTextActive: {
-    color: '#2563eb',
+    color: '#3b82f6',
   },
-  
-  // --- Card de Ambiente ---
-  environmentCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+
+  // --- Section Title ---
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 12,
+    letterSpacing: -0.3,
+  },
+
+  // --- Status Filter Tabs ---
+  statusFilterContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  statusFilterTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 4,
+  },
+  statusFilterText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    flexShrink: 1,
+  },
+  statusFilterBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  statusFilterBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+
+  // --- Empty State ---
+  emptyState: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    marginBottom: 16,
-    padding: 16,
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
   },
-  cardHeader: {
+  emptyStateText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  
+  // --- Modal de Reserva (Bottom Sheet Redesign) ---
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  modalBottomSheet: {
+    backgroundColor: '#f8fafc',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: '92%',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  sheetHeader: {
+    paddingTop: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#cbd5e1',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  headerTitleContainer: {
+    flex: 1,
+  },
+  sheetTitle: {
+    fontSize: 22,
+    fontWeight: '800',
     color: '#1e293b',
+    letterSpacing: -0.4,
+    marginBottom: 4,
   },
-  cardDescription: {
+  sheetSubtitle: {
     fontSize: 14,
     color: '#64748b',
-    marginBottom: 12,
+    fontWeight: '500',
   },
-  cardInfo: {
-    flexDirection: 'row',
+  closeSheetButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  cardInfoText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#475569',
+  closeSheetButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#64748b',
   },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  cardButton: {
+  sheetContent: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
+    paddingHorizontal: 20,
   },
-  primaryButton: {
-    backgroundColor: '#2563eb',
-  },
-  outlineButton: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-  },
-  buttonTextPrimary: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  buttonTextOutline: {
-    color: '#334155',
-    fontWeight: '600',
-  },
-  disabledButton: {
-    backgroundColor: '#e2e8f0',
+  sheetFooter: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
   },
   
-  // --- Modal de Reserva ---
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  // --- Seções do Modal ---
+  section: {
+    marginTop: 20,
   },
-  modalContent: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    maxHeight: '85%',
+  sectionLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 12,
+    letterSpacing: -0.2,
   },
-  modalHeader: {
-    paddingBottom: 16,
+  calendarCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 12,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  
+  // --- Period Picker Modernizado ---
+  periodGrid: {
+    gap: 12,
   },
-  modalSubtitle: {
+  modernPeriodCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  periodCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  periodIconLarge: {
+    fontSize: 40,
+  },
+  selectedBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3b82f6',
+  },
+  selectedBadgeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  periodCardContent: {
+    gap: 4,
+  },
+  periodLabelLarge: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1e293b',
+    letterSpacing: -0.3,
+  },
+  periodTimeLarge: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#64748b',
-    marginTop: 4,
   },
+  reservedBadge: {
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#ef4444',
+    alignSelf: 'flex-start',
+  },
+  reservedBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  
+  // --- Botão de Confirmar Reserva ---
+  confirmReservationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3b82f6',
+    borderRadius: 14,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  confirmReservationButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+
+  // --- Old styles (deprecated, keeping for backwards compatibility) ---
+  periodCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    padding: 16,
+    alignItems: 'center',
+    gap: 6,
+  },
+  periodIcon: {
+    fontSize: 32,
+    marginBottom: 4,
+  },
+  periodLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  periodTime: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  reservedLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ef4444',
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // --- Time Slots (deprecated, keeping for backwards compatibility) ---
   timeSlotGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginTop: 12,
   },
   timeSlotButton: {
     width: '23%',
     paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 10,
+    borderWidth: 1.5,
     borderColor: '#cbd5e1',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
+    backgroundColor: '#ffffff',
   },
   timeSlotText: {
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 13,
   },
-  timeSlotAvailable: {
-    borderColor: '#cbd5e1',
-    backgroundColor: 'white',
-  },
-  timeSlotSelected: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
-  },
-  timeSlotReserved: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
-  },
-  timeSlotTextAvailable: {
-    color: '#334155',
-  },
-  timeSlotTextSelected: {
-    color: 'white',
-  },
-  timeSlotTextReserved: {
-    color: '#9ca3af',
-  },
+  
   modalFooter: {
-    marginTop: 16,
-  },
-
-  // --- Lista de Minhas Reservas (Accordion) ---
-  accordionItem: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  accordionTrigger: {
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  triggerLeft: {
-    flex: 1,
-  },
-  accordionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  accordionSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    marginTop: 4,
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  accordionContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    marginTop: 20,
+    paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
   },
-  detailRow: {
-    flexDirection: 'row',
+  confirmButton: {
+    width: '100%',
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'center',
+    borderWidth: 1.5,
   },
-  detailText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#475569',
-  },
-  cancelButton: {
-    marginTop: 16,
-    backgroundColor: '#fee2e2',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#b91c1c',
-    fontWeight: '600',
+  confirmButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 0.2,
   },
 });
