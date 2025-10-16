@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Calendar, Clock, CheckCircle2, Copy } from 'lucide-react-native';
+import { Calendar, Clock, CheckCircle2, Copy, Check } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard';
+import Toast from 'react-native-toast-message';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTheme } from '../../contexts/ThemeProvider';
@@ -10,6 +12,7 @@ import styles from './styles';
 
 export default function PackageCard({ item, onPress, index }) {
   const { theme } = useTheme();
+  const [copied, setCopied] = useState(false);
   
   const isAwaiting = item.status === 'Aguardando';
   const arrivalDate = new Date(item.arrivalDate);
@@ -18,6 +21,40 @@ export default function PackageCard({ item, onPress, index }) {
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress(item);
+  };
+
+  const handleCopyTrackingCode = async (e) => {
+    // Previne que o click abra o modal
+    e.stopPropagation();
+    
+    try {
+      await Clipboard.setStringAsync(item.trackingCode);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCopied(true);
+      
+      // Mostra toast de sucesso
+      Toast.show({
+        type: 'success',
+        text1: '✓ Código copiado!',
+        text2: item.trackingCode,
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+      
+      // Reseta o ícone após 2 segundos
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Erro ao copiar código:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao copiar',
+        text2: 'Tente novamente',
+        position: 'bottom',
+      });
+    }
   };
 
   const getStoreInitials = (storeName) => {
@@ -32,13 +69,13 @@ export default function PackageCard({ item, onPress, index }) {
     >
       <TouchableOpacity
         onPress={handlePress}
-        style={styles.card}
+        style={[styles.card, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}
         activeOpacity={0.7}
       >
         {/* Barra lateral colorida */}
         <View style={[
           styles.sideBar,
-          { backgroundColor: isAwaiting ? '#3b82f6' : '#10b981' }
+          { backgroundColor: isAwaiting ? theme.colors.primary : theme.colors.success }
         ]} />
 
         <View style={styles.cardContent}>
@@ -46,33 +83,33 @@ export default function PackageCard({ item, onPress, index }) {
           <View style={styles.header}>
             <View style={[
               styles.iconCircle,
-              { backgroundColor: isAwaiting ? '#eff6ff' : '#f0fdf4' }
+              { backgroundColor: isAwaiting ? theme.colors.primary + '22' : theme.colors.success + '22' }
             ]}>
               <Text style={[
                 styles.iconText,
-                { color: isAwaiting ? '#3b82f6' : '#10b981' }
+                { color: isAwaiting ? theme.colors.primary : theme.colors.success }
               ]}>
                 {getStoreInitials(item.store)}
               </Text>
             </View>
 
-            <Text style={styles.storeName} numberOfLines={1}>
+            <Text style={[styles.storeName, { color: theme.colors.text }]} numberOfLines={1}>
               {item.store}
             </Text>
 
             <View style={[
               styles.statusBadge,
-              { backgroundColor: isAwaiting ? '#dbeafe' : '#d1fae5' }
+              { backgroundColor: isAwaiting ? theme.colors.primary + '22' : theme.colors.success + '22' }
             ]}>
               <CheckCircle2 
                 size={10} 
-                color={isAwaiting ? '#2563eb' : '#16a34a'} 
+                color={isAwaiting ? theme.colors.primary : theme.colors.success} 
                 strokeWidth={2.5} 
               />
               <Text 
                 style={[
                   styles.statusText,
-                  { color: isAwaiting ? '#2563eb' : '#16a34a' }
+                  { color: isAwaiting ? theme.colors.primary : theme.colors.success }
                 ]}
                 numberOfLines={1}
               >
@@ -82,43 +119,51 @@ export default function PackageCard({ item, onPress, index }) {
           </View>
 
           {/* Código de Rastreamento */}
-          <View style={styles.trackingContainer}>
+          <View style={[styles.trackingContainer, { backgroundColor: theme.colors.background }]}>
             <View style={styles.trackingIcon}>
               <View style={styles.packageIconBox}>
                 <Text style={styles.packageIconText}>📦</Text>
               </View>
             </View>
-            <Text style={styles.trackingCode} numberOfLines={1}>
+            <Text style={[styles.trackingCode, { color: theme.colors.text }]} numberOfLines={1}>
               {item.trackingCode}
             </Text>
-            <TouchableOpacity style={styles.copyButton} activeOpacity={0.6}>
-              <Copy size={14} color="#94a3b8" strokeWidth={2} />
+            <TouchableOpacity 
+              style={styles.copyButton} 
+              activeOpacity={0.6}
+              onPress={handleCopyTrackingCode}
+            >
+              {copied ? (
+                <Check size={14} color={theme.colors.success} strokeWidth={2.5} />
+              ) : (
+                <Copy size={14} color={theme.colors.textSecondary} strokeWidth={2} />
+              )}
             </TouchableOpacity>
           </View>
 
           {/* Informações de Data */}
           <View style={styles.dateInfo}>
             <View style={styles.dateRow}>
-              <Calendar size={14} color="#64748b" strokeWidth={2} />
-              <Text style={styles.dateLabel}>Chegou em </Text>
-              <Text style={styles.dateValue}>
+              <Calendar size={14} color={theme.colors.textSecondary} strokeWidth={2} />
+              <Text style={[styles.dateLabel, { color: theme.colors.textSecondary }]}>Chegou em </Text>
+              <Text style={[styles.dateValue, { color: theme.colors.text }]}>
                 {format(arrivalDate, "dd 'de' MMMM", { locale: ptBR })}
               </Text>
             </View>
 
             {isAwaiting && daysWaiting > 0 && (
               <View style={styles.dateRow}>
-                <Clock size={14} color="#3b82f6" strokeWidth={2} />
-                <Text style={styles.waitingLabel}>Aguardando retirada há </Text>
-                <Text style={styles.waitingValue}>{daysWaiting} dias</Text>
+                <Clock size={14} color={theme.colors.primary} strokeWidth={2} />
+                <Text style={[styles.waitingLabel, { color: theme.colors.textSecondary }]}>Aguardando retirada há </Text>
+                <Text style={[styles.waitingValue, { color: theme.colors.primary }]}>{daysWaiting} dias</Text>
               </View>
             )}
 
             {!isAwaiting && item.deliveryDate && (
               <View style={styles.dateRow}>
-                <CheckCircle2 size={14} color="#10b981" strokeWidth={2} />
-                <Text style={styles.dateLabel}>Retirado em </Text>
-                <Text style={styles.dateValue}>
+                <CheckCircle2 size={14} color={theme.colors.success} strokeWidth={2} />
+                <Text style={[styles.dateLabel, { color: theme.colors.textSecondary }]}>Retirado em </Text>
+                <Text style={[styles.dateValue, { color: theme.colors.text }]}>
                   {format(new Date(item.deliveryDate), "dd 'de' MMMM", { locale: ptBR })}
                 </Text>
               </View>

@@ -2,13 +2,11 @@ import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
     borderRadius: 16,
     marginBottom: 16,
     marginHorizontal: 16,
     flexDirection: 'row',
     overflow: 'hidden',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -44,7 +42,6 @@ export default StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontWeight: '700',
-    color: '#0f172a',
     letterSpacing: -0.3,
   },
   statusBadge: {
@@ -65,7 +62,6 @@ export default StyleSheet.create({
   trackingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 8,
@@ -88,7 +84,6 @@ export default StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
-    color: '#475569',
     letterSpacing: 0.3,
   },
   copyButton: {
@@ -106,21 +101,17 @@ export default StyleSheet.create({
   dateLabel: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#64748b',
   },
   dateValue: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#475569',
   },
   waitingLabel: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#64748b',
   },
   waitingValue: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#2563eb',
   },
 });

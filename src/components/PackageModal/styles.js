@@ -3,15 +3,12 @@ import { StyleSheet } from 'react-native';
 export default StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#ffffff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -24,7 +21,6 @@ export default StyleSheet.create({
     padding: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -36,26 +32,22 @@ export default StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#eff6ff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0f172a',
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748b',
     fontWeight: '600',
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f8fafc',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -73,27 +65,14 @@ export default StyleSheet.create({
     borderRadius: 16,
     gap: 8,
   },
-  statusBadgeAwaitingLarge: {
-    backgroundColor: '#eff6ff',
-  },
-  statusBadgeDeliveredLarge: {
-    backgroundColor: '#d1fae5',
-  },
   statusTextLarge: {
     fontSize: 18,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  statusTextAwaitingLarge: {
-    color: '#1e40af',
-  },
-  statusTextDeliveredLarge: {
-    color: '#065f46',
-  },
   waitingDaysText: {
     fontSize: 14,
-    color: '#64748b',
     fontWeight: '600',
   },
   section: {
@@ -103,7 +82,6 @@ export default StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94a3b8',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 16,
@@ -118,7 +96,6 @@ export default StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f8fafc',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -127,7 +104,6 @@ export default StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: '#94a3b8',
     fontWeight: '600',
     marginBottom: 4,
     textTransform: 'uppercase',
@@ -135,14 +111,12 @@ export default StyleSheet.create({
   },
   infoValue: {
     fontSize: 15,
-    color: '#0f172a',
     fontWeight: '600',
     lineHeight: 20,
     textTransform: 'capitalize',
   },
   infoValueSecondary: {
     fontSize: 13,
-    color: '#64748b',
     fontWeight: '500',
     marginTop: 2,
   },
@@ -153,18 +127,15 @@ export default StyleSheet.create({
   waitingAlert: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#eff6ff',
     padding: 12,
     borderRadius: 12,
     gap: 10,
     marginTop: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#3b82f6',
   },
   waitingAlertText: {
     flex: 1,
     fontSize: 13,
-    color: '#1e40af',
     fontWeight: '500',
     lineHeight: 18,
   },
@@ -174,7 +145,6 @@ export default StyleSheet.create({
     paddingTop: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
   },
   shareButton: {
     flex: 1,
@@ -183,21 +153,17 @@ export default StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#f8fafc',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
     gap: 8,
   },
   shareButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#475569',
   },
   closeButtonFooter: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#3b82f6',
     alignItems: 'center',
     justifyContent: 'center',
   },

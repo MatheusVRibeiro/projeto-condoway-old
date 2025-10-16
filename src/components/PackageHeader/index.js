@@ -36,7 +36,7 @@ const PackageHeader = ({ awaitingCount, deliveredCount, totalCount }) => {
   ];
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
       <View style={styles.container}>
         {stats.map((stat, index) => {
           const Icon = stat.icon;
@@ -48,8 +48,8 @@ const PackageHeader = ({ awaitingCount, deliveredCount, totalCount }) => {
                 delay={stat.delay}
                 style={styles.statCard}
               >
-                <View style={[styles.iconContainer, { backgroundColor: stat.lightColor }]}>
-                  <Icon size={20} color={stat.color} strokeWidth={2.5} />
+                <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '22' }]}>
+                  <Icon size={20} color={theme.colors.primary} strokeWidth={2.5} />
                 </View>
                 <Text style={[styles.statValue, { color: theme.colors.text }]}>
                   {stat.value}
@@ -62,12 +62,12 @@ const PackageHeader = ({ awaitingCount, deliveredCount, totalCount }) => {
                   {stat.label}
                 </Text>
               </Animatable.View>
-              {!isLast && <View style={styles.divider} />}
+              {!isLast && <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />}
             </React.Fragment>
           );
         })}
       </View>
-      <View style={styles.separator} />
+      <View style={[styles.separator, { backgroundColor: theme.colors.border }]} />
     </View>
   );
 };

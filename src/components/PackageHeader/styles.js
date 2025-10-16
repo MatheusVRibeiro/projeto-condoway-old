@@ -2,11 +2,10 @@ import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
   wrapper: {
-    backgroundColor: '#ffffff',
     marginHorizontal: 16,
+    marginTop: 16,
     marginBottom: 16,
     borderRadius: 16,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -21,7 +20,6 @@ export default StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#e2e8f0',
     marginHorizontal: 16,
   },
   statCard: {
@@ -33,7 +31,6 @@ export default StyleSheet.create({
   divider: {
     width: 1,
     height: 80,
-    backgroundColor: '#e2e8f0',
     marginHorizontal: 8,
   },
   iconContainer: {
@@ -47,13 +44,11 @@ export default StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1e293b',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#64748b',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     textAlign: 'center',
