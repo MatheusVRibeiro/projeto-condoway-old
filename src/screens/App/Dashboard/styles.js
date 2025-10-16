@@ -16,26 +16,11 @@ export const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 12,
-  },
-  seeAllButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  seeAllButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2563eb',
   },
 
   // --- Header ---
@@ -66,17 +51,6 @@ export const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-  profileButton: {
-    borderRadius: 22,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.1)',
-  },
-  avatarButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
   },
   notificationButton: {
     position: 'relative',
@@ -140,50 +114,11 @@ export const styles = StyleSheet.create({
   updatesCard: { backgroundColor: 'white', borderRadius: 12, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
   updateGroup: { marginBottom: 12 },
   updateDate: { textTransform: 'uppercase', fontSize: 12, fontWeight: 'bold', color: '#9ca3af', paddingBottom: 8 },
-  updateItem: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginHorizontal: -8,
-    borderRadius: 8,
-  },
+  updateItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
   updateIconContainer: { backgroundColor: '#f3f4f6', padding: 8, borderRadius: 999, marginRight: 12 },
   updateTextContainer: { flex: 1 },
   updateText: { fontSize: 14, color: '#374151' },
-  updateTime: { fontSize: 12, color: '#9ca3af', marginLeft: 8 },
-  updatesLoading: { 
-    paddingVertical: 32, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  updatesLoadingText: { 
-    fontSize: 14, 
-    color: '#9ca3af', 
-    fontWeight: '500' 
-  },
-  updatesError: { 
-    paddingVertical: 32, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  updatesErrorText: { 
-    fontSize: 14, 
-    color: '#ef4444', 
-    fontWeight: '500', 
-    textAlign: 'center' 
-  },
-  updatesEmpty: { 
-    paddingVertical: 40, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  updatesEmptyText: { 
-    fontSize: 14, 
-    color: '#9ca3af', 
-    fontWeight: '500', 
-    marginTop: 12 
-  },
+  updateTime: { fontSize: 12, color: '#9ca3af' },
 
   // --- Meu Condomínio ---
   condominioCard: {

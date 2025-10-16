@@ -16,30 +16,32 @@ import * as Animatable from 'react-native-animatable';
 import { Mail, ArrowLeft, ArrowRight, CheckCircle, HelpCircle } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { styles } from './styles';
-import { validateEmail, validateRequired } from '../../../utils/validation';
 
 const ForgotPassword = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSendEmail = async () => {
-    // Validação de campo obrigatório
-    if (!validateRequired(email)) {
+    if (!email.trim()) {
       Toast.show({
         type: 'error',
-        text1: 'Campo obrigatório',
+        text1: 'Erro',
         text2: 'Por favor, insira seu e-mail',
       });
       return;
     }
 
-    // Validação de formato de e-mail
     if (!validateEmail(email)) {
       Toast.show({
         type: 'error',
-        text1: 'E-mail inválido',
-        text2: 'Digite um e-mail válido (ex: usuario@exemplo.com)',
+        text1: 'Erro',
+        text2: 'Por favor, insira um e-mail válido',
       });
       return;
     }

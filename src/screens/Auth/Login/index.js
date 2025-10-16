@@ -22,7 +22,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useAuth } from '../../../contexts/AuthContext';
 import Help from '../../../screens/App/Perfil/Help';
-import { validateEmail, validateRequired } from '../../../utils/validation';
+
+// Função simples de validação de e-mail
+function validateEmail(email) {
+  return /\S+@\S+\.\S+/.test(email);
+}
 
 export default function Login() {
   const navigation = useNavigation();
@@ -38,40 +42,15 @@ export default function Login() {
   async function handleLogin() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    // Validação de campos obrigatórios
-    if (!validateRequired(email)) {
+    if (!email || !password) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ type: 'error', text1: 'Campo obrigatório', text2: 'Por favor, informe o e-mail.', position: 'bottom' });
+      Toast.show({ type: 'error', text1: 'Atenção', text2: 'Por favor, preencha todos os campos.', position: 'bottom' });
       return;
     }
     
-    if (!validateRequired(password)) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ type: 'error', text1: 'Campo obrigatório', text2: 'Por favor, informe a senha.', position: 'bottom' });
-      return;
-    }
-    
-    // Validação de formato de e-mail
     if (!validateEmail(email)) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ 
-        type: 'error', 
-        text1: 'E-mail inválido', 
-        text2: 'Digite um e-mail válido (ex: usuario@exemplo.com).', 
-        position: 'bottom' 
-      });
-      return;
-    }
-    
-    // Validação mínima de senha (pelo menos 6 caracteres)
-    if (password.length < 6) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Senha muito curta', 
-        text2: 'A senha deve ter no mínimo 6 caracteres.', 
-        position: 'bottom' 
-      });
+      Toast.show({ type: 'error', text1: 'E-mail inválido', text2: 'Digite um e-mail válido.', position: 'bottom' });
       return;
     }
     

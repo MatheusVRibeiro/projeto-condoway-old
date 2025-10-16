@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert, Switch, ActivityIndicator } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Lock, Eye, EyeOff, Shield, Smartphone, Key, AlertTriangle } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { useTheme } from '../../../../contexts/ThemeProvider';
-import { useProfile } from '../../../../hooks';
 
 export default function Security() {
   const navigation = useNavigation();
   const { theme } = useTheme();
-  const { changePassword, loading } = useProfile();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,7 +18,7 @@ export default function Security() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert('Erro', 'Preencha todos os campos de senha.');
       return;
@@ -33,19 +31,10 @@ export default function Security() {
       Alert.alert('Erro', 'A nova senha deve ter pelo menos 6 caracteres.');
       return;
     }
-
-    try {
-      await changePassword(currentPassword, newPassword);
-      Alert.alert('Sucesso', 'Senha alterada com sucesso!');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error) {
-      Alert.alert(
-        'Erro', 
-        error.message || 'Não foi possível alterar a senha. Verifique se a senha atual está correta.'
-      );
-    }
+    Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   const SecurityOption = ({ icon: Icon, title, subtitle, onPress, hasSwitch = false, switchValue, onSwitchChange, variant = 'default' }) => (
@@ -112,19 +101,9 @@ export default function Security() {
             <PasswordInput label="Senha Atual" value={currentPassword} onChangeText={setCurrentPassword} placeholder="Digite sua senha atual" showPassword={showCurrentPassword} onToggleShow={() => setShowCurrentPassword(!showCurrentPassword)} />
             <PasswordInput label="Nova Senha" value={newPassword} onChangeText={setNewPassword} placeholder="Digite a nova senha" showPassword={showNewPassword} onToggleShow={() => setShowNewPassword(!showNewPassword)} />
             <PasswordInput label="Confirmar Nova Senha" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Confirme a nova senha" showPassword={showConfirmPassword} onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)} />
-            <TouchableOpacity 
-              style={[styles.changePasswordButton, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
-              onPress={handleChangePassword}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <>
-                  <Lock size={20} color="white" />
-                  <Text style={styles.changePasswordText}>Alterar Senha</Text>
-                </>
-              )}
+            <TouchableOpacity style={[styles.changePasswordButton, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} onPress={handleChangePassword}>
+              <Lock size={20} color="white" />
+              <Text style={styles.changePasswordText}>Alterar Senha</Text>
             </TouchableOpacity>
           </View>
         </Animatable.View>

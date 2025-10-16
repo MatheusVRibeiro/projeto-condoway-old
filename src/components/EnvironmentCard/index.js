@@ -170,10 +170,13 @@ const EnvironmentCard = ({ item, onReserve, onDetails, index = 0 }) => {
 
 const styles = StyleSheet.create({
   card: {
+    backgroundColor: 'white',
     borderRadius: 16,
     borderWidth: 1,
+    borderColor: '#e2e8f0',
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#3b82f6',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -216,10 +219,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
+    color: '#1e293b',
     marginBottom: 6,
   },
   description: {
     fontSize: 13,
+    color: '#64748b',
     lineHeight: 18,
   },
   infoBadges: {
@@ -234,10 +239,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     gap: 6,
+    backgroundColor: '#f8fafc',
   },
   infoBadgeText: {
     fontSize: 12,
     fontWeight: '600',
+    color: '#64748b',
   },
   footer: {
     flexDirection: 'row',
@@ -255,14 +262,16 @@ const styles = StyleSheet.create({
   },
   outlineButton: {
     borderWidth: 1.5,
+    borderColor: '#cbd5e1',
     backgroundColor: 'transparent',
   },
   primaryButton: {
-    // backgroundColor aplicado dinamicamente
+    backgroundColor: '#3b82f6',
   },
   buttonText: {
     fontSize: 13,
     fontWeight: '700',
+    color: '#334155',
   },
   primaryButtonText: {
     fontSize: 13,

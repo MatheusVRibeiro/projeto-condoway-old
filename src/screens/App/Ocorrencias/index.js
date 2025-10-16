@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, Alert, FlatList, ActivityIndicator, Pressable, RefreshControl, Share, Clipboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
@@ -9,7 +9,6 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useAuth } from '../../../contexts/AuthContext';
-import { usePaginatedOcorrencias } from '../../../hooks';
 import ActionSheet from 'react-native-actions-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,20 +32,7 @@ export default function Ocorrencias() {
   const openImageOptions = () => actionSheetRef.current?.setModalVisible(true);
   const closeImageOptions = () => actionSheetRef.current?.setModalVisible(false);
   const [activeTab, setActiveTab] = useState('registrar');
-  
-  // ✅ Hook de paginação com infinite scroll
-  const {
-    ocorrencias,
-    loading,
-    loadingMore,
-    refreshing,
-    error: loadError,
-    pagination,
-    loadMore,
-    refresh,
-    addOcorrencia
-  } = usePaginatedOcorrencias(20);
-  
+  const [myIssues, setMyIssues] = useState([]);
   const [step, setStep] = useState(1);
   const [category, setCategory] = useState(null);
   const [description, setDescription] = useState('');
@@ -55,54 +41,93 @@ export default function Ocorrencias() {
   // support multiple attachments (max 3)
   const [attachments, setAttachments] = useState([]);
   const ATTACHMENT_LIMIT = 3;
-  const [uploading, setUploading] = useState(false); // Para formulário de criação
+  const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({}); // {uri: percent}
   const [expandedId, setExpandedId] = useState(null);
   const [messageDrafts, setMessageDrafts] = useState({}); // { [issueId]: text }
   
   // Estados para filtros
   const [filterStatus, setFilterStatus] = useState('todas'); // 'todas', 'abertas', 'analise', 'resolvidas'
-  // refreshing agora vem do hook
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedOccurrence, setSelectedOccurrence] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
   const DRAFT_KEY = '@condoway_occurrence_draft_v1';
 
-  // ✅ Mapear ocorrências do hook para o formato esperado pela tela
-  const myIssues = useMemo(() => {
-    if (!ocorrencias || !Array.isArray(ocorrencias)) return [];
-    
-    // Mapear os dados da API para o formato esperado
-    return ocorrencias.map(oco => ({
-      id: oco.oco_id,
-      protocol: oco.oco_protocolo,
-      title: oco.oco_categoria,
-      category: oco.oco_categoria,
-      description: oco.oco_descricao,
-      location: oco.oco_localizacao,
-      date: oco.oco_data ? new Date(oco.oco_data).toLocaleString('pt-BR') : '',
-      status: oco.oco_status === 'Aberta' ? 'Em Análise' : 
-              oco.oco_status === 'Em Andamento' ? 'Em Análise' : 
-              oco.oco_status === 'Resolvida' ? 'Resolvida' : oco.oco_status,
-      priority: oco.oco_prioridade?.toLowerCase() || 'media',
-      attachments: oco.oco_imagem ? [oco.oco_imagem] : [],
-      comments: [
-        {
-          author: 'Morador',
-          text: oco.oco_descricao,
-          date: oco.oco_data ? new Date(oco.oco_data).toLocaleString('pt-BR') : ''
-        }
-      ],
-      // Dados originais para referência
-      _original: oco
-    })).filter(oco => {
-      // Filtrar apenas ocorrências do usuário logado
-      return oco._original?.userap_id === user?.user_id;
-    });
-  }, [ocorrencias, user?.user_id]);
+  // Buscar ocorrências ao carregar a tela
+  useEffect(() => {
+    console.log('Dados do usuário:', user); // Debug
+    if (user?.user_id && user?.token) {
+      buscarMinhasOcorrencias();
+    } else {
+      console.log('Usuário não autenticado ou sem token:', { 
+        user_id: user?.user_id, 
+        token: user?.token ? 'presente' : 'ausente' 
+      });
+    }
+  }, [user]);
 
-  // ✅ Função simplificada - hook já gerencia o carregamento
-  const buscarMinhasOcorrencias = refresh;
+  const buscarMinhasOcorrencias = async () => {
+    try {
+      console.log('🔍 Iniciando busca de ocorrências...');
+      console.log('👤 Dados do usuário:', { user_id: user?.user_id, token: user?.token ? 'presente' : 'ausente' });
+      
+      setUploading(true);
+      const ocorrenciasDaApi = await apiService.buscarOcorrencias();
+      
+      console.log('📋 Ocorrências recebidas da API:', ocorrenciasDaApi);
+      console.log('📊 Tipo de dados:', typeof ocorrenciasDaApi);
+      console.log('📏 É array?', Array.isArray(ocorrenciasDaApi));
+      console.log('📏 Quantidade:', ocorrenciasDaApi?.length);
+      
+      // Garantir que sempre seja um array válido
+      const ocorrenciasValidas = Array.isArray(ocorrenciasDaApi) ? ocorrenciasDaApi : [];
+      console.log('✅ Ocorrências válidas:', ocorrenciasValidas);
+      
+      // Mapear os dados da API para o formato esperado pelo componente
+      const ocorrenciasMapeadas = ocorrenciasValidas.map(oco => ({
+        id: oco.oco_id,
+        protocol: oco.oco_protocolo,
+        title: oco.oco_categoria,
+        category: oco.oco_categoria,
+        description: oco.oco_descricao,
+        location: oco.oco_localizacao,
+        date: new Date(oco.oco_data).toLocaleString('pt-BR'),
+        status: oco.oco_status === 'Aberta' ? 'Em Análise' : 
+                oco.oco_status === 'Em Andamento' ? 'Em Análise' : 
+                oco.oco_status === 'Resolvida' ? 'Resolvida' : oco.oco_status,
+        priority: oco.oco_prioridade?.toLowerCase() || 'media',
+        attachments: oco.oco_imagem ? [oco.oco_imagem] : [],
+        comments: [
+          {
+            author: 'Morador',
+            text: oco.oco_descricao,
+            date: new Date(oco.oco_data).toLocaleString('pt-BR')
+          }
+        ]
+      }));
+      
+      // Filtrar apenas as ocorrências do usuário logado
+      const minhasOcorrencias = ocorrenciasMapeadas.filter(oco => {
+        const ocorrenciaOriginal = ocorrenciasValidas.find(orig => orig.oco_id === oco.id);
+        return ocorrenciaOriginal?.userap_id === user?.user_id;
+      });
+      
+      console.log('🎯 Ocorrências mapeadas (todas):', ocorrenciasMapeadas.length);
+      console.log('👤 Minhas ocorrências filtradas:', minhasOcorrencias.length, minhasOcorrencias);
+      console.log('🔍 User ID para filtro:', user?.user_id);
+      
+      setMyIssues(minhasOcorrencias);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao carregar ocorrências',
+        text2: error.message
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleCategorySelect = (selectedCategory) => {
     setCategory(selectedCategory);
@@ -363,8 +388,8 @@ export default function Ocorrencias() {
         ...novaOcorrencia
       };
       
-      // Atualizar a lista de ocorrências usando o hook
-      addOcorrencia(novaOcorrencia);
+      // Atualizar a lista de ocorrências
+      setMyIssues(prev => [ocorrenciaComId, ...prev]);
       setStep(3);
       
       // Limpar rascunho
@@ -798,8 +823,13 @@ export default function Ocorrencias() {
     }
   };
 
-  // ✅ onRefresh agora usa o refresh do hook (buscarMinhasOcorrencias = refresh)
-  
+  // Função de refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await buscarMinhasOcorrencias();
+    setRefreshing(false);
+  };
+
   // Filtrar ocorrências por status
   const getFilteredIssues = () => {
     let filtered = myIssues.filter(item => item && item.id); // Validação de segurança
@@ -893,7 +923,7 @@ export default function Ocorrencias() {
           ))}
         </View>
 
-        {/* Lista de ocorrências com infinite scroll e pull to refresh */}
+        {/* Lista de ocorrências */}
         <FlatList
           data={filteredIssues}
           keyExtractor={(item, index) => item?.id?.toString() || `item-${index}`}
@@ -901,13 +931,11 @@ export default function Ocorrencias() {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={refresh}
+              onRefresh={onRefresh}
               colors={[theme.colors.primary]}
               tintColor={theme.colors.primary}
             />
           }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
           renderItem={({ item, index }) => (
             <OccurrenceCard
               item={item}
@@ -918,63 +946,15 @@ export default function Ocorrencias() {
               }}
             />
           )}
-          ListFooterComponent={() => {
-            if (!loadingMore) return null;
-            return (
-              <View style={{ padding: 20, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-                <Text style={{ color: theme.colors.textSecondary, marginTop: 8, fontSize: 12 }}>
-                  Carregando mais ocorrências...
-                </Text>
-              </View>
-            );
-          }}
-          ListEmptyComponent={() => {
-            if (loading) {
-              return (
-                <View style={{ padding: 60, alignItems: 'center' }}>
-                  <ActivityIndicator size="large" color={theme.colors.primary} />
-                  <Text style={{ color: theme.colors.textSecondary, marginTop: 16 }}>
-                    Carregando ocorrências...
-                  </Text>
-                </View>
-              );
-            }
-            if (loadError) {
-              return (
-                <View style={{ padding: 40, alignItems: 'center' }}>
-                  <Text style={{ color: theme.colors.error, marginBottom: 16, textAlign: 'center' }}>
-                    {loadError}
-                  </Text>
-                  <TouchableOpacity 
-                    style={{ 
-                      backgroundColor: theme.colors.primary, 
-                      paddingHorizontal: 24,
-                      paddingVertical: 12,
-                      borderRadius: 8 
-                    }}
-                    onPress={refresh}
-                  >
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                      Tentar novamente
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            }
-            return (
-              <OccurrenceEmptyState
-                message={
-                  filterStatus !== 'todas'
-                    ? `Nenhuma ocorrência ${filterStatus}`
-                    : 'Você ainda não tem ocorrências registradas'
-                }
-              />
-            );
-          }}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          windowSize={10}
+          ListEmptyComponent={
+            <OccurrenceEmptyState
+              message={
+                filterStatus !== 'todas'
+                  ? `Nenhuma ocorrência ${filterStatus}`
+                  : 'Você ainda não tem ocorrências registradas'
+              }
+            />
+          }
         />
       </View>
     );
@@ -989,14 +969,11 @@ export default function Ocorrencias() {
         </View>
 
         {step === 1 && (
-          <View style={[styles.tabsContainer, { backgroundColor: theme.colors.border }]}>
+          <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[
                 styles.tabButton,
-                activeTab === 'registrar' && [styles.tabButtonActive, { 
-                  backgroundColor: theme.colors.card,
-                  shadowColor: theme.colors.primary 
-                }]
+                activeTab === 'registrar' && styles.tabButtonActive
               ]}
               onPress={() => setActiveTab('registrar')}
               activeOpacity={0.7}
@@ -1004,13 +981,12 @@ export default function Ocorrencias() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Plus 
                   size={18} 
-                  color={activeTab === 'registrar' ? theme.colors.primary : theme.colors.textSecondary} 
+                  color={activeTab === 'registrar' ? '#3b82f6' : '#64748b'} 
                   strokeWidth={2.5} 
                 />
                 <Text style={[
                   styles.tabText,
-                  { color: theme.colors.textSecondary },
-                  activeTab === 'registrar' && [styles.tabTextActive, { color: theme.colors.primary }]
+                  activeTab === 'registrar' && styles.tabTextActive
                 ]}>
                   Registrar Nova
                 </Text>
@@ -1019,10 +995,7 @@ export default function Ocorrencias() {
             <TouchableOpacity
               style={[
                 styles.tabButton,
-                activeTab === 'minhas' && [styles.tabButtonActive, { 
-                  backgroundColor: theme.colors.card,
-                  shadowColor: theme.colors.primary 
-                }]
+                activeTab === 'minhas' && styles.tabButtonActive
               ]}
               onPress={() => setActiveTab('minhas')}
               activeOpacity={0.7}
@@ -1030,13 +1003,12 @@ export default function Ocorrencias() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <FileText 
                   size={18} 
-                  color={activeTab === 'minhas' ? theme.colors.primary : theme.colors.textSecondary} 
+                  color={activeTab === 'minhas' ? '#3b82f6' : '#64748b'} 
                   strokeWidth={2.5} 
                 />
                 <Text style={[
                   styles.tabText,
-                  { color: theme.colors.textSecondary },
-                  activeTab === 'minhas' && [styles.tabTextActive, { color: theme.colors.primary }]
+                  activeTab === 'minhas' && styles.tabTextActive
                 ]}>
                   Minhas Ocorrências
                 </Text>

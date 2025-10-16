@@ -8,7 +8,11 @@ import { Calendar } from 'react-native-calendars';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
-import { EnvironmentCard, ReservationHeader, ReservationCard, EnvironmentDetailsModal, ReservationDetailsModal } from '../../../components';
+import EnvironmentCard from '../../../components/EnvironmentCard';
+import ReservationHeader from '../../../components/ReservationHeader';
+import ReservationCard from '../../../components/ReservationCard';
+import EnvironmentDetailsModal from '../../../components/EnvironmentDetailsModal';
+import ReservationDetailsModal from '../../../components/ReservationDetailsModal';
 
 export default function Reservas() {
   const { theme } = useTheme();
