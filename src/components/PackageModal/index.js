@@ -29,7 +29,9 @@ export default function PackageModal({ visible, onClose, package: selectedPackag
   if (!selectedPackage) return null;
 
   const arrivalDate = parseISO(selectedPackage.arrivalDate);
-  const deliveryDate = selectedPackage.retirada_data ? parseISO(selectedPackage.retirada_data) : null;
+  const deliveryDate = selectedPackage.deliveryDate
+    ? parseISO(selectedPackage.deliveryDate)
+    : (selectedPackage.retirada_data ? parseISO(selectedPackage.retirada_data) : null);
   const daysWaiting = differenceInDays(new Date(), arrivalDate);
   const isAwaiting = selectedPackage.status === 'Aguardando';
 
