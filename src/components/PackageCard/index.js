@@ -23,9 +23,9 @@ export default function PackageCard({ item, onPress, index }) {
     onPress(item);
   };
 
-  const handleCopyTrackingCode = async (e) => {
+  const handleCopyTrackingCode = async () => {
     // Previne que o click abra o modal
-    e.stopPropagation();
+    
     
     try {
       await Clipboard.setStringAsync(item.trackingCode);
