@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { InboxIcon } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import { useTheme } from '../../contexts/ThemeProvider';
+import styles from './styles';
 
 const OccurrenceEmptyState = ({ message = 'Nenhuma ocorrência encontrada' }) => {
   const { theme } = useTheme();
@@ -32,37 +33,5 @@ const OccurrenceEmptyState = ({ message = 'Nenhuma ocorrência encontrada' }) =>
     </Animatable.View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 32,
-  },
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  message: {
-    fontSize: 14,
-    color: '#64748b',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});
 
 export default React.memo(OccurrenceEmptyState);
