@@ -6,6 +6,7 @@ export { useAnimation } from './useAnimation';
 export { useProfile } from './useProfile';
 export { useCondominio } from './useCondominio';
 export { useLatestUpdates } from './useLatestUpdates';
+export { usePushNotifications } from './usePushNotifications';
 
 // Pagination Hooks
 export { usePaginatedOcorrencias } from './usePaginatedOcorrencias';

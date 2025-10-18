@@ -26,8 +26,23 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#3b82f6",
+      "androidMode": "default",
+      "androidCollapsedTitle": "#{unread_notifications} novas notificações"
+    },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3b82f6",
+          "sounds": [],
+          "mode": "production"
+        }
+      ]
     ]
   }
 }

@@ -8,10 +8,14 @@ import Routes from './src/routes';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeProvider';
 import { NotificationProvider } from './src/contexts/NotificationProvider';
+import { usePushNotifications } from './src/hooks/usePushNotifications';
 
-// Componente interno que usa o tema
+// Componente interno que usa o tema e configura notificações push
 const AppContent = () => {
   const { theme } = useTheme();
+  
+  // 🔔 Configurar listeners de notificações push
+  usePushNotifications();
   
   // Criar tema personalizado para o NavigationContainer
   const navigationTheme = {

@@ -370,4 +370,36 @@ export const apiService = {
       return { sucesso: false, mensagem: 'Erro ao buscar atualizações', dados: [] };
     }
   },
+
+  // Push Notifications
+  registrarTokenPush: async (userId, pushToken, platform) => {
+    try {
+      console.log(`🔔 [API] Registrando token push para usuário ${userId}...`);
+      const response = await api.post('/usuario/push-token', {
+        userId,
+        pushToken,
+        platform,
+      });
+      console.log('✅ [API] Token push registrado com sucesso');
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao registrar token push:', error.response?.status, error.response?.data);
+      // Não lançar erro para não bloquear o login
+      return { sucesso: false, mensagem: 'Erro ao registrar token push' };
+    }
+  },
+
+  removerTokenPush: async (userId, pushToken) => {
+    try {
+      console.log(`🔔 [API] Removendo token push para usuário ${userId}...`);
+      const response = await api.delete('/usuario/push-token', {
+        data: { userId, pushToken }
+      });
+      console.log('✅ [API] Token push removido com sucesso');
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao remover token push:', error.response?.status, error.response?.data);
+      return { sucesso: false, mensagem: 'Erro ao remover token push' };
+    }
+  },
 };
