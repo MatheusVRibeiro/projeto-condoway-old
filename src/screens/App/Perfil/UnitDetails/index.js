@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, Home, MapPin, Calendar, Users, Car, Wifi, Zap, Droplets, Edit3, Phone, Mail } from 'lucide-react-native';
+import { ArrowLeft, Home, MapPin, Calendar, Users, Car, Clock } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { userProfile } from '../mock';
 import { useTheme } from '../../../../contexts/ThemeProvider';
+import { apiService } from '../../../../services/api';
 
 export default function UnitDetails() {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const [ambientes, setAmbientes] = useState([]);
+  const [loadingAmbientes, setLoadingAmbientes] = useState(true);
   const [unitData] = useState({
     ...userProfile,
     area: '85m²',
@@ -18,28 +21,29 @@ export default function UnitDetails() {
     parkingSpots: 1,
     registrationDate: 'Janeiro 2023',
     monthlyFee: 'R$ 485,00',
-    emergencyContact: {
-      name: 'João Silva',
-      phone: '(11) 99876-5432',
-      relationship: 'Responsável'
-    },
-    utilities: {
-      water: 'Ativo',
-      electricity: 'Ativo',
-      gas: 'Ativo',
-      internet: 'Ativo'
-    },
-    amenities: [
-      'Piscina',
-      'Academia',
-      'Salão de Festas',
-      'Playground',
-      'Quadra de Tênis',
-      'Sauna'
-    ]
   });
 
-  const InfoCard = ({ icon: Icon, title, value, subtitle, onEdit }) => (
+  useEffect(() => {
+    carregarAmbientes();
+  }, []);
+
+  const carregarAmbientes = async () => {
+    try {
+      setLoadingAmbientes(true);
+      console.log('🔄 [UnitDetails] Carregando ambientes...');
+      const data = await apiService.listarAmbientes();
+      console.log('✅ [UnitDetails] Ambientes carregados:', data);
+      console.log('📋 [UnitDetails] Primeiro ambiente:', data[0]);
+      setAmbientes(data);
+    } catch (error) {
+      console.error('❌ [UnitDetails] Erro ao carregar ambientes:', error);
+      setAmbientes([]);
+    } finally {
+      setLoadingAmbientes(false);
+    }
+  };
+
+  const InfoCard = ({ icon: Icon, title, value, subtitle, badge }) => (
     <View style={styles.infoCard}>
       <View style={styles.infoHeader}>
         <View style={[styles.infoIconContainer, { backgroundColor: theme.colors.primary + '22' }]}>
@@ -49,36 +53,43 @@ export default function UnitDetails() {
           <Text style={[styles.infoTitle, { color: theme.colors.textSecondary }]}>{title}</Text>
           {subtitle && <Text style={[styles.infoSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>}
         </View>
-        {onEdit && (
-          <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-            <Edit3 size={16} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
+        {badge && (
+          <View style={[styles.badge, { backgroundColor: theme.colors.warning + '22' }]}>
+            <Clock size={12} color={theme.colors.warning} />
+            <Text style={[styles.badgeText, { color: theme.colors.warning }]}>{badge}</Text>
+          </View>
         )}
       </View>
       <Text style={[styles.infoValue, { color: theme.colors.text }]}>{value}</Text>
     </View>
   );
 
-  const UtilityStatus = ({ icon: Icon, name, status }) => (
-    <View style={[styles.utilityItem, { borderBottomColor: theme.colors.border }]}>
-      <View style={[styles.utilityIcon, { backgroundColor: theme.colors.background }]}>
-        <Icon size={18} color={status === 'Ativo' ? theme.colors.success : theme.colors.error} />
+  const ComingSoonCard = ({ title, description }) => (
+    <Animatable.View 
+      animation="fadeInUp" 
+      duration={600} 
+      style={[styles.comingSoonCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+    >
+      <View style={[styles.comingSoonIcon, { backgroundColor: theme.colors.warning + '22' }]}>
+        <Clock size={32} color={theme.colors.warning} />
       </View>
-      <Text style={[styles.utilityName, { color: theme.colors.text }]}>{name}</Text>
-      <View style={[styles.utilityStatus, { backgroundColor: (status === 'Ativo' ? theme.colors.success : theme.colors.error) + '22' }]}>
-        <Text style={[styles.utilityStatusText, { color: status === 'Ativo' ? theme.colors.success : theme.colors.error }]}>
-          {status}
-        </Text>
+      <Text style={[styles.comingSoonTitle, { color: theme.colors.text }]}>{title}</Text>
+      <Text style={[styles.comingSoonDescription, { color: theme.colors.textSecondary }]}>{description}</Text>
+      <View style={[styles.comingSoonBadge, { backgroundColor: theme.colors.warning + '22' }]}>
+        <Text style={[styles.comingSoonBadgeText, { color: theme.colors.warning }]}>EM BREVE</Text>
       </View>
-    </View>
+    </Animatable.View>
   );
 
-  const AmenityItem = ({ name }) => (
-    <View style={styles.amenityItem}>
-      <View style={[styles.amenityDot, { backgroundColor: theme.colors.primary }]} />
-      <Text style={[styles.amenityText, { color: theme.colors.text }]}>{name}</Text>
-    </View>
-  );
+  const AmenityItem = ({ name }) => {
+    console.log('🏢 [AmenityItem] Renderizando:', name);
+    return (
+      <View style={styles.amenityItem}>
+        <View style={[styles.amenityDot, { backgroundColor: theme.colors.primary }]} />
+        <Text style={[styles.amenityText, { color: theme.colors.text }]}>{name || 'Nome não disponível'}</Text>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -114,7 +125,7 @@ export default function UnitDetails() {
               <InfoCard icon={MapPin} title="Localização" value={`${unitData.apartment}, ${unitData.block}`} subtitle="Endereço da unidade" />
               <InfoCard icon={Calendar} title="Desde" value={unitData.registrationDate} subtitle="Data de cadastro" />
               <InfoCard icon={Users} title="Tipo" value={unitData.userType === 'morador' ? 'Morador' : 'Proprietário'} subtitle="Relação com o imóvel" />
-              <InfoCard icon={Car} title="Vagas" value={`${unitData.parkingSpots} vaga`} subtitle="Estacionamento" />
+              <InfoCard icon={Car} title="Vagas" value={`${unitData.parkingSpots} vaga`} subtitle="Estacionamento" badge="EM BREVE" />
             </View>
           </View>
         </Animatable.View>
@@ -131,43 +142,30 @@ export default function UnitDetails() {
           </View>
         </Animatable.View>
 
-        {/* Emergency Contact */}
+        {/* Áreas Comuns Disponíveis */}
         <Animatable.View animation="fadeInUp" duration={600} delay={500} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>CONTATO DE EMERGÊNCIA</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <View style={styles.contactCard}>
-              <View style={styles.contactHeader}>
-                <Text style={[styles.contactName, { color: theme.colors.text }]}>{unitData.emergencyContact.name}</Text>
-                <Text style={[styles.contactRelation, { color: theme.colors.textSecondary }]}>{unitData.emergencyContact.relationship}</Text>
-              </View>
-              <TouchableOpacity style={styles.contactItem}>
-                <Phone size={18} color={theme.colors.primary} />
-                <Text style={[styles.contactText, { color: theme.colors.text }]}>{unitData.emergencyContact.phone}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Animatable.View>
-
-        {/* Utilities Status */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={600} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>STATUS DOS SERVIÇOS</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <UtilityStatus icon={Droplets} name="Água" status={unitData.utilities.water} />
-            <UtilityStatus icon={Zap} name="Energia" status={unitData.utilities.electricity} />
-            <UtilityStatus icon={Wifi} name="Internet" status={unitData.utilities.internet} />
-          </View>
-        </Animatable.View>
-
-        {/* Amenities */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={700} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ÁREAS COMUNS DISPONÍVEIS</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <View style={styles.amenitiesGrid}>
-              {unitData.amenities.map((amenity, index) => (
-                <AmenityItem key={index} name={amenity} />
-              ))}
+          {loadingAmbientes ? (
+            <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Carregando ambientes...</Text>
             </View>
-          </View>
+          ) : ambientes.length > 0 ? (
+            <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+              <View style={styles.amenitiesGrid}>
+                {ambientes.map((ambiente, index) => (
+                  <AmenityItem 
+                    key={ambiente.id || ambiente.amd_id || ambiente.amb_id || index} 
+                    name={ambiente.nome || ambiente.amd_nome || ambiente.amb_nome || 'Ambiente sem nome'} 
+                  />
+                ))}
+              </View>
+            </View>
+          ) : (
+            <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
+              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>Nenhum ambiente disponível no momento</Text>
+            </View>
+          )}
         </Animatable.View>
 
         <View style={styles.bottomSpacer} />

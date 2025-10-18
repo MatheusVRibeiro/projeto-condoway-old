@@ -56,6 +56,10 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       console.log('💾 Usuário salvo no AsyncStorage');
       
+      // ✅ CORREÇÃO: Marcar onboarding como concluído após login bem-sucedido
+      await AsyncStorage.setItem('onboardingSeen', 'true');
+      console.log('✅ Onboarding marcado como concluído');
+      
       // Depois atualizar o estado (isso deve forçar re-render)
       console.log('🔄 Atualizando estado do usuário no contexto...');
       setUser(userData);

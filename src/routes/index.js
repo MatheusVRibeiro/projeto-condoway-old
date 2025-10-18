@@ -58,7 +58,7 @@ export default function Routes() {
         </>
       ) : (
         // 3. Logado - mostrar App direto
-        <RootStack.Screen name={ROUTES.MAINTABS} component={AppStack} />
+        <RootStack.Screen name="App" component={AppStack} />
       )}
     </RootStack.Navigator>
   );

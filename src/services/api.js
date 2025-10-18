@@ -292,6 +292,7 @@ export const apiService = {
   },
 
   // Reenviar convite para visitante
+  // Visitantes
   reenviarConviteVisitante: async (visitanteId) => {
     try {
       console.log(`🔄 [API] Reenviando convite para visitante ${visitanteId}...`);
@@ -301,6 +302,72 @@ export const apiService = {
     } catch (error) {
       console.error('❌ [API] Erro ao reenviar convite:', error.response?.status, error.response?.data);
       handleError(error, 'reenviarConviteVisitante');
+    }
+  },
+
+  // Ambientes
+  listarAmbientes: async () => {
+    try {
+      console.log('🔄 [API] Buscando ambientes disponíveis...');
+      const response = await api.get('/ambientes');
+      console.log('✅ [API] Ambientes carregados:', response.data);
+      return response.data.dados || response.data || [];
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar ambientes:', error.response?.status, error.response?.data);
+      return []; // Retorna array vazio em caso de erro
+    }
+  },
+
+  // Dashboard
+  buscarAvisosImportantes: async () => {
+    try {
+      console.log('🔄 [API] Buscando avisos importantes...');
+      const response = await api.get('/notificacoes/importantes');
+      console.log('✅ [API] Avisos importantes recebidos:', response.data);
+      
+      // Mapeia os campos do backend para o formato esperado no frontend
+      const avisos = (response.data.dados || response.data || []).map(aviso => ({
+        id: aviso.not_id,
+        titulo: aviso.not_titulo,
+        texto: aviso.not_mensagem,
+      }));
+      
+      console.log('📋 [API] Avisos mapeados:', avisos);
+      return avisos;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar avisos importantes:', error.response?.status, error.response?.data);
+      return []; // Retorna array vazio em caso de erro (fallback para mock)
+    }
+  },
+
+  // Perfil do Usuário
+  buscarPerfilUsuario: async (userId) => {
+    try {
+      console.log(`🔄 [API] Buscando perfil completo para o usuário ID: ${userId}...`);
+      const response = await api.get(`/usuario/perfil/${userId}`);
+      console.log('✅ [API] Perfil recebido:', response.data);
+      return response.data; // { sucesso, mensagem, dados }
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar perfil:', error.response?.status, error.response?.data);
+      return null; // Retorna null em caso de erro
+    }
+  },
+
+  // Últimas Atualizações / Atividades Recentes
+  buscarUltimasAtualizacoes: async (userapId) => {
+    try {
+      console.log(`🔄 [API] Buscando últimas atualizações para userap_id: ${userapId}...`);
+      const response = await api.get(`/atualizacoes/${userapId}`);
+      console.log('✅ [API] Atualizações recebidas:', response.data);
+      return response.data; // { sucesso, mensagem, dados }
+    } catch (error) {
+      // Endpoint ainda não implementado no backend - retornar dados vazios silenciosamente
+      if (error.response?.status === 404) {
+        console.warn('⚠️ [API] Endpoint de atualizações ainda não implementado no backend');
+        return { sucesso: true, mensagem: 'Endpoint em desenvolvimento', dados: [] };
+      }
+      console.error('❌ [API] Erro ao buscar atualizações:', error.response?.status, error.response?.data);
+      return { sucesso: false, mensagem: 'Erro ao buscar atualizações', dados: [] };
     }
   },
 };

@@ -10,6 +10,12 @@ import createStyles from './AuthorizeVisitorScreenStyles';
 import FormField from '../../../components/FormField';
 import Button from '../../../components/Button';
 import { apiService } from '../../../services/api';
+import { 
+  validateFullName, 
+  validateCPF, 
+  formatCPF, 
+  validateRequired 
+} from '../../../utils/validation';
 
 export default function AuthorizeVisitorScreen() {
   const { theme } = useTheme();
@@ -20,15 +26,13 @@ export default function AuthorizeVisitorScreen() {
   const [name, setName] = useState('');
   const [document, setDocument] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   
   const formatDocument = (text) => {
     const numbers = text.replace(/\D/g, '');
-    // Formata CPF se tiver 11 dígitos, senão deixa livre para RG
+    // Formata CPF automaticamente
     if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d)/, '$1.$2')
-        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      return formatCPF(numbers);
     }
     return numbers.substring(0, 20); // Limite de 20 caracteres conforme banco
   };
@@ -42,19 +46,36 @@ export default function AuthorizeVisitorScreen() {
     };
   };
   const handleGenerateInvite = async () => {
-    // Validações
-    if (!name.trim()) {
-      Alert.alert('Campo Obrigatório', 'Por favor, informe o nome do visitante.');
-      return;
+    const newErrors = {};
+
+    // Validação de nome completo
+    if (!validateRequired(name)) {
+      newErrors.name = 'Nome é obrigatório';
+    } else if (!validateFullName(name.trim())) {
+      newErrors.name = 'Digite o nome completo (mínimo 2 partes, ex: João Silva)';
+    } else if (name.trim().length > 60) {
+      newErrors.name = 'O nome deve ter no máximo 60 caracteres';
     }
 
-    if (name.trim().length > 60) {
-      Alert.alert('Nome muito longo', 'O nome deve ter no máximo 60 caracteres.');
-      return;
+    // Validação de CPF (se informado)
+    if (document) {
+      const cleanDoc = document.replace(/\D/g, '');
+      if (cleanDoc.length === 11) {
+        // Validar CPF
+        if (!validateCPF(document)) {
+          newErrors.document = 'CPF inválido. Verifique os dígitos informados.';
+        }
+      } else if (cleanDoc.length < 8) {
+        newErrors.document = 'Documento deve ter no mínimo 8 dígitos';
+      }
     }
 
-    if (document && document.replace(/\D/g, '').length < 8) {
-      Alert.alert('Documento Inválido', 'Por favor, informe um documento válido.');
+    setErrors(newErrors);
+
+    // Se houver erros, exibe o primeiro
+    if (Object.keys(newErrors).length > 0) {
+      const firstError = Object.values(newErrors)[0];
+      Alert.alert('Erro de validação', firstError);
       return;
     }
 
@@ -157,6 +178,7 @@ export default function AuthorizeVisitorScreen() {
             onChangeText={setName}
             autoCapitalize="words"
             maxLength={60}
+            error={errors.name}
           />
 
           <FormField
@@ -167,6 +189,7 @@ export default function AuthorizeVisitorScreen() {
             onChangeText={(text) => setDocument(formatDocument(text))}
             keyboardType="numeric"
             maxLength={20}
+            error={errors.document}
           />
 
           {/* Aviso simplificado */}
