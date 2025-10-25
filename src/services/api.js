@@ -66,12 +66,51 @@ export const apiService = {
     }
   },
 
-  buscarOcorrencias: async () => {
+  buscarOcorrencias: async (page = 1, limit = 20) => {
     try {
-      const response = await api.get('/ocorrencias');
-      return response.data.dados || [];
+      const response = await api.get('/ocorrencias', {
+        params: { page, limit }
+      });
+      
+      // Se a API retorna dados paginados
+      if (response.data.pagination) {
+        return {
+          dados: response.data.dados || [],
+          pagination: {
+            currentPage: response.data.pagination.currentPage || page,
+            totalPages: response.data.pagination.totalPages || 1,
+            total: response.data.pagination.total || 0,
+            hasMore: response.data.pagination.hasMore || false,
+            perPage: response.data.pagination.perPage || limit
+          }
+        };
+      }
+      
+      // Se a API retorna apenas array (fallback para compatibilidade)
+      const dados = response.data.dados || response.data || [];
+      return {
+        dados: Array.isArray(dados) ? dados : [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          total: Array.isArray(dados) ? dados.length : 0,
+          hasMore: false,
+          perPage: limit
+        }
+      };
     } catch (error) {
       handleError(error, 'buscarOcorrencias');
+      // Retornar estrutura vazia em caso de erro
+      return {
+        dados: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          total: 0,
+          hasMore: false,
+          perPage: limit
+        }
+      };
     }
   },
 
@@ -243,9 +282,9 @@ export const apiService = {
   },
 
   // Listar visitantes do usuário
-  listarVisitantes: async (filtros = {}) => {
+  listarVisitantes: async (filtros = {}, page = 1, limit = 20) => {
     try {
-      console.log('🔄 [API] Buscando lista de visitantes...');
+      console.log('🔄 [API] Buscando lista de visitantes...', { filtros, page, limit });
       const params = new URLSearchParams();
       
       // Adiciona filtros se fornecidos
@@ -253,15 +292,56 @@ export const apiService = {
       if (filtros.dataInicio) params.append('data_inicio', filtros.dataInicio);
       if (filtros.dataFim) params.append('data_fim', filtros.dataFim);
       
+      // Adiciona paginação
+      params.append('page', page);
+      params.append('limit', limit);
+      
       const queryString = params.toString();
-      const endpoint = queryString ? `/visitantes?${queryString}` : '/visitantes';
+      const endpoint = `/visitantes?${queryString}`;
       
       const response = await api.get(endpoint);
       console.log('✅ [API] Visitantes carregados:', response.data);
-      return response.data;
+      
+      // Se a API retorna dados paginados
+      if (response.data.pagination) {
+        return {
+          dados: response.data.dados || [],
+          pagination: {
+            currentPage: response.data.pagination.currentPage || page,
+            totalPages: response.data.pagination.totalPages || 1,
+            total: response.data.pagination.total || 0,
+            hasMore: response.data.pagination.hasMore || false,
+            perPage: response.data.pagination.perPage || limit
+          }
+        };
+      }
+      
+      // Se a API retorna apenas array (fallback para compatibilidade)
+      const dados = response.data.dados || response.data || [];
+      return {
+        dados: Array.isArray(dados) ? dados : [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          total: Array.isArray(dados) ? dados.length : 0,
+          hasMore: false,
+          perPage: limit
+        }
+      };
     } catch (error) {
       console.error('❌ [API] Erro ao listar visitantes:', error.response?.status, error.response?.data);
       handleError(error, 'listarVisitantes');
+      // Retornar estrutura vazia em caso de erro
+      return {
+        dados: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          total: 0,
+          hasMore: false,
+          perPage: limit
+        }
+      };
     }
   },
 
@@ -368,38 +448,6 @@ export const apiService = {
       }
       console.error('❌ [API] Erro ao buscar atualizações:', error.response?.status, error.response?.data);
       return { sucesso: false, mensagem: 'Erro ao buscar atualizações', dados: [] };
-    }
-  },
-
-  // Push Notifications
-  registrarTokenPush: async (userId, pushToken, platform) => {
-    try {
-      console.log(`🔔 [API] Registrando token push para usuário ${userId}...`);
-      const response = await api.post('/usuario/push-token', {
-        userId,
-        pushToken,
-        platform,
-      });
-      console.log('✅ [API] Token push registrado com sucesso');
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao registrar token push:', error.response?.status, error.response?.data);
-      // Não lançar erro para não bloquear o login
-      return { sucesso: false, mensagem: 'Erro ao registrar token push' };
-    }
-  },
-
-  removerTokenPush: async (userId, pushToken) => {
-    try {
-      console.log(`🔔 [API] Removendo token push para usuário ${userId}...`);
-      const response = await api.delete('/usuario/push-token', {
-        data: { userId, pushToken }
-      });
-      console.log('✅ [API] Token push removido com sucesso');
-      return response.data;
-    } catch (error) {
-      console.error('❌ [API] Erro ao remover token push:', error.response?.status, error.response?.data);
-      return { sucesso: false, mensagem: 'Erro ao remover token push' };
     }
   },
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { User, FileText, Clock, ChevronLeft } from 'lucide-react-native';
+import { User, FileText, Clock, ChevronLeft, Phone } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { DateTime } from 'luxon';
 
@@ -14,7 +14,9 @@ import {
   validateFullName, 
   validateCPF, 
   formatCPF, 
-  validateRequired 
+  validateRequired,
+  validatePhone,
+  formatPhone
 } from '../../../utils/validation';
 
 export default function AuthorizeVisitorScreen() {
@@ -25,6 +27,7 @@ export default function AuthorizeVisitorScreen() {
   // Estados do formulário
   const [name, setName] = useState('');
   const [document, setDocument] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   
@@ -55,6 +58,13 @@ export default function AuthorizeVisitorScreen() {
       newErrors.name = 'Digite o nome completo (mínimo 2 partes, ex: João Silva)';
     } else if (name.trim().length > 60) {
       newErrors.name = 'O nome deve ter no máximo 60 caracteres';
+    }
+
+    // Validação de telefone (obrigatório)
+    if (!validateRequired(phone)) {
+      newErrors.phone = 'Telefone é obrigatório';
+    } else if (!validatePhone(phone)) {
+      newErrors.phone = 'Telefone inválido. Digite um número com DDD (ex: 11987654321)';
     }
 
     // Validação de CPF (se informado)
@@ -95,6 +105,7 @@ export default function AuthorizeVisitorScreen() {
       userap_id: user?.userap_id || user?.Userap_ID || user?.id, // ID do usuário autenticado
       vst_nome: name.trim(),
       vst_documento: document.replace(/\D/g, '') || null,
+      vst_celular: phone.replace(/\D/g, ''), // Celular obrigatório
       vst_validade_inicio: validity.start,
       vst_validade_fim: validity.end,
       vst_status: 'Aguardando'
@@ -120,6 +131,7 @@ export default function AuthorizeVisitorScreen() {
       // Limpa os campos do formulário
       setName('');
       setDocument('');
+      setPhone('');
       
       // Navega para tela de convite gerado
       navigation.navigate('InvitationGenerated', { 
@@ -179,6 +191,17 @@ export default function AuthorizeVisitorScreen() {
             autoCapitalize="words"
             maxLength={60}
             error={errors.name}
+          />
+
+          <FormField
+            label="Celular *"
+            icon={Phone}
+            placeholder="(11) 98765-4321"
+            value={phone}
+            onChangeText={(text) => setPhone(formatPhone(text))}
+            keyboardType="phone-pad"
+            maxLength={15}
+            error={errors.phone}
           />
 
           <FormField

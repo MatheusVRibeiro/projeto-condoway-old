@@ -1,409 +1,52 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, SafeAreaView, RefreshControl, Modal, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { Plus, UserCheck, Clock, Calendar, ArrowRight, QrCode, Users, X, Phone, FileText, MapPin } from 'lucide-react-native';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
+import { View, Text, TouchableOpacity, FlatList, SafeAreaView, RefreshControl, ActivityIndicator, Animated } from 'react-native';
+import { Plus, Users, Calendar, Clock, AlertCircle, CheckCircle2, History, UserCheck } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
-import { DateTime } from 'luxon';
-import SearchBar from '../../../components/SearchBar';
+import * as Haptics from 'expo-haptics';
 
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { usePaginatedVisitantes } from '../../../hooks';
+import SearchBar from '../../../components/SearchBar';
+import VisitorHeader from '../../../components/VisitorHeader';
+import VisitorCard from '../../../components/VisitorCard';
+import VisitorModal from '../../../components/VisitorModal';
+import LoadingState from '../../../components/LoadingState';
 import createStyles from './styles';
-import { apiService } from '../../../services/api';
 
-// --- Dados de Exemplo (Mocks) seguindo estrutura da API Condoo ---
-const upcomingVisitorsData = [
-  { 
-    id: '1', 
-    visitor_name: 'Carlos Silva', 
-    cpf: '123.456.789-00',
-    visit_date: '2025-10-02',
-    visit_time: '18:00',
-    qr_code: 'QR123456',
-    status: 'Aguardando',
-    created_at: '2025-10-01T10:00:00',
-    phone: '(11) 98765-4321',
-    notes: 'Visitante autorizado para entrega'
-  },
-  { 
-    id: '2', 
-    visitor_name: 'Mariana Costa', 
-    cpf: '987.654.321-00',
-    visit_date: '2025-10-03',
-    visit_time: '10:30',
-    qr_code: 'QR789012',
-    status: 'Aguardando',
-    created_at: '2025-10-01T11:00:00',
-    phone: '(11) 91234-5678',
-    notes: null
-  },
-  { 
-    id: '3', 
-    visitor_name: 'João Santos', 
-    cpf: '456.789.123-00',
-    visit_date: '2025-10-02',
-    visit_time: '14:00',
-    qr_code: 'QR345678',
-    status: 'Entrou',
-    created_at: '2025-09-28T09:00:00',
-    phone: '(11) 99999-8888',
-    notes: 'Visitante frequente - funcionário'
-  },
-];
+// Criar FlatList animada
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-const accessHistoryData = [
-  { 
-    id: '1', 
-    visitor_name: 'Ana Beatriz',
-    cpf: '111.222.333-44',
-    visit_date: '2025-09-30',
-    entry_time: '09:15',
-    exit_time: '11:30',
-    status: 'Finalizado',
-    qr_code: 'QR111222'
-  },
-  { 
-    id: '2', 
-    visitor_name: 'Ricardo Gomes',
-    cpf: '555.666.777-88',
-    visit_date: '2025-09-29',
-    entry_time: '14:00',
-    exit_time: '18:45',
-    status: 'Finalizado',
-    qr_code: 'QR555666'
-  },
-];
-// --- Fim dos Dados de Exemplo ---
-
-const getStatusConfig = (status) => {
-  const configs = {
-    'Aguardando': { color: '#F59E0B', label: 'Aguardando', icon: Clock },
-    'Entrou': { color: '#10B981', label: 'Entrou', icon: UserCheck },
-    'Finalizado': { color: '#6B7280', label: 'Finalizado', icon: Calendar },
-    'Cancelado': { color: '#EF4444', label: 'Cancelado', icon: Clock },
-  };
-  return configs[status] || configs['Aguardando'];
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return 'Data inválida';
+// Helper: Parse date string to extract time
+const parseDateTime = (dateString) => {
+  if (!dateString) return null;
   
-  // Tenta parsear como SQL primeiro (YYYY-MM-DD HH:MM:SS), depois como ISO
-  let dt = DateTime.fromSQL(dateString);
-  if (!dt.isValid) {
-    dt = DateTime.fromISO(dateString);
+  try {
+    const date = new Date(dateString);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  } catch {
+    return null;
   }
-  
-  if (!dt.isValid) return dateString; // Retorna string original se não conseguir parsear
-  
-  const today = DateTime.local().startOf('day');
-  const tomorrow = today.plus({ days: 1 });
-  
-  if (dt.hasSame(today, 'day')) return 'Hoje';
-  if (dt.hasSame(tomorrow, 'day')) return 'Amanhã';
-  return dt.toFormat('dd/MM/yyyy');
 };
 
-// Card para a lista de "Próximas Visitas"
-const VisitorCard = ({ item, theme, onPress }) => {
-  const styles = createStyles(theme);
-  const statusConfig = getStatusConfig(item.status);
-  const StatusIcon = statusConfig.icon;
-
-  return (
-    <Animatable.View animation="fadeInUp" duration={600} style={styles.card}>
-      <TouchableOpacity 
-        style={styles.cardContent}
-        activeOpacity={0.7}
-        onPress={onPress}
-      >
-        {/* Avatar e Info Principal */}
-        <View style={styles.cardLeft}>
-          <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
-            <Text style={styles.avatarText}>
-              {item.visitor_name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-          
-          <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle}>{item.visitor_name}</Text>
-            <Text style={styles.cardCPF}>CPF: {item.cpf}</Text>
-            
-            <View style={styles.cardDetailsRow}>
-              <View style={styles.dateTimeContainer}>
-                <Calendar size={14} color={theme.colors.textSecondary} />
-                <Text style={styles.cardDateTime}>
-                  {formatDate(item.visit_date)} às {item.visit_time}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Status e Ação */}
-        <View style={styles.cardRight}>
-          <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}20` }]}>
-            <StatusIcon size={12} color={statusConfig.color} />
-            <Text style={[styles.statusText, { color: statusConfig.color }]}>
-              {statusConfig.label}
-            </Text>
-          </View>
-          
-          {item.status === 'pending' && (
-            <TouchableOpacity 
-              style={styles.qrButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                // Mostrar QR Code
-              }}
-            >
-              <QrCode size={20} color={theme.colors.primary} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </TouchableOpacity>
-    </Animatable.View>
-  );
-};
-
-// Card para a lista de "Histórico de Acessos"
-const HistoryCard = ({ item, theme, onPress }) => {
-  const styles = createStyles(theme);
-  const statusConfig = getStatusConfig(item.status);
-  
-  return (
-    <Animatable.View animation="fadeInUp" duration={600} style={styles.historyCard}>
-      <TouchableOpacity 
-        style={styles.historyCardContent}
-        activeOpacity={0.7}
-        onPress={onPress}
-      >
-        <View style={styles.cardLeft}>
-          <View style={[styles.avatar, { backgroundColor: theme.colors.textSecondary }]}>
-            <Text style={styles.avatarText}>
-              {item.visitor_name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-          
-          <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle}>{item.visitor_name}</Text>
-            <Text style={styles.cardSubtitle}>
-              {formatDate(item.visit_date)}
-            </Text>
-            
-            <View style={styles.timeRow}>
-              <View style={styles.timeItem}>
-                <Text style={styles.timeLabel}>Entrada</Text>
-                <Text style={styles.timeValue}>{item.entry_time}</Text>
-              </View>
-              <ArrowRight size={14} color={theme.colors.textSecondary} style={styles.arrowIcon} />
-              <View style={styles.timeItem}>
-                <Text style={styles.timeLabel}>Saída</Text>
-                <Text style={styles.timeValue}>{item.exit_time || '—'}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}20` }]}>
-          <Text style={[styles.statusText, { color: statusConfig.color }]}>
-            {statusConfig.label}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    </Animatable.View>
-  );
-};
-
-// Modal de Detalhes do Visitante
-const VisitorDetailsModal = ({ visible, visitor, onClose, theme }) => {
-  const styles = createStyles(theme);
-  
-  if (!visitor) return null;
-  
-  const statusConfig = getStatusConfig(visitor.status);
-  const StatusIcon = statusConfig.icon;
-
-  const handleCancelAuthorization = () => {
-    Alert.alert(
-      'Cancelar Autorização',
-      `Deseja realmente cancelar a autorização de ${visitor.visitor_name}?`,
-      [
-        { text: 'Não', style: 'cancel' },
-        { 
-          text: 'Sim, Cancelar', 
-          style: 'destructive',
-          onPress: () => {
-            // Chamar API para cancelar
-            console.log('Cancelar autorização:', visitor.id);
-            onClose();
-          }
-        }
-      ]
-    );
-  };
-
-  const handleResendInvite = () => {
-    Alert.alert(
-      'Reenviar Convite',
-      `Deseja reenviar o convite para ${visitor.visitor_name}?`,
-      [
-        { text: 'Não', style: 'cancel' },
-        { 
-          text: 'Sim, Reenviar',
-          onPress: () => {
-            // Chamar API para reenviar
-            console.log('Reenviar convite:', visitor.id);
-            onClose();
-          }
-        }
-      ]
-    );
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <Animatable.View 
-          animation="slideInUp" 
-          duration={400}
-          style={styles.modalContent}
-        >
-          {/* Header do Modal */}
-          <View style={styles.modalHeader}>
-            <View style={styles.modalTitleContainer}>
-              <Text style={styles.modalTitle}>Detalhes do Visitante</Text>
-              <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}20` }]}>
-                <StatusIcon size={12} color={statusConfig.color} />
-                <Text style={[styles.statusText, { color: statusConfig.color }]}>
-                  {statusConfig.label}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.modalCloseButton}>
-              <X size={24} color={theme.colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-            {/* Avatar e Nome */}
-            <View style={styles.modalAvatarSection}>
-              <View style={[styles.modalAvatar, { backgroundColor: theme.colors.primary }]}>
-                <Text style={styles.modalAvatarText}>
-                  {visitor.visitor_name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <Text style={styles.modalVisitorName}>{visitor.visitor_name}</Text>
-            </View>
-
-            {/* Informações Principais */}
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Informações Pessoais</Text>
-              
-              <View style={styles.modalInfoRow}>
-                <FileText size={18} color={theme.colors.textSecondary} />
-                <View style={styles.modalInfoText}>
-                  <Text style={styles.modalInfoLabel}>CPF</Text>
-                  <Text style={styles.modalInfoValue}>{visitor.cpf}</Text>
-                </View>
-              </View>
-
-              {visitor.phone && (
-                <View style={styles.modalInfoRow}>
-                  <Phone size={18} color={theme.colors.textSecondary} />
-                  <View style={styles.modalInfoText}>
-                    <Text style={styles.modalInfoLabel}>Telefone</Text>
-                    <Text style={styles.modalInfoValue}>{visitor.phone}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {/* Informações da Visita */}
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Detalhes da Visita</Text>
-              
-              <View style={styles.modalInfoRow}>
-                <Calendar size={18} color={theme.colors.textSecondary} />
-                <View style={styles.modalInfoText}>
-                  <Text style={styles.modalInfoLabel}>Data e Horário</Text>
-                  <Text style={styles.modalInfoValue}>
-                    {formatDate(visitor.visit_date)} às {visitor.visit_time}
-                  </Text>
-                </View>
-              </View>
-
-              {visitor.entry_time && (
-                <View style={styles.modalInfoRow}>
-                  <Clock size={18} color={theme.colors.textSecondary} />
-                  <View style={styles.modalInfoText}>
-                    <Text style={styles.modalInfoLabel}>Horário de Entrada</Text>
-                    <Text style={styles.modalInfoValue}>{visitor.entry_time}</Text>
-                  </View>
-                </View>
-              )}
-
-              {visitor.exit_time && (
-                <View style={styles.modalInfoRow}>
-                  <Clock size={18} color={theme.colors.textSecondary} />
-                  <View style={styles.modalInfoText}>
-                    <Text style={styles.modalInfoLabel}>Horário de Saída</Text>
-                    <Text style={styles.modalInfoValue}>{visitor.exit_time}</Text>
-                  </View>
-                </View>
-              )}
-
-              <View style={styles.modalInfoRow}>
-                <QrCode size={18} color={theme.colors.textSecondary} />
-                <View style={styles.modalInfoText}>
-                  <Text style={styles.modalInfoLabel}>Código QR</Text>
-                  <Text style={styles.modalInfoValue}>{visitor.qr_code}</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Observações */}
-            {visitor.notes && (
-              <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Observações</Text>
-                <Text style={styles.modalNotesText}>{visitor.notes}</Text>
-              </View>
-            )}
-          </ScrollView>
-
-          {/* Ações do Modal */}
-          {visitor.status === 'Aguardando' && (
-            <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={[styles.modalActionButton, styles.modalActionButtonSecondary]}
-                onPress={handleResendInvite}
-              >
-                <Text style={styles.modalActionButtonTextSecondary}>Reenviar Convite</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalActionButton, styles.modalActionButtonDanger]}
-                onPress={handleCancelAuthorization}
-              >
-                <Text style={styles.modalActionButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </Animatable.View>
-      </View>
-    </Modal>
-  );
-};
-
-// Tela Principal
+// Main Screen Component
 const VisitantesScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const styles = createStyles(theme);
+
+  // State
+  const [selectedTab, setSelectedTab] = useState('waiting'); // 'waiting', 'present', 'history'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedVisitor, setSelectedVisitor] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // FAB animation
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fabScale = useRef(new Animated.Value(1)).current;
+  const lastScrollY = useRef(0);
 
   // ✅ Hook de paginação para visitantes
   const {
@@ -418,17 +61,38 @@ const VisitantesScreen = () => {
     updateFilters
   } = usePaginatedVisitantes({}, 20);
 
-  const [selectedTab, setSelectedTab] = useState('upcoming');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVisitor, setSelectedVisitor] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  
+  // ✅ Helper para agrupar por data
+  const groupByDate = (visitors) => {
+    const groups = {};
+    
+    visitors.forEach(visitor => {
+      const dateKey = visitor.visit_date?.split('T')[0] || 'Sem data';
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(visitor);
+    });
+    
+    // Ordenar datas (mais recente primeiro)
+    const sortedDates = Object.keys(groups).sort((a, b) => {
+      if (a === 'Sem data') return 1;
+      if (b === 'Sem data') return -1;
+      return new Date(b) - new Date(a);
+    });
+    
+    return sortedDates.map(date => ({
+      date,
+      data: groups[date]
+    }));
+  };
+
   // ✅ Mapear visitantes do hook para formato esperado e separar por status
-  const upcomingVisitors = useMemo(() => {
+  // AGUARDANDO: Autorizados mas ainda não entraram
+  const waitingVisitors = useMemo(() => {
     if (!visitantes || !Array.isArray(visitantes)) return [];
     
-    return visitantes
-      .filter(v => ['Aguardando', 'Entrou'].includes(v.vst_status || v.status))
+    const filtered = visitantes
+      .filter(v => (v.vst_status || v.status) === 'Aguardando')
       .map(v => {
         const validadeInicio = v.vst_validade_inicio || v.visit_date;
         const dataEntrada = v.vst_data_entrada;
@@ -438,23 +102,56 @@ const VisitantesScreen = () => {
           id: v.vst_id?.toString() || v.id,
           visitor_name: v.vst_nome || v.visitor_name,
           cpf: v.vst_documento || v.cpf || 'N/A',
+          phone: v.vst_celular || v.phone || null,
           visit_date: validadeInicio,
-          visit_time: validadeInicio ? DateTime.fromSQL(validadeInicio).toFormat('HH:mm') : 'N/A',
+          visit_time: parseDateTime(validadeInicio) || 'N/A',
           qr_code: v.vst_qrcode_hash || v.qr_code,
           status: v.vst_status || v.status,
           created_at: v.created_at,
-          phone: v.phone || null,
           notes: v.notes || null,
-          entry_time: dataEntrada ? DateTime.fromSQL(dataEntrada).toFormat('HH:mm') : null,
-          exit_time: dataSaida ? DateTime.fromSQL(dataSaida).toFormat('HH:mm') : null,
+          entry_time: parseDateTime(dataEntrada),
+          exit_time: parseDateTime(dataSaida),
         };
       });
+    
+    return groupByDate(filtered);
   }, [visitantes]);
 
+  // PRESENTES: Visitantes que já fizeram check-in (estão no condomínio)
+  const presentVisitors = useMemo(() => {
+    if (!visitantes || !Array.isArray(visitantes)) return [];
+    
+    const filtered = visitantes
+      .filter(v => (v.vst_status || v.status) === 'Entrou')
+      .map(v => {
+        const validadeInicio = v.vst_validade_inicio || v.visit_date;
+        const dataEntrada = v.vst_data_entrada;
+        const dataSaida = v.vst_data_saida;
+        
+        return {
+          id: v.vst_id?.toString() || v.id,
+          visitor_name: v.vst_nome || v.visitor_name,
+          cpf: v.vst_documento || v.cpf || 'N/A',
+          phone: v.vst_celular || v.phone || null,
+          visit_date: validadeInicio,
+          visit_time: parseDateTime(validadeInicio) || 'N/A',
+          qr_code: v.vst_qrcode_hash || v.qr_code,
+          status: v.vst_status || v.status,
+          created_at: v.created_at,
+          notes: v.notes || null,
+          entry_time: parseDateTime(dataEntrada),
+          exit_time: parseDateTime(dataSaida),
+        };
+      });
+    
+    return groupByDate(filtered);
+  }, [visitantes]);
+
+  // HISTÓRICO: Finalizados (saíram) ou Cancelados
   const historyVisitors = useMemo(() => {
     if (!visitantes || !Array.isArray(visitantes)) return [];
     
-    return visitantes
+    const filtered = visitantes
       .filter(v => ['Finalizado', 'Cancelado'].includes(v.vst_status || v.status))
       .map(v => {
         const validadeInicio = v.vst_validade_inicio || v.visit_date;
@@ -465,29 +162,30 @@ const VisitantesScreen = () => {
           id: v.vst_id?.toString() || v.id,
           visitor_name: v.vst_nome || v.visitor_name,
           cpf: v.vst_documento || v.cpf || 'N/A',
+          phone: v.vst_celular || v.phone || null,
           visit_date: validadeInicio,
-          entry_time: dataEntrada ? DateTime.fromSQL(dataEntrada).toFormat('HH:mm') : null,
-          exit_time: dataSaida ? DateTime.fromSQL(dataSaida).toFormat('HH:mm') : null,
+          entry_time: parseDateTime(dataEntrada),
+          exit_time: parseDateTime(dataSaida),
           status: v.vst_status || v.status,
           qr_code: v.vst_qrcode_hash || v.qr_code
         };
       });
+    
+    return groupByDate(filtered);
   }, [visitantes]);
-
-  // ✅ Função simplificada - hook já gerencia carregamento
-  const carregarVisitantes = refresh;
 
   // Carrega visitantes ao abrir a tela
   useFocusEffect(
     useCallback(() => {
-      // Hook já carrega automaticamente, só refresh se necessário
       if (visitantes.length === 0 && !loading) {
         refresh();
       }
     }, [visitantes.length, loading, refresh])
   );
 
+  // Handlers
   const handleAddVisitor = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     navigation.navigate('AuthorizeVisitor');
   };
 
@@ -501,178 +199,429 @@ const VisitantesScreen = () => {
     setTimeout(() => setSelectedVisitor(null), 300);
   };
 
-  // ✅ onRefresh agora usa o refresh do hook
-  
-  const filteredData = selectedTab === 'upcoming' 
-    ? upcomingVisitors.filter(v => 
-        v.visitor_name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : historyVisitors.filter(v => 
-        v.visitor_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const handleTabChange = (tab) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedTab(tab);
+    setSearchQuery(''); // Reset search when changing tabs
+  };
 
-  const EmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Users size={64} color={theme.colors.textSecondary} />
-      <Text style={styles.emptyTitle}>
-        {selectedTab === 'upcoming' 
-          ? 'Nenhum visitante agendado' 
-          : 'Sem histórico de acessos'}
+  const handleHeaderCardPress = (tabId) => {
+    setSelectedTab(tabId);
+    setSearchQuery('');
+  };
+
+  // Handlers para Quick Actions (Visitas Surpresa)
+  const handleApproveVisitor = async (visitor) => {
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // TODO: Implementar chamada à API para aprovar visitante surpresa
+      console.log('Aprovar visitante surpresa:', visitor.id);
+      // Após aprovação, visitante vai para "Presentes"
+      await refresh();
+    } catch (error) {
+      console.error('Erro ao aprovar visitante:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
+
+  const handleRejectVisitor = async (visitor) => {
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // TODO: Implementar chamada à API para recusar visitante surpresa
+      console.log('Recusar visitante surpresa:', visitor.id);
+      // Após recusa, visitante vai para "Histórico" com status "Recusado"
+      await refresh();
+    } catch (error) {
+      console.error('Erro ao recusar visitante:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
+
+  // Handle scroll for FAB animation
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: true,
+      listener: (event) => {
+        const currentScrollY = event.nativeEvent.contentOffset.y;
+        const diff = currentScrollY - lastScrollY.current;
+
+        // Hide FAB when scrolling down, show when scrolling up
+        if (diff > 5 && fabScale._value === 1) {
+          Animated.spring(fabScale, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 10,
+          }).start();
+        } else if (diff < -5 && fabScale._value === 0) {
+          Animated.spring(fabScale, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 10,
+          }).start();
+        }
+
+        lastScrollY.current = currentScrollY;
+      },
+    }
+  );
+
+  // Filtrar por busca e flatten para lista simples
+  const filteredData = useMemo(() => {
+    let groupedData = [];
+    
+    if (selectedTab === 'waiting') {
+      groupedData = waitingVisitors;
+    } else if (selectedTab === 'present') {
+      groupedData = presentVisitors;
+    } else {
+      groupedData = historyVisitors;
+    }
+    
+    if (!searchQuery.trim()) {
+      // Flatten grouped data mantendo separação por data
+      return groupedData;
+    }
+    
+    // Buscar e filtrar
+    const query = searchQuery.toLowerCase().trim();
+    const filteredGroups = groupedData
+      .map(group => ({
+        ...group,
+        data: group.data.filter(v => 
+          v.visitor_name?.toLowerCase().includes(query) ||
+          v.cpf?.toLowerCase().includes(query)
+        )
+      }))
+      .filter(group => group.data.length > 0);
+    
+    return filteredGroups;
+  }, [selectedTab, waitingVisitors, presentVisitors, historyVisitors, searchQuery]);
+
+  // Empty State Component
+  const EmptyState = () => {
+    const getEmptyStateConfig = () => {
+      switch(selectedTab) {
+        case 'waiting':
+          return {
+            title: 'Nenhum visitante aguardando',
+            description: searchQuery 
+              ? 'Tente usar outros termos de busca' 
+              : 'Visitantes autorizados que ainda não chegaram aparecerão aqui',
+            showButton: !searchQuery
+          };
+        case 'present':
+          return {
+            title: 'Nenhum visitante presente',
+            description: searchQuery 
+              ? 'Tente usar outros termos de busca' 
+              : 'Visitantes que já fizeram check-in aparecerão aqui',
+            showButton: false
+          };
+        case 'history':
+          return {
+            title: 'Sem histórico de acessos',
+            description: searchQuery 
+              ? 'Tente usar outros termos de busca' 
+              : 'Visitas finalizadas e canceladas aparecerão aqui',
+            showButton: false
+          };
+        default:
+          return {
+            title: 'Nenhum visitante',
+            description: 'Não há visitantes para exibir',
+            showButton: false
+          };
+      }
+    };
+
+    const config = getEmptyStateConfig();
+
+    return (
+      <Animatable.View 
+        animation="fadeIn" 
+        style={styles.emptyContainer}
+      >
+        <Users size={64} color={theme.colors.textSecondary} strokeWidth={1.5} />
+        <Text style={styles.emptyTitle}>{config.title}</Text>
+        <Text style={styles.emptyText}>{config.description}</Text>
+        {config.showButton && (
+          <TouchableOpacity 
+            style={styles.emptyButton}
+            onPress={handleAddVisitor}
+            activeOpacity={0.8}
+          >
+            <Plus size={20} color="#FFFFFF" strokeWidth={2.5} />
+            <Text style={styles.emptyButtonText}>Autorizar Visitante</Text>
+          </TouchableOpacity>
+        )}
+      </Animatable.View>
+    );
+  };
+
+  // Format date for section header (Agrupamento Relativo)
+  const formatSectionDate = (dateString) => {
+    if (dateString === 'Sem data') return 'SEM DATA';
+    
+    try {
+      const date = new Date(dateString);
+      const today = new Date();
+      const tomorrow = new Date(today);
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      today.setHours(0, 0, 0, 0);
+      tomorrow.setHours(0, 0, 0, 0);
+      date.setHours(0, 0, 0, 0);
+      
+      // Hoje e Amanhã
+      if (date.getTime() === today.getTime()) return 'HOJE';
+      if (date.getTime() === tomorrow.getTime()) return 'AMANHÃ';
+      
+      // Próximos 7 dias
+      if (date > tomorrow && date < nextWeek) {
+        return date.toLocaleDateString('pt-BR', { weekday: 'long' }).toUpperCase();
+      }
+      
+      // Mais de 7 dias
+      return date.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: 'short'
+      }).toUpperCase().replace('.', '');
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Render Section Header (Estilo Moderno - Alinhado à Esquerda)
+  const renderSectionHeader = (date) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>
+        {formatSectionDate(date)}
       </Text>
-      <Text style={styles.emptyText}>
-        {selectedTab === 'upcoming'
-          ? 'Autorize visitantes para permitir acesso ao condomínio'
-          : 'O histórico de acessos aparecerá aqui'}
-      </Text>
-      {selectedTab === 'upcoming' && (
-        <TouchableOpacity 
-          style={styles.emptyButton}
-          onPress={handleAddVisitor}
-        >
-          <Plus size={20} color="#FFF" />
-          <Text style={styles.emptyButtonText}>Autorizar Visitante</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 
-  const renderUpcomingCard = ({ item }) => (
-    <VisitorCard item={item} theme={theme} onPress={() => handleVisitorPress(item)} />
-  );
+  // Flatten data for FlatList with section headers
+  const flattenedData = useMemo(() => {
+    const result = [];
+    filteredData.forEach((group, groupIndex) => {
+      // Add section header
+      result.push({
+        id: `section-${group.date}`,
+        type: 'section',
+        date: group.date,
+        groupIndex
+      });
+      // Add items
+      group.data.forEach((item, itemIndex) => {
+        result.push({
+          ...item,
+          type: 'item',
+          groupIndex,
+          itemIndex
+        });
+      });
+    });
+    return result;
+  }, [filteredData]);
 
-  const renderHistoryCard = ({ item }) => (
-    <HistoryCard item={item} theme={theme} onPress={() => handleVisitorPress(item)} />
-  );
+  // Render Card or Section
+  const renderItem = ({ item, index }) => {
+    if (item.type === 'section') {
+      return renderSectionHeader(item.date);
+    }
+    
+    return (
+      <VisitorCard 
+        item={item} 
+        index={item.itemIndex}
+        onPress={handleVisitorPress}
+        onApprove={handleApproveVisitor}
+        onReject={handleRejectVisitor}
+      />
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Tabs de Navegação */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'upcoming' && styles.activeTab]}
-          onPress={() => setSelectedTab('upcoming')}
-        >
-          <Calendar size={20} color={selectedTab === 'upcoming' ? theme.colors.primary : theme.colors.textSecondary} />
-          <Text style={[
-            styles.tabText,
-            selectedTab === 'upcoming' ? styles.activeTabText : styles.inactiveTabText
-          ]}>
-            Próximos
-          </Text>
-          {upcomingVisitors.length > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{upcomingVisitors.length}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'history' && styles.activeTab]}
-          onPress={() => setSelectedTab('history')}
-        >
-          <Clock size={20} color={selectedTab === 'history' ? theme.colors.primary : theme.colors.textSecondary} />
-          <Text style={[
-            styles.tabText,
-            selectedTab === 'history' ? styles.activeTabText : styles.inactiveTabText
-          ]}>
-            Histórico
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Busca */}
-      <View style={styles.searchContainer}>
-        <SearchBar
-          placeholder="Buscar visitante..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      {/* Lista */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Carregando visitantes...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredData}
-          keyExtractor={(item) => item.id}
-          renderItem={selectedTab === 'upcoming' ? renderUpcomingCard : renderHistoryCard}
-          contentContainerStyle={[
-            styles.listContainer,
-            filteredData.length === 0 && styles.listContainerEmpty
-          ]}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={refresh}
-              tintColor={theme.colors.primary}
-              colors={[theme.colors.primary]}
+      <AnimatedFlatList
+        data={flattenedData}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={() => (
+          <>
+            {/* Header com Estatísticas */}
+            <VisitorHeader 
+              awaitingCount={waitingVisitors.reduce((acc, g) => acc + g.data.length, 0)}
+              approvedCount={presentVisitors.reduce((acc, g) => acc + g.data.length, 0)}
+              totalCount={visitantes.length}
+              onCardPress={handleHeaderCardPress}
             />
+
+            <View style={styles.contentWrapper}>
+              {/* Tabs de Navegação por Status */}
+              <View style={styles.tabContainer}>
+                {/* Tab: Aguardando */}
+                <TouchableOpacity
+                  style={[styles.tab, selectedTab === 'waiting' && styles.activeTab]}
+                  onPress={() => handleTabChange('waiting')}
+                  activeOpacity={0.7}
+                >
+                  <AlertCircle 
+                    size={18} 
+                    color={selectedTab === 'waiting' ? '#FFFFFF' : theme.colors.textSecondary} 
+                    strokeWidth={2.5}
+                  />
+                  <Text style={[
+                    styles.tabText,
+                    selectedTab === 'waiting' ? styles.activeTabText : styles.inactiveTabText
+                  ]}>
+                    Aguardando
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Tab: Presentes */}
+                <TouchableOpacity
+                  style={[styles.tab, selectedTab === 'present' && styles.activeTab]}
+                  onPress={() => handleTabChange('present')}
+                  activeOpacity={0.7}
+                >
+                  <UserCheck 
+                    size={18} 
+                    color={selectedTab === 'present' ? '#FFFFFF' : theme.colors.textSecondary} 
+                    strokeWidth={2.5}
+                  />
+                  <Text style={[
+                    styles.tabText,
+                    selectedTab === 'present' ? styles.activeTabText : styles.inactiveTabText
+                  ]}>
+                    Presentes
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Tab: Histórico */}
+                <TouchableOpacity
+                  style={[styles.tab, selectedTab === 'history' && styles.activeTab]}
+                  onPress={() => handleTabChange('history')}
+                  activeOpacity={0.7}
+                >
+                  <History 
+                    size={18} 
+                    color={selectedTab === 'history' ? '#FFFFFF' : theme.colors.textSecondary} 
+                    strokeWidth={2.5}
+                  />
+                  <Text style={[
+                    styles.tabText,
+                    selectedTab === 'history' ? styles.activeTabText : styles.inactiveTabText
+                  ]}>
+                    Histórico
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Barra de Busca */}
+              <SearchBar
+                placeholder="Buscar por nome ou CPF..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+          </>
+        )}
+        contentContainerStyle={[
+          styles.listContainer,
+          flattenedData.length === 0 && styles.listContainerEmpty
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        ListFooterComponent={() => {
+          if (!loadingMore) return null;
+          return (
+            <View style={styles.loadingMoreContainer}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={styles.loadingMoreText}>
+                Carregando mais visitantes...
+              </Text>
+            </View>
+          );
+        }}
+        ListEmptyComponent={() => {
+          if (loading && visitantes.length === 0) {
+            return <LoadingState message="Carregando visitantes..." />;
           }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={() => {
-            if (!loadingMore) return null;
+          
+          if (loadError) {
             return (
-              <View style={{ padding: 20, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-                <Text style={{ color: theme.colors.textSecondary, marginTop: 8, fontSize: 12 }}>
-                  Carregando mais visitantes...
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>
+                  {loadError}
                 </Text>
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={refresh}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.retryButtonText}>Tentar novamente</Text>
+                </TouchableOpacity>
               </View>
             );
-          }}
-          ListEmptyComponent={() => {
-            if (loadError) {
-              return (
-                <View style={styles.errorContainer}>
-                  <Text style={[styles.errorText, { color: theme.colors.error }]}>
-                    {loadError}
-                  </Text>
-                  <TouchableOpacity 
-                    style={[styles.retryButton, { backgroundColor: theme.colors.primary }]}
-                    onPress={refresh}
-                  >
-                    <Text style={styles.retryButtonText}>Tentar novamente</Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            }
-            return <EmptyState />;
-          }}
-          showsVerticalScrollIndicator={false}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-        />
-      )}
+          }
+          return <EmptyState />;
+        }}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+      />
 
       {/* FAB - Adicionar Visitante */}
-      <Animatable.View 
-        animation="bounceIn" 
-        delay={300}
-        style={styles.fabWrapper}
+      <Animated.View 
+        style={[
+          styles.fabWrapper,
+          {
+            transform: [
+              { scale: fabScale },
+              {
+                translateY: fabScale.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [100, 0],
+                }),
+              },
+            ],
+            opacity: fabScale,
+          },
+        ]}
       >
         <TouchableOpacity
           style={styles.fab}
           onPress={handleAddVisitor}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Adicionar novo visitante"
+          accessibilityLabel="Autorizar novo visitante"
         >
-          <Plus size={28} color="#FFF" />
+          <Plus size={28} color="#FFFFFF" strokeWidth={2.5} />
         </TouchableOpacity>
-      </Animatable.View>
+      </Animated.View>
 
       {/* Modal de Detalhes */}
-      <VisitorDetailsModal
+      <VisitorModal
         visible={modalVisible}
         visitor={selectedVisitor}
         onClose={handleCloseModal}
-        theme={theme}
+        onRefresh={refresh}
       />
     </SafeAreaView>
   );

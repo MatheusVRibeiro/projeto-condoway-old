@@ -25,3 +25,8 @@ export { default as EnvironmentDetailsModal } from './EnvironmentDetailsModal';
 export { default as ReservationCard } from './ReservationCard';
 export { default as ReservationHeader } from './ReservationHeader';
 export { default as ReservationDetailsModal } from './ReservationDetailsModal';
+
+// Visitor components
+export { default as VisitorHeader } from './VisitorHeader';
+export { default as VisitorCard } from './VisitorCard';
+export { default as VisitorModal } from './VisitorModal';

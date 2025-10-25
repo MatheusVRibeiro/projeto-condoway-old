@@ -1,8 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 import { apiService, setAuthToken } from '../services/api'; // 1. Importar o novo serviço e o setAuthToken
-import { registerForPushNotificationsAsync } from '../lib/notifications'; // Importar função de registro de push
 import SplashScreen from '../screens/Auxiliary/SplashScreen'; // Importando o SplashScreen (pasta correta: Auxiliary)
 
 // 1. O contexto define a "forma" dos dados que serão compartilhados.
@@ -62,22 +60,6 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.setItem('onboardingSeen', 'true');
       console.log('✅ Onboarding marcado como concluído');
       
-      // 🔔 Registrar token de push notification
-      try {
-        const pushToken = await registerForPushNotificationsAsync();
-        if (pushToken && userData.usuario_id) {
-          await apiService.registrarTokenPush(
-            userData.usuario_id,
-            pushToken,
-            Platform.OS
-          );
-          console.log('✅ Token push registrado no backend');
-        }
-      } catch (pushError) {
-        console.warn('⚠️ Erro ao registrar push notification, mas login continua:', pushError);
-        // Não bloquear o login se falhar o registro de push
-      }
-      
       // Depois atualizar o estado (isso deve forçar re-render)
       console.log('🔄 Atualizando estado do usuário no contexto...');
       setUser(userData);
@@ -93,25 +75,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // 🔔 Remover token de push notification antes de fazer logout
-      if (user?.usuario_id) {
-        try {
-          const pushToken = await AsyncStorage.getItem('pushToken');
-          if (pushToken) {
-            await apiService.removerTokenPush(user.usuario_id, pushToken);
-            await AsyncStorage.removeItem('pushToken');
-            console.log('✅ Token push removido do backend');
-          }
-        } catch (pushError) {
-          console.warn('⚠️ Erro ao remover push token, mas logout continua:', pushError);
-        }
-      }
-
       setUser(null);
       // 4. Limpar o token do axios ao fazer logout
       setAuthToken(null); 
       await AsyncStorage.removeItem('user');
-      console.log('✅ Logout realizado com sucesso');
     } catch (e) {
       console.error("Failed to logout", e);
     }

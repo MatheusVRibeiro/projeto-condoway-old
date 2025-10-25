@@ -28,11 +28,19 @@ export default function PackageModal({ visible, onClose, package: selectedPackag
 
   if (!selectedPackage) return null;
 
-  const arrivalDate = parseISO(selectedPackage.arrivalDate);
+  // Validação e parse seguro das datas
+  const arrivalDate = selectedPackage.arrivalDate 
+    ? parseISO(selectedPackage.arrivalDate) 
+    : new Date();
+    
   const deliveryDate = selectedPackage.deliveryDate
     ? parseISO(selectedPackage.deliveryDate)
     : (selectedPackage.retirada_data ? parseISO(selectedPackage.retirada_data) : null);
-  const daysWaiting = differenceInDays(new Date(), arrivalDate);
+    
+  const daysWaiting = selectedPackage.arrivalDate 
+    ? differenceInDays(new Date(), arrivalDate)
+    : 0;
+    
   const isAwaiting = selectedPackage.status === 'Aguardando';
 
   const handleCopyTrackingCode = async () => {

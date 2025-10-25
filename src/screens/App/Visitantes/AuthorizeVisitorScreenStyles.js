@@ -6,14 +6,14 @@ const styles = (theme) => StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  // Header com botão voltar
+  // Header - Estilo moderno compacto
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -23,26 +23,32 @@ const styles = (theme) => StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: 12,
     backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   headerTitle: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
+    fontSize: RFValue(16),
+    fontWeight: '700',
     color: theme.colors.text,
+    letterSpacing: -0.3,
   },
   scrollView: {
     flex: 1,
   },
   form: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 16,
   },
   sectionTitle: {
-    fontSize: RFValue(16),
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: 16,
+    fontSize: RFValue(10.5),
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
+    letterSpacing: 1.2,
+    opacity: 0.7,
+    marginBottom: 12,
+    textTransform: 'uppercase',
   },
   validityInfoBox: {
     flexDirection: 'row',
@@ -125,8 +131,9 @@ const styles = (theme) => StyleSheet.create({
     lineHeight: 20,
   },
   buttonContainer: {
-    marginTop: 24,
+    marginTop: 20,
     paddingHorizontal: 20,
+    paddingBottom: 8,
   },
   // Tabs de validade - Design compacto
   validityTabs: {
@@ -217,19 +224,20 @@ const styles = (theme) => StyleSheet.create({
   dayButtonTextActive: {
     color: theme.colors.primary,
   },
-  // Alert simplificado
+  // Alert simplificado - Estilo moderno
   simpleAlert: {
-    backgroundColor: theme.colors.card,
-    padding: 14,
-    borderRadius: 10,
+    backgroundColor: `${theme.colors.primary}08`,
+    padding: 12,
+    borderRadius: 12,
     borderLeftWidth: 3,
     borderLeftColor: theme.colors.primary,
-    marginTop: 8,
+    marginTop: 12,
   },
   simpleAlertText: {
-    fontSize: RFValue(12),
+    fontSize: RFValue(11.5),
     color: theme.colors.textSecondary,
     lineHeight: 18,
+    fontWeight: '500',
   },
   // Date Picker Button
   datePickerButton: {
