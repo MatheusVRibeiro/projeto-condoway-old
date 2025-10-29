@@ -1,25 +1,53 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, Modal, ScrollView, TouchableOpacity, TextInput, Image, Share, Clipboard } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, Modal, ScrollView, TouchableOpacity, TextInput, Image, Share, Clipboard, ActivityIndicator } from 'react-native';
 import { X, MapPin, Calendar, AlertTriangle, Paperclip, Share2, Copy, MessageCircle, Send } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as Animatable from 'react-native-animatable';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../contexts/ThemeProvider';
+import { apiService } from '../../services/api';
 import styles from './styles';
 
 const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
   const { theme } = useTheme();
   const commentsScrollRef = useRef(null);
-  const [messageText, setMessageText] = React.useState('');
+  const [messageText, setMessageText] = useState('');
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
 
+  // Carregar comentários quando a modal for aberta
   useEffect(() => {
-    if (visible && commentsScrollRef.current) {
+    const loadComments = async () => {
+      if (visible && occurrence?.id) {
+        setLoadingComments(true);
+        try {
+          console.log('🔄 Carregando comentários da ocorrência:', occurrence.id);
+          const comentarios = await apiService.buscarComentarios(occurrence.id);
+          setComments(comentarios || []);
+          console.log('✅ Comentários carregados:', comentarios);
+          
+          // TODO: Marcar mensagens como lidas quando o endpoint estiver disponível
+          // await apiService.marcarTodasMensagensLidas(occurrence.id);
+        } catch (error) {
+          console.error('❌ Erro ao carregar comentários:', error);
+        } finally {
+          setLoadingComments(false);
+        }
+      }
+    };
+
+    loadComments();
+  }, [visible, occurrence?.id]);
+
+  // Auto-scroll quando comentários mudarem
+  useEffect(() => {
+    if (visible && commentsScrollRef.current && comments.length > 0) {
       setTimeout(() => {
         commentsScrollRef.current?.scrollToEnd({ animated: true });
       }, 300);
     }
-  }, [visible, occurrence?.comments]);
+  }, [visible, comments]);
 
   if (!occurrence) return null;
 
@@ -81,10 +109,25 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
   };
 
   // Enviar mensagem
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (messageText.trim() && onSendMessage) {
-      onSendMessage(occurrence.id, messageText.trim());
-      setMessageText('');
+      try {
+        const novoComentario = await onSendMessage(occurrence.id, messageText.trim());
+        
+        // Adicionar comentário à lista local
+        if (novoComentario) {
+          setComments(prev => [...prev, novoComentario]);
+        }
+        
+        setMessageText('');
+        
+        // Auto-scroll para o final
+        setTimeout(() => {
+          commentsScrollRef.current?.scrollToEnd({ animated: true });
+        }, 150);
+      } catch (error) {
+        console.error('Erro ao enviar comentário:', error);
+      }
     }
   };
 
@@ -195,40 +238,67 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
             <View style={styles.sectionHeader}>
               <MessageCircle size={18} color={theme.colors.textSecondary} />
               <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                Conversa ({occurrence.comments?.length || 0})
+                Conversa ({comments.length})
               </Text>
             </View>
 
-            <ScrollView
-              ref={commentsScrollRef}
-              style={styles.chatScroll}
-              onContentSizeChange={() => commentsScrollRef.current?.scrollToEnd({ animated: true })}
-            >
-              {occurrence.comments?.map((comment, index) => (
-                <Animatable.View
-                  key={index}
-                  animation="fadeInUp"
-                  delay={index * 50}
-                  duration={300}
-                  style={[
-                    styles.commentBubble,
-                    comment.author === 'Morador'
-                      ? styles.moradorBubble
-                      : [styles.sindicoBubble, { backgroundColor: theme.colors.card }],
-                  ]}
-                >
-                  <Text style={[styles.commentAuthor, { color: comment.author === 'Morador' ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary }]}>
-                    {comment.author}
-                  </Text>
-                  <Text style={[styles.commentText, { color: comment.author === 'Morador' ? '#ffffff' : theme.colors.text }]}>
-                    {comment.text}
-                  </Text>
-                  <Text style={[styles.commentDate, { color: comment.author === 'Morador' ? 'rgba(255,255,255,0.6)' : theme.colors.textSecondary }]}>
-                    {comment.date}
-                  </Text>
-                </Animatable.View>
-              ))}
-            </ScrollView>
+            {loadingComments ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+                  Carregando comentários...
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                ref={commentsScrollRef}
+                style={styles.chatScroll}
+                onContentSizeChange={() => commentsScrollRef.current?.scrollToEnd({ animated: true })}
+              >
+                {comments.length === 0 ? (
+                  <View style={styles.emptyComments}>
+                    <MessageCircle size={32} color={theme.colors.textSecondary} opacity={0.3} />
+                    <Text style={[styles.emptyCommentsText, { color: theme.colors.textSecondary }]}>
+                      Nenhum comentário ainda
+                    </Text>
+                  </View>
+                ) : (
+                  comments.map((comment, index) => (
+                    <Animatable.View
+                      key={comment.id || index}
+                      animation="fadeInUp"
+                      delay={index * 50}
+                      duration={300}
+                      style={[
+                        styles.commentBubble,
+                        comment.isOwn
+                          ? styles.moradorBubble
+                          : [styles.sindicoBubble, { backgroundColor: theme.colors.card }],
+                      ]}
+                    >
+                      <Text style={[
+                        styles.commentAuthor, 
+                        { color: comment.isOwn ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary }
+                      ]}>
+                        {comment.user}
+                      </Text>
+                      <Text style={[
+                        styles.commentText, 
+                        { color: comment.isOwn ? '#ffffff' : theme.colors.text }
+                      ]}>
+                        {comment.text}
+                      </Text>
+                      <Text style={[
+                        styles.commentTime, 
+                        { color: comment.isOwn ? 'rgba(255,255,255,0.6)' : theme.colors.textSecondary }
+                      ]}>
+                        {comment.timestamp ? format(parseISO(comment.timestamp), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : ''}
+                      </Text>
+                    </Animatable.View>
+                  ))
+                )}
+              </ScrollView>
+            )}
           </View>
 
           {/* Input de Mensagem */}

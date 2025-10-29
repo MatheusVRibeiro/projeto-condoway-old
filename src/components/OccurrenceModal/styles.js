@@ -142,6 +142,27 @@ export default StyleSheet.create({
   chatScroll: {
     maxHeight: 300,
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  emptyComments: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    gap: 12,
+  },
+  emptyCommentsText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   commentBubble: {
     maxWidth: '85%',
     padding: 12,
@@ -167,6 +188,10 @@ export default StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 4,
+  },
+  commentTime: {
+    fontSize: 10,
+    fontWeight: '500',
   },
   commentDate: {
     fontSize: 10,

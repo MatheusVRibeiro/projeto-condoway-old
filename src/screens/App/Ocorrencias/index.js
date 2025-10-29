@@ -271,6 +271,9 @@ export default function Ocorrencias() {
       // Autoscroll para o final
       setTimeout(() => commentsScrollRef.current?.scrollToEnd({ animated: true }), 150);
       
+      // Retornar o comentário para atualizar a modal
+      return novoComentario;
+      
     } catch (error) {
       console.error('Erro ao enviar comentário:', error);
       Toast.show({ 

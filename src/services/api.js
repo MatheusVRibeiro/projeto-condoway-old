@@ -133,12 +133,174 @@ export const apiService = {
     }
   },
 
+  // Comentários/Mensagens de Ocorrências
   adicionarComentario: async (ocorrenciaId, comentario) => {
     try {
-      const response = await api.post(`/ocorrencias/${ocorrenciaId}/comentarios`, { texto: comentario });
+      console.log('🔄 [API] Enviando comentário para ocorrência:', ocorrenciaId);
+      
+      // Debug do token JWT
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      const token = await AsyncStorage.getItem('token');
+      
+      if (token) {
+        try {
+          // Decodificar payload do JWT (apenas para debug)
+          const base64Payload = token.split('.')[1];
+          const base64 = base64Payload.replace(/-/g, '+').replace(/_/g, '/');
+          const decodedPayload = JSON.parse(decodeURIComponent(atob(base64).split('').map(c => 
+            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+          ).join('')));
+          
+          console.log('👤 [API] Dados do token JWT:', {
+            userap_id: decodedPayload.userap_id || decodedPayload.id,
+            cond_id: decodedPayload.cond_id,
+            nome: decodedPayload.nome || decodedPayload.name
+          });
+        } catch (e) {
+          console.warn('⚠️ [API] Não foi possível decodificar o token:', e);
+        }
+      } else {
+        console.warn('⚠️ [API] Token não encontrado no AsyncStorage');
+      }
+      
+      // Estrutura baseada na tabela Mensagens do banco
+      // O backend deve extrair cond_id e userap_id do token JWT
+      const payload = {
+        msg_mensagem: comentario.substring(0, 130), // Limite de 130 caracteres
+        oco_id: ocorrenciaId
+        // cond_id e userap_id serão extraídos do token pelo backend
+      };
+      
+      console.log('📤 [API] Payload:', payload);
+      
+      const response = await api.post('/mensagens', payload);
+      
+      console.log('✅ [API] Comentário enviado:', response.data);
+      
+      // Retornar no formato esperado pelo frontend
+      return {
+        id: response.data.dados?.msg_id,
+        text: response.data.dados?.msg_mensagem || comentario,
+        timestamp: response.data.dados?.msg_data_envio || new Date().toISOString(),
+        status: response.data.dados?.msg_status || 'Enviada',
+        user: 'Você',
+        isOwn: true // ✅ Mensagem do próprio usuário
+      };
+    } catch (error) {
+      console.error('❌ [API] Erro ao adicionar comentário:', error.response?.data);
+      
+      // Mensagem de erro mais amigável
+      if (error.response?.data?.dados?.includes("Column 'cond_id' cannot be null")) {
+        const mensagemErro = 'O backend precisa extrair cond_id e userap_id do token JWT do usuário autenticado.';
+        console.error('💡 [API] Sugestão:', mensagemErro);
+        throw new Error(mensagemErro);
+      }
+      
+      handleError(error, 'adicionarComentario');
+      throw error;
+    }
+  },
+
+  // Buscar comentários/mensagens de uma ocorrência
+  buscarComentarios: async (ocorrenciaId) => {
+    try {
+      console.log('🔄 [API] Buscando comentários da ocorrência:', ocorrenciaId);
+      
+      // ✅ Usar novo endpoint específico para ocorrências
+      const response = await api.get(`/mensagens/ocorrencia/${ocorrenciaId}`);
+      
+      console.log('✅ [API] Comentários recebidos:', response.data);
+      
+      // Transformar mensagens do banco para formato do frontend
+      const mensagens = response.data.dados || [];
+      return mensagens.map(msg => ({
+        id: msg.msg_id,
+        text: msg.msg_mensagem,
+        timestamp: msg.msg_data_envio,
+        status: msg.msg_status,
+        user: msg.user_nome || msg.userap_nome || 'Usuário',
+        isOwn: msg.is_own || false // Indica se é mensagem do próprio usuário
+      }));
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar comentários:', error.response?.data);
+      handleError(error, 'buscarComentarios');
+      return [];
+    }
+  },
+
+  // ✅ NOVO: Buscar mensagens com filtros (genérico)
+  listarMensagens: async (filtros = {}) => {
+    try {
+      console.log('🔄 [API] Listando mensagens com filtros:', filtros);
+      
+      const params = new URLSearchParams();
+      
+      // Adicionar filtros opcionais
+      if (filtros.oco_id) params.append('oco_id', filtros.oco_id);
+      if (filtros.userap_id) params.append('userap_id', filtros.userap_id);
+      if (filtros.cond_id) params.append('cond_id', filtros.cond_id);
+      if (filtros.msg_status) params.append('msg_status', filtros.msg_status);
+      
+      const queryString = params.toString();
+      const endpoint = queryString ? `/mensagens?${queryString}` : '/mensagens';
+      
+      const response = await api.get(endpoint);
+      
+      console.log('✅ [API] Mensagens listadas:', response.data);
+      
+      return response.data.dados || [];
+    } catch (error) {
+      console.error('❌ [API] Erro ao listar mensagens:', error.response?.data);
+      handleError(error, 'listarMensagens');
+      return [];
+    }
+  },
+
+  // Marcar mensagem como lida
+  marcarMensagemLida: async (mensagemId) => {
+    try {
+      console.log('🔄 [API] Marcando mensagem como lida:', mensagemId);
+      
+      const response = await api.patch(`/mensagens/${mensagemId}/lida`);
+      
+      console.log('✅ [API] Mensagem marcada como lida');
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao marcar mensagem como lida:', error.response?.data);
+      handleError(error, 'marcarMensagemLida');
+    }
+  },
+
+  // ✅ NOVO: Marcar todas as mensagens de uma ocorrência como lidas
+  marcarTodasMensagensLidas: async (ocorrenciaId) => {
+    try {
+      console.log('🔄 [API] Marcando todas as mensagens da ocorrência como lidas:', ocorrenciaId);
+      
+      const response = await api.patch(`/mensagens/ocorrencia/${ocorrenciaId}/lida`);
+      
+      console.log('✅ [API] Todas as mensagens marcadas como lidas');
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao marcar mensagens como lidas:', error.response?.data);
+      handleError(error, 'marcarTodasMensagensLidas');
+    }
+  },
+
+  // ✅ NOVO: Editar mensagem (suporta oco_id)
+  editarMensagem: async (mensagemId, dadosAtualizados) => {
+    try {
+      console.log('🔄 [API] Editando mensagem:', mensagemId, dadosAtualizados);
+      
+      const response = await api.put(`/mensagens/${mensagemId}`, dadosAtualizados);
+      
+      console.log('✅ [API] Mensagem editada com sucesso');
+      
       return response.data.dados;
     } catch (error) {
-      handleError(error, 'adicionarComentario');
+      console.error('❌ [API] Erro ao editar mensagem:', error.response?.data);
+      handleError(error, 'editarMensagem');
     }
   },
 
