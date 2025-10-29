@@ -433,7 +433,28 @@ const VisitantesScreen = () => {
     if (item.type === 'section') {
       return renderSectionHeader(item.date);
     }
-    
+    // Evitar renderizar o card principal antes dos dados estarem prontos
+    // Isso previne o bug de "first render" onde o card é montado sem tamanho
+    // e causa saltos/overflows no layout.
+    const isReady = item && (item.visitor_name || item.id);
+
+    if (!isReady) {
+      // Skeleton com altura aproximada do card para evitar reflows
+      return (
+        <View style={{ marginBottom: 12, marginHorizontal: 20 }}>
+          <View
+            style={{
+              borderRadius: 18,
+              height: 84,
+              backgroundColor: theme.colors.surface || '#F2F2F2',
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+            }}
+          />
+        </View>
+      );
+    }
+
     return (
       <VisitorCard 
         item={item} 

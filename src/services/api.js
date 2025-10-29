@@ -2,18 +2,35 @@ import axios from 'axios';
 
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
-  // baseURL: 'http://192.168.0.174:3333',
-  baseURL: 'http://10.67.23.46:3333',
-  timeout: 10000, // Adiciona um timeout de 10 segundos
+  baseURL: 'http://192.168.0.174:3333',
+  // baseURL: 'http://10.67.23.46:3333',
+  timeout: 30000, // 30 segundos
 });
+
+// Interceptor de REQUEST - Para debug do token
+api.interceptors.request.use(
+  (config) => {
+    const token = config.headers.common?.Authorization || config.headers?.Authorization;
+    console.log(`🔄 [API] ${config.method.toUpperCase()} ${config.url}`, {
+      hasToken: !!token,
+      token: token ? token.substring(0, 30) + '...' : 'NENHUM'
+    });
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // 2. Interceptor para injetar o token em todas as requisições
 // A função setAuthToken será chamada no seu AuthContext após o login
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    console.log('✅ [API] Token configurado no Axios:', token.substring(0, 20) + '...');
   } else {
     delete api.defaults.headers.common['Authorization'];
+    console.log('🔓 [API] Token removido do Axios');
   }
 };
 
@@ -21,7 +38,16 @@ export const setAuthToken = (token) => {
 const handleError = (error, functionName) => {
   // Axios coloca informações do erro em `error.response`
   const errorMessage = error.response?.data?.mensagem || error.message;
-  console.error(`API Error - ${functionName}:`, errorMessage);
+  const statusCode = error.response?.status;
+  const errorDetails = error.response?.data;
+  
+  console.error(`❌ [API Error - ${functionName}]:`, {
+    status: statusCode,
+    message: errorMessage,
+    details: errorDetails,
+    fullError: error.response?.data || error.message
+  });
+  
   // Lança o erro para que a UI possa capturá-lo
   throw new Error(errorMessage);
 };
@@ -66,9 +92,20 @@ export const apiService = {
     }
   },
 
-  buscarOcorrencias: async (page = 1, limit = 20) => {
+  buscarOcorrencias: async (userApId, page = 1, limit = 20) => {
     try {
-      const response = await api.get('/ocorrencias', {
+      // <--- 6. VALIDAÇÃO: se não houver userApId, retorna erro
+      if (!userApId) {
+        return handleError({ 
+          message: 'ID do apartamento do usuário não encontrado.' 
+        });
+      }
+
+      // <--- 7. MONTA O ENDPOINT COM O userApId
+      const endpoint = `/ocorrencias/${userApId}`;
+      console.log(`🔄 [API] Buscando ocorrências: ${endpoint}?page=${page}&limit=${limit}`);
+
+      const response = await api.get(endpoint, {
         params: { page, limit }
       });
       
@@ -99,6 +136,21 @@ export const apiService = {
         }
       };
     } catch (error) {
+      // Se o erro for 500 e for relacionado a paginação, retornar vazio sem quebrar
+      if (error.response?.status === 500) {
+        console.warn(`⚠️ [API] Erro 500 ao buscar página ${page} - retornando vazio`);
+        return {
+          dados: [],
+          pagination: {
+            currentPage: page,
+            totalPages: page,
+            total: 0,
+            hasMore: false,
+            perPage: limit
+          }
+        };
+      }
+      
       handleError(error, 'buscarOcorrencias');
       // Retornar estrutura vazia em caso de erro
       return {
@@ -143,9 +195,20 @@ export const apiService = {
   },
 
   // Encomendas
-  getEncomendas: async () => {
+  getEncomendas: async (userApId) => {
     try {
-      const response = await api.get('/encomendas');
+      // Validação: se não houver userApId, retorna erro
+      if (!userApId) {
+        return handleError({ 
+          message: 'ID do apartamento do usuário não encontrado.' 
+        });
+      }
+
+      // Monta o endpoint com o userApId (moradores veem apenas suas encomendas)
+      const endpoint = `/encomendas/${userApId}`;
+      console.log(`🔄 [API] Buscando encomendas: ${endpoint}`);
+
+      const response = await api.get(endpoint);
       return response.data.dados || [];
     } catch (error) {
       handleError(error, 'getEncomendas');
@@ -176,19 +239,9 @@ export const apiService = {
         throw new Error(response.data.mensagem || 'E-mail ou senha inválidos.');
       }
 
-      const userData = {
-        ...response.data.dados,
-        token: response.data.dados.token || 'temp_token_' + Date.now()
-      };
-
-      console.log('✅ UserData processado:', JSON.stringify(userData, null, 2));
-
-      // Se o login for bem-sucedido, configura o token para todas as futuras requisições
-      if (userData.token) {
-        setAuthToken(userData.token);
-      }
-      
-      return userData;
+      // A API retorna { sucesso: true, dados: { usuario, token } }
+      // Retornar a resposta completa para o AuthContext processar
+      return response.data;
     } catch (error) {
       // O handleError aqui pode ser customizado se a resposta de erro do login for diferente
       const errorMessage = error.response?.data?.mensagem || error.message || 'E-mail ou senha inválidos.';
