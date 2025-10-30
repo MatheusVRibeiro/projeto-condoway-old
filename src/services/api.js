@@ -473,13 +473,47 @@ export const apiService = {
     }
   },
 
-  // Perfil do Usuário
+  // Perfil do Usuário (com normalização de campos para evitar diferenças de names entre backends)
   buscarPerfilUsuario: async (userId) => {
     try {
       console.log(`🔄 [API] Buscando perfil completo para o usuário ID: ${userId}...`);
       const response = await api.get(`/usuario/perfil/${userId}`);
       console.log('✅ [API] Perfil recebido:', response.data);
-      return response.data; // { sucesso, mensagem, dados }
+
+      const raw = response.data?.dados || response.data || null;
+      if (!raw) return response.data;
+
+      const normalize = (p) => ({
+        // Usuário
+        userap_id: p.userap_id ?? p.userApId ?? p.Userap_ID ?? null,
+        user_id: p.user_id ?? p.userId ?? p.User_ID ?? null,
+        user_nome: p.user_nome ?? p.userNome ?? p.userName ?? null,
+        user_email: p.user_email ?? p.userEmail ?? null,
+        user_telefone: p.user_telefone ?? p.userTelefone ?? null,
+        user_tipo: p.user_tipo ?? p.userTipo ?? null,
+
+        // Apartamento
+        ap_id: p.ap_id ?? p.apId ?? p.apartamento_id ?? p.apartamentoId ?? null,
+        ap_numero: p.ap_numero ?? p.apNumero ?? p.apartamento_numero ?? p.apartamentoNumero ?? null,
+
+  // Bloco: normalizamos apenas a forma 'bloc_id' para evitar aliases poluídos
+  bl_id: p.bloc_id ?? null,
+  bl_nome: p.bloc_nome ?? null,
+
+        // Condomínio
+        cond_id: p.cond_id ?? p.condId ?? p.condominio_id ?? p.condominioId ?? null,
+        cond_nome: p.cond_nome ?? p.condNome ?? p.condominio_nome ?? p.condominioNome ?? null,
+
+        // Mantém o objeto original para casos extras
+        _raw: p,
+      });
+
+      const dadosNormalizados = Array.isArray(raw) ? raw.map(normalize) : normalize(raw);
+
+      return {
+        ...response.data,
+        dados: dadosNormalizados,
+      };
     } catch (error) {
       console.error('❌ [API] Erro ao buscar perfil:', error.response?.status, error.response?.data);
       return null; // Retorna null em caso de erro
