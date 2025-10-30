@@ -26,6 +26,20 @@ const handleError = (error, functionName) => {
   throw new Error(errorMessage);
 };
 
+// Helper: decodifica payload do JWT (somente para debug/fallback)
+const decodeJwt = (token) => {
+  try {
+    const base64Payload = token.split('.')[1];
+    const base64 = base64Payload.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(atob(base64).split('').map(c =>
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
+    return JSON.parse(json);
+  } catch (e) {
+    return null;
+  }
+};
+
 // 4. O novo objeto de serviço, agora usando a instância do axios
 export const apiService = {
   // Função de teste para verificar conectividade
@@ -44,12 +58,48 @@ export const apiService = {
     }
   },
 
+  // Marca todas as mensagens de uma ocorrência como lidas (tolerante a 404 enquanto backend não implementar)
+  marcarTodasMensagensLidas: async (ocorrenciaId) => {
+    try {
+      console.log('🔄 [API] Marcando todas as mensagens da ocorrência como lidas:', ocorrenciaId);
+      const response = await api.patch(`/mensagens/ocorrencia/${ocorrenciaId}/lida`);
+      console.log('✅ [API] Todas as mensagens marcadas como lidas');
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        console.warn('⚠️ [API] Endpoint marcarTodasMensagensLidas não encontrado (404). Ignorando temporariamente.');
+        return null;
+      }
+      console.error('❌ [API] Erro ao marcar mensagens como lidas:', error.response?.data || error.message);
+      handleError(error, 'marcarTodasMensagensLidas');
+    }
+  },
+
   // Ocorrências
   criarOcorrencia: async (dados) => {
     try {
       console.log('🔄 Criando nova ocorrência com Axios...');
+
+      // fallback: tentar extrair userap_id do token se não foi passado em dados
+      let userapId = dados.user_id;
+      try {
+        if (!userapId) {
+          const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+          const token = await AsyncStorage.getItem('token');
+          if (token) {
+            const decoded = decodeJwt(token);
+            userapId = decoded?.userap_id || decoded?.id || userapId;
+            console.log('👤 [API] userapId fallback extraído do token:', userapId);
+          } else {
+            console.warn('⚠️ [API] Token não encontrado no AsyncStorage para fallback userapId');
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ [API] Erro ao tentar extrair userapId do token:', e);
+      }
+
       const corpoRequisicao = {
-        userap_id: dados.user_id,
+        userap_id: userapId,
         oco_categoria: dados.categoria,
         oco_descricao: dados.descricao,
         oco_localizacao: dados.local,
@@ -57,6 +107,7 @@ export const apiService = {
         oco_status: 'Aberta',
         oco_imagem: dados.anexos?.length > 0 ? dados.anexos[0] : null,
       };
+
       console.log('📋 Dados enviados:', JSON.stringify(corpoRequisicao, null, 2));
       const response = await api.post('/ocorrencias', corpoRequisicao);
       console.log('📦 Resposta da criação:', JSON.stringify(response.data, null, 2));
@@ -135,9 +186,60 @@ export const apiService = {
 
   adicionarComentario: async (ocorrenciaId, comentario) => {
     try {
-      const response = await api.post(`/ocorrencias/${ocorrenciaId}/comentarios`, { texto: comentario });
-      return response.data.dados;
+      console.log('🔄 [API] Enviando comentário para ocorrência:', ocorrenciaId);
+
+      // Tentar decodificar token do AsyncStorage para fallback (cond_id / userap_id)
+      let decoded = null;
+      try {
+        const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          decoded = decodeJwt(token);
+          console.log('👤 [API] Dados do token JWT (adicionarComentario):', {
+            userap_id: decoded?.userap_id || decoded?.id,
+            cond_id: decoded?.cond_id,
+            nome: decoded?.nome || decoded?.name
+          });
+        } else {
+          console.warn('⚠️ [API] Token não encontrado no AsyncStorage (adicionarComentario)');
+        }
+      } catch (e) {
+        console.warn('⚠️ [API] Erro lendo AsyncStorage para token:', e);
+      }
+
+      // Construir payload para /mensagens (workaround: inclui cond_id/userap_id se disponíveis)
+      const payload = {
+        msg_mensagem: (comentario || '').substring(0, 130),
+        oco_id: ocorrenciaId || null
+      };
+
+      if (decoded?.cond_id) payload.cond_id = decoded.cond_id;
+      if (decoded?.userap_id || decoded?.id) payload.userap_id = decoded.userap_id || decoded.id;
+
+      console.log('📤 [API] Payload (mensagem):', payload);
+
+      const response = await api.post('/mensagens', payload);
+
+      console.log('✅ [API] Comentário enviado:', response.data);
+
+      return {
+        id: response.data.dados?.msg_id,
+        text: response.data.dados?.msg_mensagem || comentario,
+        timestamp: response.data.dados?.msg_data_envio || new Date().toISOString(),
+        status: response.data.dados?.msg_status || 'Enviada',
+        user: 'Você',
+        isOwn: true
+      };
     } catch (error) {
+      console.error('❌ [API] Erro ao adicionar comentário:', error.response?.data || error.message);
+
+      if (error.response?.data?.dados?.includes("Column 'cond_id' cannot be null") ||
+          error.response?.data?.mensagem?.includes('cond_id')) {
+        const mensagemErro = 'O backend precisa extrair cond_id e userap_id do token JWT do usuário autenticado.';
+        console.error('💡 [API] Sugestão:', mensagemErro);
+        throw new Error(mensagemErro);
+      }
+
       handleError(error, 'adicionarComentario');
     }
   },
@@ -329,9 +431,11 @@ export const apiService = {
         }
       };
     } catch (error) {
-      console.error('❌ [API] Erro ao listar visitantes:', error.response?.status, error.response?.data);
-      handleError(error, 'listarVisitantes');
-      // Retornar estrutura vazia em caso de erro
+      // Log detalhado, mas não lançar para evitar quebrar hooks/UX
+      console.error('❌ [API] Erro ao listar visitantes (tratado):', error.response?.status, error.response?.data || error.message);
+      // Opcional: você pode enviar esse erro para um serviço de monitoramento aqui
+
+      // Retornar estrutura vazia em caso de erro para manter a UI funcional
       return {
         dados: [],
         pagination: {
