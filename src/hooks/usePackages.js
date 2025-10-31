@@ -16,32 +16,37 @@ export function usePackages() {
 
   // Função para buscar as encomendas da API
   const fetchPackages = useCallback(async () => {
-    if (!user?.user_id) {
-      Toast.show({ type: 'error', text1: 'Usuário não autenticado.' });
+    const userApId = user?.userap_id; // Pegar o userap_id do usuário logado
+    
+    if (!userApId) {
+      console.warn('⚠️ [usePackages] userApId não disponível');
       setLoading(false);
       setRefreshing(false);
       return;
     }
 
     try {
-      const packagesFromApi = await apiService.getEncomendas();
+      console.log('🔄 [usePackages] Buscando encomendas para userApId:', userApId);
+      const packagesFromApi = await apiService.getEncomendas(userApId); // Passar userApId
+      
       // Mapear os dados da API para o formato que o frontend espera
-      const mappedPackages = packagesFromApi
-        .filter(pkg => pkg.userap_id === user.user_id) // Mostrar somente encomendas do morador logado
-        .map(pkg => ({
-          id: pkg.enc_id,
-          store: pkg.enc_nome_loja || '',
-          trackingCode: pkg.enc_codigo_rastreio || pkg.enc_cod_rastreio || '',
-          arrivalDate: pkg.enc_data_chegada,
-          status: pkg.enc_status || 'Aguardando',
-          description: '',
-          recipient: user?.name || '',
-          retirada_por: pkg.enc_retirada_por || null,
-          retirada_data: pkg.enc_data_retirada || null,
-          raw: pkg, // manter o objeto bruto para casos específicos
-        }));
+      const mappedPackages = packagesFromApi.map(pkg => ({
+        id: pkg.enc_id,
+        store: pkg.enc_nome_loja || '',
+        trackingCode: pkg.enc_codigo_rastreio || pkg.enc_cod_rastreio || '',
+        arrivalDate: pkg.enc_data_chegada,
+        status: pkg.enc_status || 'Aguardando',
+        description: '',
+        recipient: user?.user_nome || '',
+        retirada_por: pkg.enc_retirada_por || null,
+        retirada_data: pkg.enc_data_retirada || null,
+        raw: pkg, // manter o objeto bruto para casos específicos
+      }));
+      
       setPackages(mappedPackages);
+      console.log('✅ [usePackages] Encomendas carregadas:', mappedPackages.length);
     } catch (error) {
+      console.error('❌ [usePackages] Erro ao buscar encomendas:', error);
       Toast.show({
         type: 'error',
         text1: 'Erro ao buscar encomendas',
@@ -51,7 +56,7 @@ export function usePackages() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user?.token]);
+  }, [user?.userap_id, user?.user_nome]);
 
   // Buscar dados ao montar o componente
   useEffect(() => {

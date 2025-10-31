@@ -289,8 +289,7 @@ export default function Ocorrencias() {
 
     console.log('Verificando autenticação:', { 
       user: user ? 'presente' : 'ausente',
-      user_id: user?.user_id,
-      token: user?.token ? 'presente' : 'ausente'
+      user_id: user?.user_id
     });
 
     if (!user) {
@@ -298,10 +297,7 @@ export default function Ocorrencias() {
       return;
     }
 
-    if (!user.token) {
-      Toast.show({ type: 'error', text1: 'Token de autenticação não encontrado', text2: 'Faça login novamente' });
-      return;
-    }
+    // O token é gerenciado automaticamente pelo Axios após o login via setAuthToken()
 
     try {
       setUploading(true);

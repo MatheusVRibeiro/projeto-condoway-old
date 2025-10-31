@@ -51,15 +51,15 @@ export default function EditProfile() {
     if (profileData) {
       console.log('✅ [EditProfile] Extraindo dados do profileData...');
       console.log('  - Apartamento:', profileData.apto_numero || profileData.ap_numero || 'não encontrado');
-      console.log('  - Bloco:', profileData.bloco_nome || profileData.bloc_nome || 'não encontrado');
+      console.log('  - Bloco:', profileData.bl_nome || profileData.bloc_nome || profileData.bloco_nome || 'não encontrado');
       console.log('  - Condomínio:', profileData.cond_nome || 'não encontrado');
-      
+
       setProfile({
         name: profileData.user_nome || user?.user_nome || '',
         email: profileData.user_email || user?.user_email || '',
         phone: profileData.user_telefone || user?.user_telefone || '',
         apartment: profileData.apto_numero || profileData.ap_numero || '',
-        block: profileData.bloco_nome || profileData.bloc_nome || '',
+        block: profileData.bl_nome || profileData.bloc_nome || profileData.bloco_nome || '',
         condominium: profileData.cond_nome || '',
         avatarUrl: profileData.user_foto || user?.user_foto || null,
         userType: profileData.userap_tipo || 'morador'
@@ -279,10 +279,10 @@ export default function EditProfile() {
             <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>LOCALIZAÇÃO</Text>
             <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>              
               <View style={styles.fieldContainer}>
-                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Apartamento</Text>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Condomínio</Text>
                 <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
                   <Text style={[styles.fieldInput, { color: theme.colors.textSecondary }]}>
-                    {profile.apartment || 'Não informado'}
+                    {profile.condominium || 'Não informado'}
                   </Text>
                 </View>
               </View>
@@ -297,10 +297,10 @@ export default function EditProfile() {
               </View>
               
               <View style={styles.fieldContainer}>
-                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Condomínio</Text>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Apartamento</Text>
                 <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
                   <Text style={[styles.fieldInput, { color: theme.colors.textSecondary }]}>
-                    {profile.condominium || 'Não informado'}
+                    {profile.apartment || 'Não informado'}
                   </Text>
                 </View>
               </View>

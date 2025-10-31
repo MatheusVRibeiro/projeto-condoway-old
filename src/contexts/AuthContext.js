@@ -19,17 +19,28 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     async function loadUserFromStorage() {
       try {
-        console.log('🔄 Carregando usuário do AsyncStorage...');
+        console.log('🔄 Carregando dados do AsyncStorage...');
+        
+        // Carregar tanto o usuário quanto o token
         const storedUser = await AsyncStorage.getItem('user');
-        console.log('📦 Dados brutos do AsyncStorage:', storedUser);
-        if (storedUser) {
+        const storedToken = await AsyncStorage.getItem('token');
+        
+        console.log('📦 Dados brutos do AsyncStorage:', { 
+          hasUser: !!storedUser, 
+          hasToken: !!storedToken 
+        });
+        
+        if (storedUser && storedToken) {
           const userData = JSON.parse(storedUser);
-          console.log('✅ Usuário carregado do storage:', userData);
+          console.log('✅ Utilizador e Token carregados.');
+          
+          // Reconfigurar o Axios com o token salvo
+          setAuthToken(storedToken);
+          
+          // Atualizar o estado com os dados do usuário
           setUser(userData);
-          // 2. Configurar o token no axios assim que o app carregar
-          setAuthToken(userData.token); 
         } else {
-          console.log('❌ Nenhum usuário encontrado no storage');
+          console.log('❌ Nenhum utilizador/token encontrado no storage');
         }
       } catch (e) {
         console.error("Failed to load user from storage", e);
@@ -44,31 +55,35 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      // 3. Usar o novo apiService para o login
       console.log('🔄 Fazendo login com email:', email);
-      const userData = await apiService.login(email, password);
-      console.log('✅ Login realizado com sucesso:', userData);
       
-      // O setAuthToken já é chamado dentro do apiService.login, mas podemos garantir aqui também.
-      setAuthToken(userData.token);
+      // 1. Chamar o apiService - retorna { sucesso: true, dados: { usuario, token } }
+      const response = await apiService.login(email, password);
       
-      // Salvar primeiro no AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      console.log('💾 Usuário salvo no AsyncStorage');
+      // 2. Desestruturar a resposta para pegar o utilizador e o token
+      const { usuario, token } = response.dados;
       
-      // ✅ CORREÇÃO: Marcar onboarding como concluído após login bem-sucedido
+      console.log('✅ Login realizado com sucesso. Usuário:', usuario.user_nome);
+      
+      // 3. Configurar o token no Axios para todas as futuras requisições
+      setAuthToken(token);
+      
+      // 4. Salvar o UTILIZADOR e o TOKEN separadamente no AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(usuario));
+      await AsyncStorage.setItem('token', token);
+      console.log('💾 Usuário e Token salvos no AsyncStorage');
+      
+      // ✅ Marcar onboarding como concluído após login bem-sucedido
       await AsyncStorage.setItem('onboardingSeen', 'true');
       console.log('✅ Onboarding marcado como concluído');
       
-      // Depois atualizar o estado (isso deve forçar re-render)
-      console.log('🔄 Atualizando estado do usuário no contexto...');
-      setUser(userData);
-      console.log('✅ Estado atualizado - user:', userData);
+      // 5. Atualizar o estado (agora só com os dados do utilizador)
+      setUser(usuario);
+      console.log('✅ Estado atualizado');
       
-      return userData; // Retornar os dados do usuário para a tela de login, se necessário
+      return usuario;
     } catch (error) {
-      console.error("Login failed:", error.message);
-      // Lançar o erro para que a tela de Login possa exibi-lo
+      console.error("Login failed:", error.message || error);
       throw error;
     }
   };
@@ -76,9 +91,14 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setUser(null);
-      // 4. Limpar o token do axios ao fazer logout
-      setAuthToken(null); 
+      // Limpar o token do axios ao fazer logout
+      setAuthToken(null);
+      
+      // Limpar dados do AsyncStorage
       await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('token');
+      
+      console.log('✅ Logout realizado com sucesso');
     } catch (e) {
       console.error("Failed to logout", e);
     }
