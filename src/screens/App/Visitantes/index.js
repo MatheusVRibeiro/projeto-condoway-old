@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { View, Text, TouchableOpacity, FlatList, SafeAreaView, RefreshControl, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Users, Calendar, Clock, AlertCircle, CheckCircle2, History, UserCheck } from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';

@@ -5,13 +5,13 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  SafeAreaView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { styles } from './styles';
 import { environments, allExistingReservations, myInitialReservations } from './mock';

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, SafeAreaView, ImageBackground, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import { View, Text, ImageBackground, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useOnboardingStatus } from '../../../hooks/useOnboardingStatus';

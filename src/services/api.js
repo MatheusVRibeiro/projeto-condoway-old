@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
-  // baseURL: 'http://192.168.0.174:3333',
-  baseURL: 'http://10.67.23.46:3333',
+  baseURL: 'http://192.168.0.174:3333',
+  // baseURL: 'http://10.67.23.46:3333',
   timeout: 10000, // Adiciona um timeout de 10 segundos
 });
 
@@ -165,34 +165,46 @@ export const apiService = {
   login: async (email, password) => {
     try {
       console.log('🔄 Fazendo login na API...');
-      const response = await api.post('/Usuario/login', {
-        user_email: email,
-        user_senha: password,
-      });
-      
+      // Tenta endpoint com diferentes capitalizações caso o backend varie
+      let response;
+      try {
+        response = await api.post('/Usuario/login', { user_email: email, user_senha: password });
+      } catch (e) {
+        console.warn('⚠️ /Usuario/login falhou, tentando /usuario/login', e.message);
+        response = await api.post('/usuario/login', { user_email: email, user_senha: password });
+      }
+
       console.log('📦 Resposta do login:', JSON.stringify(response.data, null, 2));
-      
-      if (!response.data.sucesso) {
+
+      // Normaliza diferentes formatos de resposta
+      const sucesso = response.data?.sucesso ?? true;
+      if (sucesso === false) {
         throw new Error(response.data.mensagem || 'E-mail ou senha inválidos.');
       }
 
+      // Tenta extrair token de várias localizações possíveis
+      const token = response.data?.token || response.data?.dados?.token || response.data?.dados?.usuario?.token || response.data?.dados?.user?.token || null;
+
+      // Tenta extrair o objeto do usuário
+      const usuarioObj = response.data?.dados?.usuario ?? response.data?.dados?.user ?? response.data?.dados ?? null;
+
       const userData = {
-        ...response.data.dados,
-        token: response.data.dados.token || 'temp_token_' + Date.now()
+        ...((typeof usuarioObj === 'object' && usuarioObj) ? usuarioObj : {}),
+        token: token || null,
       };
 
-      console.log('✅ UserData processado:', JSON.stringify(userData, null, 2));
+      console.log('✅ UserData processado (login):', JSON.stringify(userData, null, 2));
 
-      // Se o login for bem-sucedido, configura o token para todas as futuras requisições
       if (userData.token) {
         setAuthToken(userData.token);
+      } else {
+        console.warn('⚠️ Token não encontrado na resposta de login. Nenhum token foi configurado.');
       }
-      
+
       return userData;
     } catch (error) {
-      // O handleError aqui pode ser customizado se a resposta de erro do login for diferente
       const errorMessage = error.response?.data?.mensagem || error.message || 'E-mail ou senha inválidos.';
-      console.error(`API Error - login:`, errorMessage);
+      console.error('API Error - login:', errorMessage, error.response?.data);
       throw new Error(errorMessage);
     }
   },

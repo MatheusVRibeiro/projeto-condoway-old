@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, SafeAreaView, ScrollView, RefreshControl, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, RefreshControl, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package, Camera } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';

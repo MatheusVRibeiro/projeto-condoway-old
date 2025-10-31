@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiService, setAuthToken } from '../services/api'; // 1. Importar o novo serviço e o setAuthToken
+import { apiService, setAuthToken } from '../services/api.js'; // 1. Importar o novo serviço e o setAuthToken (com extensão .js para SDK54)
 import SplashScreen from '../screens/Auxiliary/SplashScreen'; // Importando o SplashScreen (pasta correta: Auxiliary)
 
 // 1. O contexto define a "forma" dos dados que serão compartilhados.

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { styles } from './styles';

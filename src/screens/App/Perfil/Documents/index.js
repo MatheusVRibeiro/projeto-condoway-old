@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, FileText, Download, Eye, Search, Filter, Calendar, Folder } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
