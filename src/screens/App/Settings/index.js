@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { styles } from './styles';
 import { ArrowLeft } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Settings = React.memo(function Settings() {
   const navigation = useNavigation();

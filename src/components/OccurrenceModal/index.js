@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, Modal, ScrollView, TouchableOpacity, TextInput, Image, Share, Clipboard } from 'react-native';
+import { View, Text, Modal, ScrollView, TouchableOpacity, TextInput, Image, Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { X, MapPin, Calendar, AlertTriangle, Paperclip, Share2, Copy, MessageCircle, Send } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -53,15 +54,19 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
   };
 
   // Copiar protocolo
-  const handleCopyProtocol = () => {
-    Clipboard.setString(occurrence.protocol);
-    Toast.show({
-      type: 'success',
-      text1: 'Protocolo copiado!',
-      text2: `${occurrence.protocol} copiado para a área de transferência`,
-      position: 'bottom',
-      visibilityTime: 2000,
-    });
+  const handleCopyProtocol = async () => {
+    try {
+      await Clipboard.setStringAsync(occurrence.protocol);
+      Toast.show({
+        type: 'success',
+        text1: 'Protocolo copiado!',
+        text2: `${occurrence.protocol} copiado para a área de transferência`,
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+    } catch (e) {
+      console.warn('Erro ao copiar protocolo:', e);
+    }
   };
 
   // Compartilhar ocorrência
