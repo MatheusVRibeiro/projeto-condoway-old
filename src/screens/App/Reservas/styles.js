@@ -113,6 +113,28 @@ export const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
+
+  // --- Separador de Data ---
+  dateSeparator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  dateSeparatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e2e8f0',
+  },
+  dateSeparatorText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748b',
+    paddingHorizontal: 12,
+    textTransform: 'capitalize',
+    letterSpacing: 0.3,
+  },
   
   // --- Modal de Reserva (Bottom Sheet Redesign) ---
   modalOverlay: {
