@@ -2,7 +2,6 @@
   "expo": {
     "name": "tcc-condoway",
     "slug": "tcc-condoway",
-    "main": "index.js",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

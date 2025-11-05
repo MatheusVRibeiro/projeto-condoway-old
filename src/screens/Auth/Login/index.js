@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  SafeAreaView,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Modal,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { useTheme } from '../../../contexts/ThemeProvider';

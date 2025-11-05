@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Bell, Moon, Globe, Palette, Volume2, Vibrate, Mail, MessageSquare, Shield } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Share, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, Share } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, CheckCircle, Share2 } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import QRCode from 'react-native-qrcode-svg';

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Pressable, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { createProfileStyles } from './styles';

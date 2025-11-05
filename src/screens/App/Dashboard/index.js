@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Bell, AlertTriangle, Calendar, Box, UserPlus, MessageSquareWarning, Moon, Sun, Video, MessageSquare, UserCheck, Car, Tag, Plus, User } from 'lucide-react-native';
 import Skeleton from '../../../components/ui/Skeleton';

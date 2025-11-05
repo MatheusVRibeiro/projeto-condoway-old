@@ -3,6 +3,7 @@ import axios from 'axios';
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
   baseURL: 'http://192.168.0.174:3333',
+  // baseURL: 'http://192.168.5.10:3333',
   // baseURL: 'http://10.67.23.46:3333',
   timeout: 30000, // 30 segundos
 });
@@ -229,7 +230,15 @@ export const apiService = {
       const response = await api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      return response.data.url || response.data.dados || fileUri;
+      
+      // Backend retorna: { sucesso, mensagem, dados: { path, filename, ... } }
+      if (response.data?.dados?.path) {
+        // Construir URL completa: baseURL + path
+        const baseURL = api.defaults.baseURL;
+        return `${baseURL}${response.data.dados.path}`;
+      }
+      
+      return response.data.url || fileUri;
     } catch (error) {
       handleError(error, 'uploadAnexo');
       return fileUri; // Fallback em caso de erro

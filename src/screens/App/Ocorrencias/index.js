@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, Alert, FlatList, ActivityIndicator, Pressable, RefreshControl, Share, Clipboard } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Alert, FlatList, ActivityIndicator, Pressable, RefreshControl, Share } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 import { categories } from './mock';
 import { MessageSquareWarning, ArrowLeft, CheckCircle, Paperclip, XCircle, Share2, Copy, MessageCircle, Plus, FileText } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as Clipboard from 'expo-clipboard';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -651,16 +653,20 @@ export default function Ocorrencias() {
     if (step === 3) {
       const lastOccurrence = myIssues[0];
       
-      const handleCopyProtocol = () => {
+      const handleCopyProtocol = async () => {
         if (lastOccurrence?.protocol) {
-          Clipboard.setString(lastOccurrence.protocol);
-          Toast.show({
-            type: 'success',
-            text1: 'Protocolo copiado!',
-            text2: `${lastOccurrence.protocol} copiado para a área de transferência`,
-            position: 'bottom',
-            visibilityTime: 2000,
-          });
+          try {
+            await Clipboard.setStringAsync(lastOccurrence.protocol);
+            Toast.show({
+              type: 'success',
+              text1: 'Protocolo copiado!',
+              text2: `${lastOccurrence.protocol} copiado para a área de transferência`,
+              position: 'bottom',
+              visibilityTime: 2000,
+            });
+          } catch (e) {
+            console.warn('Erro ao copiar protocolo:', e);
+          }
         }
       };
 

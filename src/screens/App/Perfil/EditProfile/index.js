@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Camera, Edit3, Save, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';

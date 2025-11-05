@@ -4,13 +4,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { Mail, ArrowLeft, ArrowRight, CheckCircle, HelpCircle } from 'lucide-react-native';
