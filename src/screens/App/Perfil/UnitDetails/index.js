@@ -156,8 +156,8 @@ export default function UnitDetails() {
               <View style={styles.amenitiesGrid}>
                 {ambientes.map((ambiente, index) => (
                   <AmenityItem 
-                    key={ambiente.id || ambiente.amd_id || ambiente.amb_id || index} 
-                    name={ambiente.nome || ambiente.amd_nome || ambiente.amb_nome || 'Ambiente sem nome'} 
+                    key={ambiente.amd_id || index} 
+                    name={ambiente.amd_nome || 'Ambiente sem nome'} 
                   />
                 ))}
               </View>

@@ -51,6 +51,17 @@ export const AuthProvider = ({ children }) => {
     }
 
     loadUserFromStorage();
+    
+    // Configurar listener para token expirado
+    global.onTokenExpired = () => {
+      console.log('🔴 [AuthContext] Token expirado. Fazendo logout...');
+      logout();
+    };
+    
+    // Cleanup
+    return () => {
+      global.onTokenExpired = null;
+    };
   }, []);
 
   const login = async (email, password) => {
@@ -68,10 +79,12 @@ export const AuthProvider = ({ children }) => {
       // 3. Configurar o token no Axios para todas as futuras requisições
       setAuthToken(token);
       
-      // 4. Salvar o UTILIZADOR e o TOKEN separadamente no AsyncStorage
+      // 4. Salvar o UTILIZADOR, TOKEN, EMAIL e SENHA no AsyncStorage (para renovação automática)
       await AsyncStorage.setItem('user', JSON.stringify(usuario));
       await AsyncStorage.setItem('token', token);
-      console.log('💾 Usuário e Token salvos no AsyncStorage');
+      await AsyncStorage.setItem('userEmail', email);
+      await AsyncStorage.setItem('userPassword', password);
+      console.log('💾 Usuário, Token e Credenciais salvos no AsyncStorage');
       
       // ✅ Marcar onboarding como concluído após login bem-sucedido
       await AsyncStorage.setItem('onboardingSeen', 'true');
@@ -94,9 +107,8 @@ export const AuthProvider = ({ children }) => {
       // Limpar o token do axios ao fazer logout
       setAuthToken(null);
       
-      // Limpar dados do AsyncStorage
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('token');
+      // Limpar dados do AsyncStorage (incluindo credenciais)
+      await AsyncStorage.multiRemove(['user', 'token', 'userEmail', 'userPassword']);
       
       console.log('✅ Logout realizado com sucesso');
     } catch (e) {

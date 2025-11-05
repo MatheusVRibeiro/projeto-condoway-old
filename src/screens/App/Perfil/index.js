@@ -77,12 +77,12 @@ export default function Perfil() {
     name: profileData?.user_nome || user?.user_nome || 'Usuário',
     email: profileData?.user_email || user?.user_email || '',
     phone: profileData?.user_telefone || user?.user_telefone || '',
-    apartment: profileData?.apto_numero || 'N/A',
-    block: profileData?.bloco_nome || '',
+    apartment: profileData?.ap_numero || '',
+    block: profileData?.bloc_nome || '',
     condominium: profileData?.cond_nome || '',
     avatarUrl: profileData?.user_foto || user?.user_foto || null,
-    userType: profileData?.userap_tipo || 'morador',
-    memberSince: profileData?.userap_data_cadastro || user?.user_data_cadastro || 'Recente',
+    userType: profileData?.user_tipo || user?.user_tipo || 'Morador',
+    memberSince: profileData?.user_data_cadastro || user?.user_data_cadastro || 'Recente',
   };
 
   const handlePickImage = async () => {

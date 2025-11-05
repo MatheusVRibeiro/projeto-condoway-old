@@ -51,19 +51,19 @@ export default function EditProfile() {
     
     if (profileData) {
       console.log('✅ [EditProfile] Extraindo dados do profileData...');
-      console.log('  - Apartamento:', profileData.apto_numero || profileData.ap_numero || 'não encontrado');
-      console.log('  - Bloco:', profileData.bl_nome || profileData.bloc_nome || profileData.bloco_nome || 'não encontrado');
+      console.log('  - Apartamento:', profileData.ap_numero || 'não encontrado');
+      console.log('  - Bloco:', profileData.bloc_nome || 'não encontrado');
       console.log('  - Condomínio:', profileData.cond_nome || 'não encontrado');
 
       setProfile({
         name: profileData.user_nome || user?.user_nome || '',
         email: profileData.user_email || user?.user_email || '',
         phone: profileData.user_telefone || user?.user_telefone || '',
-        apartment: profileData.apto_numero || profileData.ap_numero || '',
-        block: profileData.bl_nome || profileData.bloc_nome || profileData.bloco_nome || '',
+        apartment: profileData.ap_numero || '',
+        block: profileData.bloc_nome || '',
         condominium: profileData.cond_nome || '',
         avatarUrl: profileData.user_foto || user?.user_foto || null,
-        userType: profileData.userap_tipo || 'morador'
+        userType: profileData.user_tipo || user?.user_tipo || 'Morador'
       });
     } else if (user) {
       console.log('⚠️ [EditProfile] Sem profileData, usando dados do user');

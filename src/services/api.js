@@ -23,6 +23,71 @@ api.interceptors.request.use(
   }
 );
 
+// Interceptor de RESPONSE - Para detectar token expirado (401)
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Se receber 401 e não for a rota de login
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/login')) {
+      originalRequest._retry = true;
+      
+      console.warn('⚠️ [API] Token expirado (401). Tentando renovar...');
+      
+      try {
+        // Importar AsyncStorage dinamicamente para evitar dependência circular
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        
+        // Pegar credenciais salvas
+        const savedEmail = await AsyncStorage.getItem('userEmail');
+        const savedPassword = await AsyncStorage.getItem('userPassword');
+        
+        if (savedEmail && savedPassword) {
+          console.log('🔄 [API] Fazendo re-login automático...');
+          
+          // Fazer login novamente
+          const loginResponse = await api.post('/login', {
+            user_email: savedEmail,
+            user_senha: savedPassword
+          });
+          
+          if (loginResponse.data?.sucesso && loginResponse.data?.token) {
+            const newToken = loginResponse.data.token;
+            
+            // Configurar novo token
+            setAuthToken(newToken);
+            await AsyncStorage.setItem('authToken', newToken);
+            
+            // Atualizar header da requisição original
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            
+            console.log('✅ [API] Token renovado com sucesso. Repetindo requisição...');
+            
+            // Repetir a requisição original
+            return api(originalRequest);
+          }
+        }
+        
+        console.error('❌ [API] Não foi possível renovar o token. Redirecionando para login...');
+        
+        // Limpar dados e redirecionar para login
+        await AsyncStorage.multiRemove(['authToken', 'userEmail', 'userPassword', 'userData']);
+        
+        // Emitir evento para o AuthContext fazer logout
+        if (global.onTokenExpired) {
+          global.onTokenExpired();
+        }
+        
+      } catch (renewError) {
+        console.error('❌ [API] Erro ao renovar token:', renewError);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 // 2. Interceptor para injetar o token em todas as requisições
 // A função setAuthToken será chamada no seu AuthContext após o login
 export const setAuthToken = (token) => {
@@ -220,26 +285,65 @@ export const apiService = {
 
   uploadAnexo: async (fileUri) => {
     try {
+      console.log('📤 [uploadAnexo] URI recebida:', fileUri);
+      
       const formData = new FormData();
-      formData.append('file', {
-        uri: fileUri,
-        type: 'image/jpeg',
-        name: 'anexo.jpg',
-      });
+      
+      // Verificar se está rodando no Web (blob/file) ou Mobile (uri)
+      if (fileUri.startsWith('blob:') || fileUri.startsWith('http')) {
+        // React Native Web - converter blob para File
+        console.log('🌐 [uploadAnexo] Modo Web detectado');
+        
+        const response = await fetch(fileUri);
+        const blob = await response.blob();
+        
+        // Criar File a partir do Blob
+        const file = new File([blob], 'anexo.jpg', { type: blob.type || 'image/jpeg' });
+        formData.append('file', file);
+        
+        console.log('✅ [uploadAnexo] File criado:', {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        });
+      } else {
+        // React Native Mobile - usar objeto com uri
+        console.log('📱 [uploadAnexo] Modo Mobile detectado');
+        
+        formData.append('file', {
+          uri: fileUri,
+          type: 'image/jpeg',
+          name: 'anexo.jpg',
+        });
+      }
+      
+      console.log('🚀 [uploadAnexo] Enviando para /upload...');
+      
       // Para upload, passamos headers específicos
       const response = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 
+          'Content-Type': 'multipart/form-data'
+        },
       });
+      
+      console.log('✅ [uploadAnexo] Resposta recebida:', response.data);
       
       // Backend retorna: { sucesso, mensagem, dados: { path, filename, ... } }
       if (response.data?.dados?.path) {
         // Construir URL completa: baseURL + path
         const baseURL = api.defaults.baseURL;
-        return `${baseURL}${response.data.dados.path}`;
+        const fullUrl = `${baseURL}${response.data.dados.path}`;
+        console.log('📎 [uploadAnexo] URL completa:', fullUrl);
+        return fullUrl;
       }
       
       return response.data.url || fileUri;
     } catch (error) {
+      console.error('❌ [uploadAnexo] Erro detalhado:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       handleError(error, 'uploadAnexo');
       return fileUri; // Fallback em caso de erro
     }
@@ -597,25 +701,31 @@ export const apiService = {
       if (!raw) return response.data;
 
       const normalize = (p) => ({
-        // Usuário
-        userap_id: p.userap_id ?? p.userApId ?? p.Userap_ID ?? null,
-        user_id: p.user_id ?? p.userId ?? p.User_ID ?? null,
-        user_nome: p.user_nome ?? p.userNome ?? p.userName ?? null,
-        user_email: p.user_email ?? p.userEmail ?? null,
-        user_telefone: p.user_telefone ?? p.userTelefone ?? null,
-        user_tipo: p.user_tipo ?? p.userTipo ?? null,
+        // Usuário (nomes exatos do banco)
+        userap_id: p.userap_id ?? null,
+        user_id: p.user_id ?? null,
+        user_nome: p.user_nome ?? null,
+        user_email: p.user_email ?? null,
+        user_telefone: p.user_telefone ?? null,
+        user_tipo: p.user_tipo ?? null,
+        user_foto: p.user_foto ?? null,
+        user_data_cadastro: p.user_data_cadastro ?? null,
 
-        // Apartamento
-        ap_id: p.ap_id ?? p.apId ?? p.apartamento_id ?? p.apartamentoId ?? null,
-        ap_numero: p.ap_numero ?? p.apNumero ?? p.apartamento_numero ?? p.apartamentoNumero ?? null,
+        // Apartamento (nomes exatos do banco)
+        ap_id: p.ap_id ?? null,
+        ap_numero: p.ap_numero ?? null,
+        ap_andar: p.ap_andar ?? null,
 
-  // Bloco: normalizamos apenas a forma 'bloc_id' para evitar aliases poluídos
-  bl_id: p.bloc_id ?? null,
-  bl_nome: p.bloc_nome ?? null,
+        // Bloco (nomes exatos do banco)
+        bloc_id: p.bloc_id ?? null,
+        bloc_nome: p.bloc_nome ?? null,
 
-        // Condomínio
-        cond_id: p.cond_id ?? p.condId ?? p.condominio_id ?? p.condominioId ?? null,
-        cond_nome: p.cond_nome ?? p.condNome ?? p.condominio_nome ?? p.condominioNome ?? null,
+        // Condomínio (nomes exatos do banco)
+        cond_id: p.cond_id ?? null,
+        cond_nome: p.cond_nome ?? null,
+        cond_endereco: p.cond_endereco ?? null,
+        cond_cidade: p.cond_cidade ?? null,
+        cond_estado: p.cond_estado ?? null,
 
         // Mantém o objeto original para casos extras
         _raw: p,
