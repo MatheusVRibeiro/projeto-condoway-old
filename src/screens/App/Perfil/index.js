@@ -85,6 +85,13 @@ export default function Perfil() {
     memberSince: profileData?.user_data_cadastro || user?.user_data_cadastro || 'Recente',
   };
 
+  // Debug: Log da URL do avatar
+  useEffect(() => {
+    console.log('👤 [Perfil] displayProfile.avatarUrl:', displayProfile.avatarUrl);
+    console.log('👤 [Perfil] profileData?.user_foto:', profileData?.user_foto);
+    console.log('👤 [Perfil] user?.user_foto:', user?.user_foto);
+  }, [displayProfile.avatarUrl, profileData?.user_foto, user?.user_foto]);
+
   const handlePickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -138,10 +145,12 @@ export default function Perfil() {
               <Image 
                 source={{ uri: displayProfile.avatarUrl }} 
                 style={[styles.avatar, { borderColor: theme.colors.card }]} 
+                onLoad={() => console.log('✅ [Perfil] Imagem carregada com sucesso:', displayProfile.avatarUrl)}
+                onError={(e) => console.error('❌ [Perfil] Erro ao carregar imagem:', e.nativeEvent.error, 'URL:', displayProfile.avatarUrl)}
               />
             ) : (
-              <View style={[styles.avatar, { backgroundColor: theme.colors.primary, borderColor: theme.colors.card, justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ color: 'white', fontSize: 36, fontWeight: 'bold' }}>
+              <View style={[styles.avatar, { backgroundColor: theme.colors.primary, borderColor: theme.colors.card }]}>
+                <Text style={styles.avatarText}>
                   {displayProfile.name.charAt(0).toUpperCase()}
                 </Text>
               </View>
@@ -158,14 +167,11 @@ export default function Perfil() {
                 <MapPin size={14} color={theme.colors.textSecondary} />
               </View>
               <Text style={[styles.locationText, { color: theme.colors.textSecondary }]}>
-                {displayProfile.apartment && displayProfile.block 
-                  ? `${displayProfile.apartment} - ${displayProfile.block}` 
-                  : displayProfile.condominium || 'Condomínio'}
+                {displayProfile.condominium || 'Sem condomínio'}
               </Text>
             </View>
-            <View style={[styles.roleBadge, { backgroundColor: theme.isDark ? `${theme.colors.warning}33` : `${theme.colors.warning}15` }] }>
-              <Star size={12} color={theme.colors.warning} fill={theme.colors.warning} />
-              <Text style={[styles.roleText, { color: theme.colors.text }]}>{getUserTypeLabel(displayProfile.userType)}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: theme.colors.primary + '15', borderWidth: 1, borderColor: theme.colors.primary + '30' }]}>
+              <Text style={[styles.roleText, { color: theme.colors.primary, fontWeight: '600' }]}>{getUserTypeLabel(displayProfile.userType)}</Text>
             </View>
           </View>
         </Animatable.View>

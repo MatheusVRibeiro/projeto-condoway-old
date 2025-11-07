@@ -466,11 +466,20 @@ export const formatPhone = (phone) => {
   const clean = removeNonNumeric(phone);
   
   if (clean.length === 11) {
-    // Celular: (XX) 9XXXX-XXXX
+    // Celular: (XX) XXXXX-XXXX
     return clean.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   } else if (clean.length === 10) {
     // Fixo: (XX) XXXX-XXXX
     return clean.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  } else if (clean.length > 0) {
+    // Formatação progressiva enquanto digita
+    if (clean.length <= 2) {
+      return `(${clean}`;
+    } else if (clean.length <= 7) {
+      return `(${clean.slice(0, 2)}) ${clean.slice(2)}`;
+    } else if (clean.length <= 11) {
+      return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`;
+    }
   }
   
   return phone;

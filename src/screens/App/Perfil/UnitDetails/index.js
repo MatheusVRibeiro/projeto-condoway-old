@@ -22,6 +22,8 @@ export default function UnitDetails() {
     parkingSpots: 1,
     registrationDate: 'Janeiro 2023',
     monthlyFee: 'R$ 485,00',
+    city: 'São Paulo',
+    state: 'SP',
   });
 
   useEffect(() => {
@@ -122,12 +124,65 @@ export default function UnitDetails() {
         <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>INFORMAÇÕES BÁSICAS</Text>
           <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <View style={styles.infoGrid}>
-              <InfoCard icon={MapPin} title="Localização" value={`${unitData.apartment}, ${unitData.block}`} subtitle="Endereço da unidade" />
-              <InfoCard icon={Calendar} title="Desde" value={unitData.registrationDate} subtitle="Data de cadastro" />
-              <InfoCard icon={Users} title="Tipo" value={unitData.userType === 'morador' ? 'Morador' : 'Proprietário'} subtitle="Relação com o imóvel" />
-              <InfoCard icon={Car} title="Vagas" value={`${unitData.parkingSpots} vaga`} subtitle="Estacionamento" badge="EM BREVE" />
+            
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Condomínio</Text>
+              <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                  {unitData.condominium || 'Não informado'}
+                </Text>
+              </View>
             </View>
+
+            <View style={styles.fieldRow}>
+              <View style={[styles.fieldContainer, styles.fieldHalf]}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Bloco</Text>
+                <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                    {unitData.block || 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.fieldContainer, styles.fieldHalf]}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Apartamento</Text>
+                <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                    {unitData.apartment || 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.fieldRow}>
+              <View style={[styles.fieldContainer, styles.fieldLarge]}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Cidade</Text>
+                <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                    {unitData.city || 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.fieldContainer, styles.fieldSmall]}>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Estado</Text>
+                <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                    {unitData.state || '--'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.fieldContainer}>
+              <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Cadastrado desde</Text>
+              <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                  {unitData.registrationDate || 'Não informado'}
+                </Text>
+              </View>
+            </View>
+
           </View>
         </Animatable.View>
 

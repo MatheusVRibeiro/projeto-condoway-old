@@ -8,6 +8,16 @@ const api = axios.create({
   timeout: 30000, // 30 segundos
 });
 
+// Helper para construir URLs completas de uploads
+export const getBaseURL = () => api.defaults.baseURL;
+
+export const buildFullImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('/uploads/')) return `${getBaseURL()}${path}`;
+  return path;
+};
+
 // Interceptor de REQUEST - Para debug do token
 api.interceptors.request.use(
   (config) => {
@@ -700,36 +710,47 @@ export const apiService = {
       const raw = response.data?.dados || response.data || null;
       if (!raw) return response.data;
 
-      const normalize = (p) => ({
-        // Usuário (nomes exatos do banco)
-        userap_id: p.userap_id ?? null,
-        user_id: p.user_id ?? null,
-        user_nome: p.user_nome ?? null,
-        user_email: p.user_email ?? null,
-        user_telefone: p.user_telefone ?? null,
-        user_tipo: p.user_tipo ?? null,
-        user_foto: p.user_foto ?? null,
-        user_data_cadastro: p.user_data_cadastro ?? null,
+      const baseURL = api.defaults.baseURL;
+      
+      const normalize = (p) => {
+        // Se user_foto existe mas é apenas um path relativo, construir URL completa
+        let userFoto = p.user_foto ?? null;
+        if (userFoto && userFoto.startsWith('/uploads/')) {
+          userFoto = `${baseURL}${userFoto}`;
+          console.log('🔧 [API] user_foto convertido para URL completa:', userFoto);
+        }
+        
+        return {
+          // Usuário (nomes exatos do banco)
+          userap_id: p.userap_id ?? null,
+          user_id: p.user_id ?? null,
+          user_nome: p.user_nome ?? null,
+          user_email: p.user_email ?? null,
+          user_telefone: p.user_telefone ?? null,
+          user_tipo: p.user_tipo ?? null,
+          user_foto: userFoto, // ✅ URL completa construída
+          user_data_cadastro: p.user_data_cadastro ?? null,
 
-        // Apartamento (nomes exatos do banco)
-        ap_id: p.ap_id ?? null,
-        ap_numero: p.ap_numero ?? null,
-        ap_andar: p.ap_andar ?? null,
+          // Apartamento (nomes exatos do banco)
+          ap_id: p.ap_id ?? null,
+          ap_numero: p.ap_numero ?? null,
+          ap_andar: p.ap_andar ?? null,
 
-        // Bloco (nomes exatos do banco)
-        bloc_id: p.bloc_id ?? null,
-        bloc_nome: p.bloc_nome ?? null,
+          // Bloco (nomes exatos do banco)
+          bloc_id: p.bloc_id ?? null,
+          bloc_nome: p.bloc_nome ?? null,
 
-        // Condomínio (nomes exatos do banco)
-        cond_id: p.cond_id ?? null,
-        cond_nome: p.cond_nome ?? null,
-        cond_endereco: p.cond_endereco ?? null,
-        cond_cidade: p.cond_cidade ?? null,
-        cond_estado: p.cond_estado ?? null,
+          // Condomínio (nomes exatos do banco)
+          cond_id: p.cond_id ?? null,
+          cond_nome: p.cond_nome ?? null,
+          cond_endereco: p.cond_endereco ?? null,
+          cond_cidade: p.cond_cidade ?? null,
+          cond_estado: p.cond_estado ?? null,
 
-        // Mantém o objeto original para casos extras
-        _raw: p,
-      });
+          // Mantém o objeto original para casos extras
+          _raw: p,
+        };
+      };
 
       const dadosNormalizados = Array.isArray(raw) ? raw.map(normalize) : normalize(raw);
 
@@ -758,6 +779,106 @@ export const apiService = {
       }
       console.error('❌ [API] Erro ao buscar atualizações:', error.response?.status, error.response?.data);
       return { sucesso: false, mensagem: 'Erro ao buscar atualizações', dados: [] };
+    }
+  },
+
+  // Upload de Foto de Perfil
+  // Backend suporta ambas as rotas:
+  // - POST /usuario/foto/:id (campo 'file') ← Rota usada aqui
+  // - POST /usuario/perfil/:id/foto (campo 'foto') ← Rota alternativa
+  uploadFotoPerfil: async (userId, fileUri) => {
+    try {
+      console.log('📤 [uploadFotoPerfil] Iniciando upload para userId:', userId);
+      console.log('📤 [uploadFotoPerfil] URI recebida:', fileUri);
+      
+      const formData = new FormData();
+      
+      // Verificar se está rodando no Web (blob/file) ou Mobile (uri)
+      if (fileUri.startsWith('blob:') || fileUri.startsWith('http')) {
+        // React Native Web - converter blob para File
+        console.log('🌐 [uploadFotoPerfil] Modo Web detectado');
+        
+        const response = await fetch(fileUri);
+        const blob = await response.blob();
+        
+        // Criar File a partir do Blob
+        const file = new File([blob], 'perfil.jpg', { type: blob.type || 'image/jpeg' });
+        formData.append('file', file); // Campo 'file' esperado pela rota /usuario/foto/:id
+        
+        console.log('✅ [uploadFotoPerfil] File criado:', {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        });
+      } else {
+        // React Native Mobile - usar objeto com uri
+        console.log('📱 [uploadFotoPerfil] Modo Mobile detectado');
+        
+        formData.append('file', { // Campo 'file' esperado pela rota /usuario/foto/:id
+          uri: fileUri,
+          type: 'image/jpeg',
+          name: 'perfil.jpg',
+        });
+      }
+      
+      console.log(`🚀 [uploadFotoPerfil] Enviando para POST /usuario/foto/${userId}...`);
+      console.log(`📝 [uploadFotoPerfil] FormData field: 'file'`);
+      
+      // Para upload, passamos headers específicos
+      const response = await api.post(`/usuario/foto/${userId}`, formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data'
+        },
+      });
+      
+      console.log('✅ [uploadFotoPerfil] Resposta recebida:', response.data);
+      console.log('🔍 [uploadFotoPerfil] response.data.dados:', response.data?.dados);
+      console.log('🔍 [uploadFotoPerfil] response.data.dados.path:', response.data?.dados?.path);
+      console.log('🔍 [uploadFotoPerfil] response.data.dados.user_foto:', response.data?.dados?.user_foto);
+      console.log('🔍 [uploadFotoPerfil] response.data.url:', response.data?.url);
+      
+      // Backend retorna: { sucesso, mensagem, dados: { path, filename, ... } }
+      if (response.data?.dados?.path) {
+        // Construir URL completa: baseURL + path
+        const baseURL = api.defaults.baseURL;
+        const fullUrl = `${baseURL}${response.data.dados.path}`;
+        console.log('📸 [uploadFotoPerfil] URL completa da foto:', fullUrl);
+        return { sucesso: true, url: fullUrl, dados: response.data.dados };
+      }
+      
+      // Se backend já retornou user_foto diretamente
+      if (response.data?.dados?.user_foto) {
+        console.log('📸 [uploadFotoPerfil] user_foto retornado pelo backend:', response.data.dados.user_foto);
+        return { sucesso: true, url: response.data.dados.user_foto, dados: response.data.dados };
+      }
+      
+      // Fallback: usar url direta se existir
+      if (response.data?.url) {
+        console.log('📸 [uploadFotoPerfil] URL direta:', response.data.url);
+        return { sucesso: true, url: response.data.url, dados: response.data };
+      }
+      
+      console.warn('⚠️ [uploadFotoPerfil] Nenhuma URL encontrada na resposta, usando fileUri');
+      return { sucesso: true, url: fileUri, dados: response.data };
+    } catch (error) {
+      console.error('❌ [uploadFotoPerfil] Erro detalhado:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      // Se endpoint não existe (404), avisar que precisa ser implementado no backend
+      if (error.response?.status === 404) {
+        console.error('⚠️ [uploadFotoPerfil] Endpoint /usuario/foto/:id não implementado no backend');
+        return { 
+          sucesso: false, 
+          erro: 'Endpoint de upload de foto não implementado no backend',
+          mensagem: 'Por favor, implemente o endpoint POST /usuario/foto/:id no backend'
+        };
+      }
+      
+      handleError(error, 'uploadFotoPerfil');
+      return { sucesso: false, erro: error.message };
     }
   },
 };

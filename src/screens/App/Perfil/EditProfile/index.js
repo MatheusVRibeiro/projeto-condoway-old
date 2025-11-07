@@ -37,7 +37,7 @@ export default function EditProfile() {
     block: '',
     condominium: '',
     avatarUrl: null,
-    userType: 'morador'
+    userType: 'Morador'
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editingField, setEditingField] = useState(null);
@@ -81,12 +81,7 @@ export default function EditProfile() {
   const handleSave = async () => {
     const newErrors = {};
 
-    // Validação de nome completo
-    if (!validateRequired(profile.name)) {
-      newErrors.name = 'Nome é obrigatório';
-    } else if (!validateFullName(profile.name)) {
-      newErrors.name = 'Digite seu nome completo (mínimo 2 partes)';
-    }
+    // Nome não é validado pois o campo está bloqueado (read-only)
 
     // Validação de e-mail
     if (!validateRequired(profile.email)) {
@@ -139,7 +134,7 @@ export default function EditProfile() {
     }
 
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -183,7 +178,9 @@ export default function EditProfile() {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
-  const ProfileField = ({ label, field, value, placeholder, keyboardType = 'default', multiline = false }) => (
+  const ProfileField = ({ label, field, value, placeholder, keyboardType = 'default', multiline = false }) => {
+    const isEditable = field !== 'name'; // Nome é read-only
+    return (
     <Animatable.View animation="fadeInUp" duration={400} style={styles.fieldContainer}>
       <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>{label}</Text>
       <View style={[
@@ -199,13 +196,16 @@ export default function EditProfile() {
           placeholder={placeholder}
           placeholderTextColor={theme.colors.textSecondary}
           onChangeText={(text) => updateField(field, text)}
+          editable={isEditable}
           keyboardType={keyboardType}
           multiline={multiline}
           numberOfLines={multiline ? 3 : 1}
         />
-        <TouchableOpacity style={styles.fieldEditButton} onPress={() => setEditingField(field)}>
-          <Edit3 size={16} color={theme.colors.primary} />
-        </TouchableOpacity>
+        {isEditable && (
+          <TouchableOpacity style={styles.fieldEditButton} onPress={() => setEditingField(field)}>
+            <Edit3 size={16} color={theme.colors.primary} />
+          </TouchableOpacity>
+        )}
       </View>
       {errors[field] && (
         <Text style={{ color: '#dc2626', fontSize: 12, marginTop: 4 }}>
@@ -213,7 +213,8 @@ export default function EditProfile() {
         </Text>
       )}
     </Animatable.View>
-  );
+    );
+  };
 
   if (loading && !profileData) {
     return <Loading />;
@@ -251,7 +252,7 @@ export default function EditProfile() {
                 />
               ) : (
                 <View style={[styles.avatar, { backgroundColor: theme.colors.primary, borderColor: theme.colors.card }]}>
-                  <Text style={{ color: 'white', fontSize: 32, fontWeight: 'bold' }}>
+                  <Text style={styles.avatarText}>
                     {profile.name.charAt(0).toUpperCase() || 'U'}
                   </Text>
                 </View>
@@ -320,11 +321,12 @@ export default function EditProfile() {
                 <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Tipo de Usuário</Text>
                 <View style={[styles.userTypeContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>                  
                   <Text style={[styles.userTypeText, { color: theme.colors.text }]}>
-                    {profile.userType === 'morador' ? 'Morador' : 
-                     profile.userType === 'proprietario' ? 'Proprietário' :
-                     profile.userType === 'sindico' ? 'Síndico' : 'Porteiro'}
+                    {profile.userType === 'Morador' || profile.userType === 'morador' ? 'Morador' : 
+                     profile.userType === 'Sindico' || profile.userType === 'sindico' ? 'Síndico' :
+                     profile.userType === 'Funcionario' || profile.userType === 'funcionario' ? 'Funcionário' :
+                     profile.userType === 'ADM' || profile.userType === 'adm' ? 'Administrador' : profile.userType || 'Não definido'}
                   </Text>
-                  <Text style={[styles.userTypeHint, { color: theme.colors.textSecondary }]}>Entre em contato com a administração para alterar</Text>
+                  {/* Texto de ajuda removido conforme solicitado */}
                 </View>
               </View>
             </View>

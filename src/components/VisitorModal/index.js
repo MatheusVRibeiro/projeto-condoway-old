@@ -150,7 +150,7 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await apiService.cancelarVisitante(visitor.id);
+              await apiService.cancelarVisitante(visitor.vst_id);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               Toast.show({
                 type: 'success',
@@ -185,7 +185,7 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
           text: 'Sim, Reenviar',
           onPress: async () => {
             try {
-              await apiService.reenviarConviteVisitante(visitor.id);
+              await apiService.reenviarConviteVisitante(visitor.vst_id);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               Toast.show({
                 type: 'success',
@@ -218,7 +218,7 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
           text: 'Sim, Aprovar',
           onPress: () => {
             // TODO: Implementar API de aprovação
-            console.log('Aprovar visitante:', visitor.id);
+            console.log('Aprovar visitante:', visitor.vst_id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Toast.show({
               type: 'success',
@@ -244,7 +244,7 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
           style: 'destructive',
           onPress: () => {
             // TODO: Implementar API de recusa
-            console.log('Recusar visitante:', visitor.id);
+            console.log('Recusar visitante:', visitor.vst_id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Toast.show({
               type: 'success',

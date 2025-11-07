@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiService, setAuthToken } from '../services/api'; // 1. Importar o novo serviço e o setAuthToken
+import { apiService, setAuthToken, buildFullImageUrl } from '../services/api'; // 1. Importar o novo serviço e o setAuthToken
 import SplashScreen from '../screens/Auxiliary/SplashScreen'; // Importando o SplashScreen (pasta correta: Auxiliary)
 
 // 1. O contexto define a "forma" dos dados que serão compartilhados.
@@ -32,6 +32,13 @@ export const AuthProvider = ({ children }) => {
         
         if (storedUser && storedToken) {
           const userData = JSON.parse(storedUser);
+          
+          // Normalizar user_foto se for path relativo
+          if (userData.user_foto) {
+            userData.user_foto = buildFullImageUrl(userData.user_foto);
+            console.log('🔧 [AuthContext] user_foto normalizado ao carregar:', userData.user_foto);
+          }
+          
           console.log('✅ Utilizador e Token carregados.');
           
           // Reconfigurar o Axios com o token salvo
@@ -119,9 +126,16 @@ export const AuthProvider = ({ children }) => {
   const updateUser = async (newUserData) => {
     try {
       if (user) {
+        // Se user_foto é um path relativo, converter para URL completa
+        if (newUserData.user_foto) {
+          newUserData.user_foto = buildFullImageUrl(newUserData.user_foto);
+          console.log('🔧 [AuthContext] user_foto normalizado:', newUserData.user_foto);
+        }
+        
         const updatedUser = { ...user, ...newUserData };
         setUser(updatedUser);
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('✅ [AuthContext] user atualizado:', updatedUser);
       }
     } catch (e) {
       console.error("Failed to update user", e);

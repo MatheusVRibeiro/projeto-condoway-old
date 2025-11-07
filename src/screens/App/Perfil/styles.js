@@ -42,6 +42,14 @@ export const makeProfileStyles = (theme) => ({
     width: '100%',
     height: '100%',
     borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 36,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   cameraIconOverlay: {
     position: 'absolute',

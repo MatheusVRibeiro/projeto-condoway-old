@@ -18,8 +18,8 @@ export const useProfile = () => {
    * Carrega os dados do perfil do usuário
    */
   const loadProfile = async () => {
-    // Tenta ambos os formatos de ID (User_ID e user_id)
-    const userId = user?.User_ID || user?.user_id;
+    // Usa apenas user_id (nome correto do banco de dados)
+    const userId = user?.user_id;
     
     if (!userId) {
       console.warn('⚠️ [useProfile] Nenhum usuário logado');
@@ -85,7 +85,7 @@ export const useProfile = () => {
    * Atualiza os dados do perfil
    */
   const updateProfile = async (dadosAtualizados) => {
-    if (!user?.User_ID) {
+    if (!user?.user_id) {
       throw new Error('Nenhum usuário logado');
     }
 
@@ -94,7 +94,7 @@ export const useProfile = () => {
       setError(null);
       console.log('🔄 [useProfile] Atualizando perfil...', dadosAtualizados);
       
-      const response = await apiService.atualizarPerfilUsuario(user.User_ID, dadosAtualizados);
+      const response = await apiService.atualizarPerfilUsuario(user.user_id, dadosAtualizados);
       
       if (response.sucesso && response.dados) {
         setProfileData(response.dados);
@@ -124,7 +124,7 @@ export const useProfile = () => {
    * Altera a senha do usuário
    */
   const changePassword = async (senhaAtual, novaSenha) => {
-    if (!user?.User_ID) {
+    if (!user?.user_id) {
       throw new Error('Nenhum usuário logado');
     }
 
@@ -133,7 +133,7 @@ export const useProfile = () => {
       setError(null);
       console.log('🔄 [useProfile] Alterando senha...');
       
-      const response = await apiService.alterarSenha(user.User_ID, senhaAtual, novaSenha);
+      const response = await apiService.alterarSenha(user.user_id, senhaAtual, novaSenha);
       
       if (response.sucesso) {
         console.log('✅ [useProfile] Senha alterada com sucesso');
@@ -154,7 +154,12 @@ export const useProfile = () => {
    * Faz upload da foto de perfil
    */
   const uploadProfilePhoto = async (fileUri) => {
-    if (!user?.User_ID) {
+    // Usa apenas user_id (nome correto do banco de dados)
+    const userId = user?.user_id;
+    
+    if (!userId) {
+      console.error('❌ [useProfile] Nenhum usuário logado');
+      console.log('👤 [useProfile] user disponível:', user);
       throw new Error('Nenhum usuário logado');
     }
 
@@ -162,21 +167,31 @@ export const useProfile = () => {
       setLoading(true);
       setError(null);
       console.log('🔄 [useProfile] Fazendo upload da foto de perfil...');
+      console.log('🆔 [useProfile] userId:', userId);
       console.log('📸 [useProfile] URI da imagem:', fileUri);
       
-      const response = await apiService.uploadFotoPerfil(user.User_ID, fileUri);
+      const response = await apiService.uploadFotoPerfil(userId, fileUri);
       
-      console.log('📦 [useProfile] Resposta do upload:', response);
+      console.log('📦 [useProfile] Resposta do upload:', JSON.stringify(response, null, 2));
+      console.log('🔍 [useProfile] response.sucesso:', response.sucesso);
+      console.log('🔍 [useProfile] response.dados:', response.dados);
+      console.log('🔍 [useProfile] response.url:', response.url);
       
       if (response.sucesso && response.dados) {
-        const novaFotoUrl = response.dados.user_foto || response.dados.url;
-        console.log('✅ [useProfile] Nova URL da foto:', novaFotoUrl);
+        // IMPORTANTE: Usar response.url (URL completa) em vez de response.dados.user_foto (path relativo)
+        const novaFotoUrl = response.url || response.dados.user_foto || response.dados.url;
+        console.log('✅ [useProfile] Nova URL da foto (URL COMPLETA):', novaFotoUrl);
+        console.log('🔍 [useProfile] profileData atual:', profileData);
         
         // Atualiza o profileData com a nova URL da foto
-        setProfileData(prev => ({
-          ...prev,
-          user_foto: novaFotoUrl
-        }));
+        setProfileData(prev => {
+          const updated = {
+            ...prev,
+            user_foto: novaFotoUrl
+          };
+          console.log('🔄 [useProfile] profileData atualizado:', updated);
+          return updated;
+        });
 
         // Atualiza também no contexto de autenticação
         if (updateUser) {
@@ -184,13 +199,16 @@ export const useProfile = () => {
           await updateUser({
             user_foto: novaFotoUrl
           });
-          console.log('✅ [useProfile] Contexto atualizado');
+          console.log('✅ [useProfile] Contexto atualizado com user_foto:', novaFotoUrl);
+        } else {
+          console.warn('⚠️ [useProfile] updateUser não está disponível');
         }
         
         console.log('✅ [useProfile] Foto de perfil atualizada com sucesso');
         return response.dados;
       } else {
-        throw new Error('Resposta da API não contém dados');
+        console.error('❌ [useProfile] Resposta inválida:', { sucesso: response.sucesso, dados: response.dados });
+        throw new Error(response.erro || response.mensagem || 'Resposta da API não contém dados');
       }
     } catch (err) {
       console.error('❌ [useProfile] Erro ao fazer upload da foto:', err);
@@ -244,12 +262,12 @@ export const useProfile = () => {
    * Carrega o perfil automaticamente quando o usuário está disponível
    */
   useEffect(() => {
-    const userId = user?.User_ID || user?.user_id;
+    const userId = user?.user_id;
     if (userId && !profileData) {
       console.log('🔄 [useProfile] useEffect detectou usuário, carregando perfil...');
       loadProfile();
     }
-  }, [user?.User_ID, user?.user_id]);
+  }, [user?.user_id]);
 
   return {
     // Estados

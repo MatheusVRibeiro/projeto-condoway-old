@@ -322,4 +322,46 @@ export const styles = StyleSheet.create({
   bottomSpacer: {
     height: 40,
   },
+  // Estilos de campos melhorados
+  fieldContainer: {
+    marginBottom: 20,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  fieldInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 52,
+  },
+  fieldValue: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1e293b',
+    fontWeight: '500',
+  },
+  // Campos em linha (lado a lado)
+  fieldRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 0,
+  },
+  fieldHalf: {
+    flex: 1,
+  },
+  fieldLarge: {
+    flex: 2,
+  },
+  fieldSmall: {
+    flex: 1,
+  },
 });

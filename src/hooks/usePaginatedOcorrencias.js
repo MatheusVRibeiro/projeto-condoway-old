@@ -194,10 +194,10 @@ export const usePaginatedOcorrencias = (initialLimit = 20) => {
   /**
    * Atualizar ocorrência existente
    */
-  const updateOcorrencia = useCallback((ocorrenciaId, dadosAtualizados) => {
+  const updateOcorrencia = useCallback((oco_id, dadosAtualizados) => {
     setOcorrencias(prev => 
       prev.map(oco => 
-        oco.id === ocorrenciaId 
+        oco.oco_id === oco_id 
           ? { ...oco, ...dadosAtualizados }
           : oco
       )
@@ -207,8 +207,8 @@ export const usePaginatedOcorrencias = (initialLimit = 20) => {
   /**
    * Remover ocorrência
    */
-  const removeOcorrencia = useCallback((ocorrenciaId) => {
-    setOcorrencias(prev => prev.filter(oco => oco.id !== ocorrenciaId));
+  const removeOcorrencia = useCallback((oco_id) => {
+    setOcorrencias(prev => prev.filter(oco => oco.oco_id !== oco_id));
     setPagination(prev => ({
       ...prev,
       total: Math.max(0, prev.total - 1)

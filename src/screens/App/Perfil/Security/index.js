@@ -127,37 +127,36 @@ export default function Security() {
                 </>
               )}
             </TouchableOpacity>
+            {/* Password requirements moved here (below the button) */}
+            <View style={{ marginTop: 12 }}>
+              <Text style={[styles.infoTitle, { color: theme.colors.text }]}>Requisitos de Senha</Text>
+              <View style={[styles.infoContent, { backgroundColor: theme.colors.info + '22', borderLeftColor: theme.colors.info, marginTop: 8 }]}>
+                <Text style={[styles.infoText, { color: theme.colors.text }]}>• Mínimo de 8 caracteres</Text>
+                <Text style={[styles.infoText, { color: theme.colors.text }]}>• Recomendado: letras, números e símbolos</Text>
+                <Text style={[styles.infoText, { color: theme.colors.text }]}>• Evite informações pessoais</Text>
+                <Text style={[styles.infoText, { color: theme.colors.text }]}>• Use uma senha única</Text>
+              </View>
+            </View>
           </View>
         </Animatable.View>
 
         {/* Security Settings */}
         <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>CONFIGURAÇÕES DE SEGURANÇA</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <SecurityOption icon={Smartphone} title="Autenticação de Dois Fatores" subtitle="Adicione uma camada extra de segurança" hasSwitch={true} switchValue={twoFactorEnabled} onSwitchChange={setTwoFactorEnabled} />
-            <SecurityOption icon={Shield} title="Notificações de Segurança" subtitle="Receba alertas sobre atividades suspeitas" hasSwitch={true} switchValue={notificationsEnabled} onSwitchChange={setNotificationsEnabled} />
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow, padding: 20 }]}>            
+            <Text style={{ color: theme.colors.text, textAlign: 'center' }}>Em breve — Implementação futura</Text>
           </View>
         </Animatable.View>
 
         {/* Account Security */}
         <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>SEGURANÇA DA CONTA</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <SecurityOption icon={Key} title="Sessões Ativas" subtitle="Gerencie dispositivos conectados" onPress={() => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento')} />
-            <SecurityOption icon={AlertTriangle} title="Atividade Recente" subtitle="Visualize ações realizadas na conta" onPress={() => Alert.alert('Em breve', 'Funcionalidade em desenvolvimento')} variant="danger" />
+          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow, padding: 20 }]}>            
+            <Text style={{ color: theme.colors.text, textAlign: 'center' }}>Em breve — Implementação futura</Text>
           </View>
         </Animatable.View>
 
-        {/* Password Requirements */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={500} style={styles.infoSection}>
-          <Text style={[styles.infoTitle, { color: theme.colors.text }]}>Requisitos de Senha</Text>
-          <View style={[styles.infoContent, { backgroundColor: theme.colors.info + '22', borderLeftColor: theme.colors.info }]}>
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Mínimo de 6 caracteres</Text>
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Recomendado: letras, números e símbolos</Text>
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Evite informações pessoais</Text>
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>• Use uma senha única</Text>
-          </View>
-        </Animatable.View>
+        {/* Password requirements was moved to Change Password section above */}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>

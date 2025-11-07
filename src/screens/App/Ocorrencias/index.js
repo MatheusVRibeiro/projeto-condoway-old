@@ -154,7 +154,7 @@ export default function Ocorrencias() {
       Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar sua galeria de fotos.');
       return;
     }
-    let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, quality: 0.8 });
+    let result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, quality: 0.8 });
     if (!result.canceled) {
       await addAttachment(result.assets[0].uri);
     }
@@ -262,7 +262,7 @@ export default function Ocorrencias() {
       
       // Atualizar a lista local com o novo comentário
       setMyIssues(prev => prev.map(it => 
-        it.id === issueId 
+        it.oco_id === issueId 
           ? { ...it, comments: [...(it.comments || []), novoComentario] } 
           : it
       ));
@@ -347,7 +347,8 @@ export default function Ocorrencias() {
 
       // Garantir que a nova ocorrência tenha um ID válido
       const ocorrenciaComId = {
-        id: novaOcorrencia?.oco_id || novaOcorrencia?.id || Date.now(),
+        oco_id: novaOcorrencia?.oco_id,
+        id: novaOcorrencia?.oco_id, // Manter compatibilidade temporária
         protocol: protocoloRetornado || 'Gerando...',
         category: category?.title || 'Geral',
         title: category?.title || 'Ocorrência',
@@ -804,7 +805,7 @@ export default function Ocorrencias() {
   
   // Filtrar ocorrências por status
   const getFilteredIssues = () => {
-    let filtered = myIssues.filter(item => item && item.id); // Validação de segurança
+    let filtered = myIssues.filter(item => item && item.oco_id); // Validação de segurança usando oco_id
 
     // Filtrar por status
     if (filterStatus !== 'todas') {
@@ -898,7 +899,7 @@ export default function Ocorrencias() {
         {/* Lista de ocorrências com infinite scroll e pull to refresh */}
         <FlatList
           data={filteredIssues}
-          keyExtractor={(item, index) => item?.id?.toString() || `item-${index}`}
+          keyExtractor={(item, index) => item?.oco_id?.toString() || item?.id?.toString() || `item-${index}`}
           contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
           refreshControl={
             <RefreshControl
