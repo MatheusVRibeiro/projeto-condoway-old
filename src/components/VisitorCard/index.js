@@ -125,7 +125,10 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   
-  if (!item) return null;
+  if (!item) {
+    console.warn('⚠️ [VisitorCard] Item é null ou undefined');
+    return null;
+  }
   
   // Suporta sub-status da API (ex: vst_sub_status ou campo específico)
   const subStatus = item.sub_status || item.vst_sub_status;
@@ -215,7 +218,7 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
                   </Text>
                 </View>
                 
-                {item.visit_time && item.visit_time !== 'N/A' && (
+                {item.visit_time && (
                   <>
                     <View style={styles.metaDivider} />
                     <View style={styles.metaItem}>

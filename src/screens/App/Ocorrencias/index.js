@@ -63,7 +63,7 @@ export default function Ocorrencias() {
   const [messageDrafts, setMessageDrafts] = useState({}); // { [issueId]: text }
   
   // Estados para filtros
-  const [filterStatus, setFilterStatus] = useState('todas'); // 'todas', 'abertas', 'analise', 'resolvidas'
+  const [filterStatus, setFilterStatus] = useState('abertas'); // Iniciado em 'abertas' ao invés de 'todas'
   // refreshing agora vem do hook
   const [selectedOccurrence, setSelectedOccurrence] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -74,8 +74,11 @@ export default function Ocorrencias() {
   const myIssues = useMemo(() => {
     if (!ocorrencias || !Array.isArray(ocorrencias)) return [];
     
+    console.log('🔍 [Ocorrencias] Total de ocorrências carregadas:', ocorrencias.length);
+    console.log('🔍 [Ocorrencias] user.userap_id:', user?.userap_id);
+    
     // Mapear os dados da API para o formato esperado
-    return ocorrencias.map(oco => ({
+    const mapped = ocorrencias.map(oco => ({
       id: oco.oco_id,
       protocol: oco.oco_protocolo,
       title: oco.oco_categoria,
@@ -83,9 +86,7 @@ export default function Ocorrencias() {
       description: oco.oco_descricao,
       location: oco.oco_localizacao,
       date: oco.oco_data ? new Date(oco.oco_data).toLocaleString('pt-BR') : '',
-      status: oco.oco_status === 'Aberta' ? 'Em Análise' : 
-              oco.oco_status === 'Em Andamento' ? 'Em Análise' : 
-              oco.oco_status === 'Resolvida' ? 'Resolvida' : oco.oco_status,
+      status: oco.oco_status || 'Aberta', // Manter o status original do backend
       priority: oco.oco_prioridade?.toLowerCase() || 'media',
       attachments: oco.oco_imagem ? [oco.oco_imagem] : [],
       comments: [
@@ -97,11 +98,30 @@ export default function Ocorrencias() {
       ],
       // Dados originais para referência
       _original: oco
-    })).filter(oco => {
+    }));
+    
+    console.log('🔍 [Ocorrencias] Ocorrências antes do filtro:', mapped.map(o => ({
+      id: o.id,
+      userap_id: o._original?.userap_id
+    })));
+    
+    const filtered = mapped.filter(oco => {
       // Filtrar apenas ocorrências do usuário logado
-      return oco._original?.userap_id === user?.user_id;
+      const matches = oco._original?.userap_id === user?.userap_id;
+      if (!matches) {
+        console.log('❌ [Ocorrencias] Ocorrência filtrada:', {
+          oco_id: oco.id,
+          oco_userap_id: oco._original?.userap_id,
+          user_userap_id: user?.userap_id
+        });
+      }
+      return matches;
     });
-  }, [ocorrencias, user?.user_id]);
+    
+    console.log('✅ [Ocorrencias] Ocorrências após filtro:', filtered.length);
+    
+    return filtered;
+  }, [ocorrencias, user?.userap_id]);
 
   // ✅ Função simplificada - hook já gerencia o carregamento
   const buscarMinhasOcorrencias = refresh;
@@ -462,9 +482,18 @@ export default function Ocorrencias() {
 
     const stats = {
       total: myIssues.length,
-      open: myIssues.filter(issue => issue?.status === 'Aberta' || issue?.status === 'Pendente').length,
-      inProgress: myIssues.filter(issue => issue?.status === 'Em Análise' || issue?.status === 'Em Andamento').length,
-      resolved: myIssues.filter(issue => issue?.status === 'Resolvida' || issue?.status === 'Concluída').length,
+      open: myIssues.filter(issue => {
+        const status = issue?.status?.toLowerCase();
+        return status === 'aberta' || status === 'pendente';
+      }).length,
+      inProgress: myIssues.filter(issue => {
+        const status = issue?.status?.toLowerCase();
+        return status === 'em análise' || status === 'em andamento';
+      }).length,
+      resolved: myIssues.filter(issue => {
+        const status = issue?.status?.toLowerCase();
+        return status === 'resolvida' || status === 'concluída';
+      }).length,
     };
 
     return stats;
@@ -805,7 +834,8 @@ export default function Ocorrencias() {
   
   // Filtrar ocorrências por status
   const getFilteredIssues = () => {
-    let filtered = myIssues.filter(item => item && item.oco_id); // Validação de segurança usando oco_id
+    console.log('🔍 [getFilteredIssues] myIssues recebido:', myIssues.length);
+    let filtered = myIssues.filter(item => item && item.id); // Validação de segurança usando id
 
     // Filtrar por status
     if (filterStatus !== 'todas') {
@@ -824,11 +854,52 @@ export default function Ocorrencias() {
       });
     }
 
+    console.log('✅ [getFilteredIssues] Resultado após filtros:', filtered.length);
     return filtered;
+  };
+
+  // Agrupar ocorrências por período (Hoje, Esta semana, Este mês, Mais antigas)
+  const groupOccurrencesByPeriod = (issues) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const groups = {
+      hoje: [],
+      semana: [],
+      mes: [],
+      antigas: []
+    };
+
+    issues.forEach(issue => {
+      if (!issue.date) {
+        groups.antigas.push(issue);
+        return;
+      }
+
+      // Extrair data do formato brasileiro "DD/MM/YYYY, HH:MM:SS"
+      const dateStr = issue.date.split(',')[0]; // "DD/MM/YYYY"
+      const [day, month, year] = dateStr.split('/').map(Number);
+      const issueDate = new Date(year, month - 1, day);
+
+      if (issueDate >= today) {
+        groups.hoje.push(issue);
+      } else if (issueDate >= weekAgo) {
+        groups.semana.push(issue);
+      } else if (issueDate >= monthAgo) {
+        groups.mes.push(issue);
+      } else {
+        groups.antigas.push(issue);
+      }
+    });
+
+    return groups;
   };
 
   const renderMyIssues = () => {
     const filteredIssues = getFilteredIssues();
+    const groupedIssues = groupOccurrencesByPeriod(filteredIssues);
     const stats = getOccurrenceStats();
 
     return (
@@ -843,13 +914,12 @@ export default function Ocorrencias() {
           />
         )}
 
-        {/* Tabs de filtro por status */}
+        {/* Tabs de filtro por status - SEM "Todas" e SEM badges de contagem */}
         <View style={styles.statusFilterContainer}>
           {[
-            { key: 'todas', label: 'Todas', count: myIssues.length },
-            { key: 'abertas', label: 'Abertas', count: stats.open },
-            { key: 'analise', label: 'Análise', count: stats.inProgress },
-            { key: 'resolvidas', label: 'Resolvidas', count: stats.resolved },
+            { key: 'abertas', label: 'Abertas' },
+            { key: 'analise', label: 'Em Análise' },
+            { key: 'resolvidas', label: 'Resolvidas' },
           ].map((tab) => (
             <TouchableOpacity
               key={tab.key}
@@ -873,33 +943,12 @@ export default function Ocorrencias() {
               >
                 {tab.label}
               </Text>
-              {tab.count > 0 && (
-                <View
-                  style={[
-                    styles.statusFilterBadge,
-                    {
-                      backgroundColor: filterStatus === tab.key ? 'rgba(255, 255, 255, 0.3)' : theme.colors.primary,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusFilterBadgeText,
-                      { color: filterStatus === tab.key ? '#ffffff' : '#ffffff' },
-                    ]}
-                  >
-                    {tab.count}
-                  </Text>
-                </View>
-              )}
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Lista de ocorrências com infinite scroll e pull to refresh */}
-        <FlatList
-          data={filteredIssues}
-          keyExtractor={(item, index) => item?.oco_id?.toString() || item?.id?.toString() || `item-${index}`}
+        {/* Lista de ocorrências agrupadas por período */}
+        <ScrollView
           contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
           refreshControl={
             <RefreshControl
@@ -909,76 +958,118 @@ export default function Ocorrencias() {
               tintColor={theme.colors.primary}
             />
           }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
-          renderItem={({ item, index }) => (
-            <OccurrenceCard
-              item={item}
-              index={index}
-              onPress={(issue) => {
-                setSelectedOccurrence(issue);
-                setShowModal(true);
-              }}
+        >
+          {/* Hoje */}
+          {groupedIssues.hoje.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.periodHeader, { color: theme.colors.text }]}>Hoje</Text>
+              {groupedIssues.hoje.map((item, index) => (
+                <OccurrenceCard
+                  key={item?.oco_id?.toString() || item?.id?.toString() || `hoje-${index}`}
+                  item={item}
+                  index={index}
+                  onPress={(issue) => {
+                    setSelectedOccurrence(issue);
+                    setShowModal(true);
+                  }}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Esta Semana */}
+          {groupedIssues.semana.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.periodHeader, { color: theme.colors.text }]}>Esta Semana</Text>
+              {groupedIssues.semana.map((item, index) => (
+                <OccurrenceCard
+                  key={item?.oco_id?.toString() || item?.id?.toString() || `semana-${index}`}
+                  item={item}
+                  index={index}
+                  onPress={(issue) => {
+                    setSelectedOccurrence(issue);
+                    setShowModal(true);
+                  }}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Este Mês */}
+          {groupedIssues.mes.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.periodHeader, { color: theme.colors.text }]}>Este Mês</Text>
+              {groupedIssues.mes.map((item, index) => (
+                <OccurrenceCard
+                  key={item?.oco_id?.toString() || item?.id?.toString() || `mes-${index}`}
+                  item={item}
+                  index={index}
+                  onPress={(issue) => {
+                    setSelectedOccurrence(issue);
+                    setShowModal(true);
+                  }}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Mais Antigas */}
+          {groupedIssues.antigas.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.periodHeader, { color: theme.colors.text }]}>Mais Antigas</Text>
+              {groupedIssues.antigas.map((item, index) => (
+                <OccurrenceCard
+                  key={item?.oco_id?.toString() || item?.id?.toString() || `antigas-${index}`}
+                  item={item}
+                  index={index}
+                  onPress={(issue) => {
+                    setSelectedOccurrence(issue);
+                    setShowModal(true);
+                  }}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <View style={{ padding: 60, alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={{ color: theme.colors.textSecondary, marginTop: 16 }}>
+                Carregando ocorrências...
+              </Text>
+            </View>
+          )}
+
+          {/* Error */}
+          {loadError && (
+            <View style={{ padding: 40, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.error, marginBottom: 16, textAlign: 'center' }}>
+                {loadError}
+              </Text>
+              <TouchableOpacity 
+                style={{ 
+                  backgroundColor: theme.colors.primary, 
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                  borderRadius: 8 
+                }}
+                onPress={refresh}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                  Tentar novamente
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Empty state */}
+          {filteredIssues.length === 0 && !loading && !loadError && (
+            <OccurrenceEmptyState
+              message={`Nenhuma ocorrência ${filterStatus === 'abertas' ? 'aberta' : filterStatus === 'analise' ? 'em análise' : 'resolvida'}`}
             />
           )}
-          ListFooterComponent={() => {
-            if (!loadingMore) return null;
-            return (
-              <View style={{ padding: 20, alignItems: 'center' }}>
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-                <Text style={{ color: theme.colors.textSecondary, marginTop: 8, fontSize: 12 }}>
-                  Carregando mais ocorrências...
-                </Text>
-              </View>
-            );
-          }}
-          ListEmptyComponent={() => {
-            if (loading) {
-              return (
-                <View style={{ padding: 60, alignItems: 'center' }}>
-                  <ActivityIndicator size="large" color={theme.colors.primary} />
-                  <Text style={{ color: theme.colors.textSecondary, marginTop: 16 }}>
-                    Carregando ocorrências...
-                  </Text>
-                </View>
-              );
-            }
-            if (loadError) {
-              return (
-                <View style={{ padding: 40, alignItems: 'center' }}>
-                  <Text style={{ color: theme.colors.error, marginBottom: 16, textAlign: 'center' }}>
-                    {loadError}
-                  </Text>
-                  <TouchableOpacity 
-                    style={{ 
-                      backgroundColor: theme.colors.primary, 
-                      paddingHorizontal: 24,
-                      paddingVertical: 12,
-                      borderRadius: 8 
-                    }}
-                    onPress={refresh}
-                  >
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                      Tentar novamente
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            }
-            return (
-              <OccurrenceEmptyState
-                message={
-                  filterStatus !== 'todas'
-                    ? `Nenhuma ocorrência ${filterStatus}`
-                    : 'Você ainda não tem ocorrências registradas'
-                }
-              />
-            );
-          }}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-        />
+        </ScrollView>
       </View>
     );
   };

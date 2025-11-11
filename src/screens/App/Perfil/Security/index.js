@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,29 @@ import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
 import { useTheme } from '../../../../contexts/ThemeProvider';
 import { useProfile } from '../../../../hooks';
+
+// Componente PasswordInput otimizado com React.memo
+const PasswordInput = React.memo(({ label, value, onChangeText, placeholder, showPassword, onToggleShow, theme }) => (
+  <View style={styles.inputContainer}>
+    <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{label}</Text>
+    <View style={[styles.passwordInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+      <TextInput
+        style={[styles.passwordInput, { color: theme.colors.text }]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={theme.colors.textSecondary}
+        secureTextEntry={!showPassword}
+        autoCapitalize="none"
+        autoCorrect={false}
+        textContentType="password"
+      />
+      <TouchableOpacity onPress={onToggleShow} style={styles.eyeButton}>
+        {showPassword ? <EyeOff size={20} color={theme.colors.textSecondary} /> : <Eye size={20} color={theme.colors.textSecondary} />}
+      </TouchableOpacity>
+    </View>
+  </View>
+));
 
 export default function Security() {
   const navigation = useNavigation();
@@ -20,6 +43,31 @@ export default function Security() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // Usar useCallback para evitar recriação das funções em cada render
+  const handleCurrentPasswordChange = useCallback((text) => {
+    setCurrentPassword(text);
+  }, []);
+
+  const handleNewPasswordChange = useCallback((text) => {
+    setNewPassword(text);
+  }, []);
+
+  const handleConfirmPasswordChange = useCallback((text) => {
+    setConfirmPassword(text);
+  }, []);
+
+  const toggleShowCurrentPassword = useCallback(() => {
+    setShowCurrentPassword(prev => !prev);
+  }, []);
+
+  const toggleShowNewPassword = useCallback(() => {
+    setShowNewPassword(prev => !prev);
+  }, []);
+
+  const toggleShowConfirmPassword = useCallback(() => {
+    setShowConfirmPassword(prev => !prev);
+  }, []);
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -37,13 +85,26 @@ export default function Security() {
 
     try {
       await changePassword(currentPassword, newPassword);
-      Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+      
+      // Limpar os campos primeiro
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      
+      // Mostrar mensagem de sucesso com botão OK
+      Alert.alert(
+        '✅ Sucesso!', 
+        'Sua senha foi alterada com sucesso.',
+        [
+          {
+            text: 'OK',
+            onPress: () => console.log('✅ [Security] Senha alterada confirmada pelo usuário')
+          }
+        ]
+      );
     } catch (error) {
       Alert.alert(
-        'Erro', 
+        '❌ Erro', 
         error.message || 'Não foi possível alterar a senha. Verifique se a senha atual está correta.'
       );
     }
@@ -75,25 +136,6 @@ export default function Security() {
     </TouchableOpacity>
   );
 
-  const PasswordInput = ({ label, value, onChangeText, placeholder, showPassword, onToggleShow }) => (
-    <View style={styles.inputContainer}>
-      <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{label}</Text>
-      <View style={[styles.passwordInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-        <TextInput
-          style={[styles.passwordInput, { color: theme.colors.text }]}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={theme.colors.textSecondary}
-          secureTextEntry={!showPassword}
-        />
-        <TouchableOpacity onPress={onToggleShow} style={styles.eyeButton}>
-          {showPassword ? <EyeOff size={20} color={theme.colors.textSecondary} /> : <Eye size={20} color={theme.colors.textSecondary} />}
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
@@ -110,9 +152,33 @@ export default function Security() {
         <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ALTERAR SENHA</Text>
           <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <PasswordInput label="Senha Atual" value={currentPassword} onChangeText={setCurrentPassword} placeholder="Digite sua senha atual" showPassword={showCurrentPassword} onToggleShow={() => setShowCurrentPassword(!showCurrentPassword)} />
-            <PasswordInput label="Nova Senha" value={newPassword} onChangeText={setNewPassword} placeholder="Digite a nova senha" showPassword={showNewPassword} onToggleShow={() => setShowNewPassword(!showNewPassword)} />
-            <PasswordInput label="Confirmar Nova Senha" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Confirme a nova senha" showPassword={showConfirmPassword} onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)} />
+            <PasswordInput 
+              label="Senha Atual" 
+              value={currentPassword} 
+              onChangeText={handleCurrentPasswordChange} 
+              placeholder="Digite sua senha atual" 
+              showPassword={showCurrentPassword} 
+              onToggleShow={toggleShowCurrentPassword}
+              theme={theme}
+            />
+            <PasswordInput 
+              label="Nova Senha" 
+              value={newPassword} 
+              onChangeText={handleNewPasswordChange} 
+              placeholder="Digite a nova senha" 
+              showPassword={showNewPassword} 
+              onToggleShow={toggleShowNewPassword}
+              theme={theme}
+            />
+            <PasswordInput 
+              label="Confirmar Nova Senha" 
+              value={confirmPassword} 
+              onChangeText={handleConfirmPasswordChange} 
+              placeholder="Confirme a nova senha" 
+              showPassword={showConfirmPassword} 
+              onToggleShow={toggleShowConfirmPassword}
+              theme={theme}
+            />
             <TouchableOpacity 
               style={[styles.changePasswordButton, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} 
               onPress={handleChangePassword}

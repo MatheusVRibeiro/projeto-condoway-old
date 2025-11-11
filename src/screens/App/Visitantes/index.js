@@ -50,7 +50,7 @@ const VisitantesScreen = () => {
 
     return visitantes
       .filter(v => {
-        const status = (v.vst_status || v.status || '').toString();
+        const status = (v.status || v.vst_status || '').toString();
         if (selectedTab === 'waiting') {
           return status !== 'Entrou' && status !== 'Finalizado' && status !== 'Cancelado';
         } else if (selectedTab === 'present') {
@@ -59,21 +59,49 @@ const VisitantesScreen = () => {
           return status === 'Finalizado' || status === 'Cancelado';
         }
       })
-      .map(v => {
+      .map((v, index) => {
         const randomId = Math.random().toString();
-        const vstId = v.vst_id ? v.vst_id.toString() : null;
-        const genId = v.id ? v.id.toString() : null;
+        const vstId = v.vst_id || v.id;
         
-        return {
-          id: vstId || genId || randomId,
-          visitor_name: v.vst_nome || v.visitor_name || 'Visitante',
-          cpf: v.vst_documento || v.cpf || 'N/A',
-          phone: v.vst_celular || v.phone || null,
-          visit_date: v.vst_validade_inicio || v.visit_date,
-          visit_time: parseDateTime(v.vst_validade_inicio || v.visit_date) || 'N/A',
-          qr_code: v.vst_qrcode_hash || v.qr_code,
-          status: v.vst_status || v.status,
+        // Backend retorna campos em camelCase: nome, celular, documento, status, validadeInicio, validadeFim
+        const nomeVisitante = v.nome || v.vst_nome || v.visitor_name;
+        const documentoVisitante = v.documento || v.vst_documento || v.cpf;
+        const celularVisitante = v.celular || v.vst_celular || v.phone;
+        const statusVisitante = v.status || v.vst_status;
+        
+        // Data/hora: backend retorna validadeInicio e validadeFim (camelCase)
+        const dataValidade = v.validadeInicio || v.validade_inicio || v.vst_validade_inicio || v.visit_date;
+        const dataValidadeFim = v.validadeFim || v.validade_fim || v.vst_validade_fim;
+        
+        const qrCodeHash = v.qrcode_hash || v.vst_qrcode_hash || v.qr_code;
+        const tipoVisita = v.tipo || v.vst_tipo;
+        
+        // Campos adicionais
+        const moradorAutorizante = v.morador || v.morador_nome;
+        const unidadeNumero = v.unidade || v.ap_numero;
+        
+        // Extrair hora da data
+        const horaValidade = parseDateTime(dataValidade);
+        
+        const mappedVisitor = {
+          id: vstId ? vstId.toString() : randomId,
+          visitor_name: nomeVisitante || 'Visitante',
+          cpf: documentoVisitante || null,
+          phone: celularVisitante || null,
+          visit_date: dataValidade || null,
+          visit_date_end: dataValidadeFim || null,
+          visit_time: horaValidade || null,
+          qr_code: qrCodeHash || null,
+          status: statusVisitante || 'Aguardando',
+          tipo: tipoVisita || 'agendado',
+          sub_status: v.sub_status || v.vst_sub_status || null,
+          vst_precisa_aprovacao: v.precisa_aprovacao || v.vst_precisa_aprovacao || false,
+          // Campos extras
+          morador: moradorAutorizante || null,
+          unidade: unidadeNumero || null,
         };
+        
+        return mappedVisitor;
       })
       .filter(v => {
         if (!searchQuery.trim()) return true;
@@ -87,12 +115,12 @@ const VisitantesScreen = () => {
   const filteredData = getFilteredVisitors();
 
   const waitingCount = visitantes.filter(v => {
-    const st = (v.vst_status || v.status || '').toString();
+    const st = (v.status || v.vst_status || '').toString();
     return st !== 'Entrou' && st !== 'Finalizado' && st !== 'Cancelado';
   }).length;
 
   const presentCount = visitantes.filter(v => {
-    const status = v.vst_status || v.status;
+    const status = v.status || v.vst_status;
     return status === 'Entrou';
   }).length;
 

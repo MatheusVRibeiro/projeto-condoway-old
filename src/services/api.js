@@ -18,14 +18,58 @@ export const buildFullImageUrl = (path) => {
   return path;
 };
 
-// Interceptor de REQUEST - Para debug do token
+// Interceptor de REQUEST - Para validar token antes de cada requisição
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const token = config.headers.common?.Authorization || config.headers?.Authorization;
+    
+    // Debug da requisição
     console.log(`🔄 [API] ${config.method.toUpperCase()} ${config.url}`, {
       hasToken: !!token,
       token: token ? token.substring(0, 30) + '...' : 'NENHUM'
     });
+    
+    // Verificar se o token está expirado ANTES de fazer a requisição
+    if (token && !config.url.includes('/login')) {
+      // Extrair o token do header "Bearer TOKEN"
+      const tokenValue = token.replace('Bearer ', '');
+      
+      if (isTokenExpired(tokenValue)) {
+        const timeRemaining = getTokenTimeRemaining(tokenValue);
+        console.error('❌ [AUTH] Token expirado detectado ANTES da requisição!');
+        console.error(`⏰ [AUTH] Tempo restante: ${timeRemaining} minutos (expirado)`);
+        
+        try {
+          // Importar AsyncStorage dinamicamente
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          
+          // Limpar dados
+          console.log('🧹 [AUTH] Limpando dados de autenticação...');
+          await AsyncStorage.multiRemove(['user', 'token', 'userEmail', 'userPassword', 'authToken', 'userData']);
+          
+          // Limpar token do axios
+          setAuthToken(null);
+          
+          // Emitir evento para logout
+          if (global.onTokenExpired) {
+            console.log('📢 [AUTH] Chamando global.onTokenExpired()...');
+            global.onTokenExpired();
+          }
+          
+          // Cancelar a requisição
+          throw new Error('Token expirado. Redirecionando para login...');
+        } catch (error) {
+          console.error('❌ [AUTH] Erro ao processar token expirado:', error);
+          throw error;
+        }
+      } else {
+        const timeRemaining = getTokenTimeRemaining(tokenValue);
+        if (timeRemaining !== null && timeRemaining < 30) {
+          console.warn(`⚠️ [AUTH] Token expira em ${timeRemaining} minutos!`);
+        }
+      }
+    }
+    
     return config;
   },
   (error) => {
@@ -43,54 +87,40 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/login')) {
       originalRequest._retry = true;
       
-      console.warn('⚠️ [API] Token expirado (401). Tentando renovar...');
+      // Verificar a mensagem de erro
+      const errorMessage = error.response?.data?.mensagem || error.response?.data?.message || '';
+      const isTokenExpired = errorMessage.includes('jwt expired') || 
+                            errorMessage.includes('token expirado') ||
+                            errorMessage.includes('Token inválido');
+      
+      if (isTokenExpired) {
+        console.error('❌ [AUTH] Erro de autenticação:', errorMessage);
+        console.error('🔴 [AUTH] Token JWT expirado. Fazendo logout forçado...');
+      } else {
+        console.warn('⚠️ [API] Erro 401 - Não autorizado:', errorMessage);
+      }
       
       try {
         // Importar AsyncStorage dinamicamente para evitar dependência circular
         const AsyncStorage = require('@react-native-async-storage/async-storage').default;
         
-        // Pegar credenciais salvas
-        const savedEmail = await AsyncStorage.getItem('userEmail');
-        const savedPassword = await AsyncStorage.getItem('userPassword');
+        // Limpar TODOS os dados de autenticação
+        console.log('🧹 [AUTH] Limpando dados de autenticação do storage...');
+        await AsyncStorage.multiRemove(['user', 'token', 'userEmail', 'userPassword', 'authToken', 'userData']);
         
-        if (savedEmail && savedPassword) {
-          console.log('🔄 [API] Fazendo re-login automático...');
-          
-          // Fazer login novamente
-          const loginResponse = await api.post('/login', {
-            user_email: savedEmail,
-            user_senha: savedPassword
-          });
-          
-          if (loginResponse.data?.sucesso && loginResponse.data?.token) {
-            const newToken = loginResponse.data.token;
-            
-            // Configurar novo token
-            setAuthToken(newToken);
-            await AsyncStorage.setItem('authToken', newToken);
-            
-            // Atualizar header da requisição original
-            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-            
-            console.log('✅ [API] Token renovado com sucesso. Repetindo requisição...');
-            
-            // Repetir a requisição original
-            return api(originalRequest);
-          }
-        }
+        // Limpar token do axios
+        setAuthToken(null);
         
-        console.error('❌ [API] Não foi possível renovar o token. Redirecionando para login...');
-        
-        // Limpar dados e redirecionar para login
-        await AsyncStorage.multiRemove(['authToken', 'userEmail', 'userPassword', 'userData']);
-        
-        // Emitir evento para o AuthContext fazer logout
+        // Emitir evento para o AuthContext fazer logout e redirecionar
         if (global.onTokenExpired) {
+          console.log('📢 [AUTH] Chamando global.onTokenExpired() para redirecionar...');
           global.onTokenExpired();
+        } else {
+          console.warn('⚠️ [AUTH] global.onTokenExpired não está definido!');
         }
         
-      } catch (renewError) {
-        console.error('❌ [API] Erro ao renovar token:', renewError);
+      } catch (logoutError) {
+        console.error('❌ [AUTH] Erro ao fazer logout:', logoutError);
       }
     }
     
@@ -139,6 +169,50 @@ const decodeJwt = (token) => {
     return JSON.parse(json);
   } catch (e) {
     return null;
+  }
+};
+
+// Helper: verifica se o token JWT está expirado
+export const isTokenExpired = (token) => {
+  if (!token) return true;
+  
+  try {
+    const decoded = decodeJwt(token);
+    if (!decoded || !decoded.exp) {
+      console.warn('⚠️ [JWT] Token não possui campo "exp" (expiration)');
+      return false; // Se não tem exp, considerar válido (o backend que deve rejeitar)
+    }
+    
+    const now = Math.floor(Date.now() / 1000); // timestamp em segundos
+    const isExpired = decoded.exp < now;
+    
+    if (isExpired) {
+      const expirationDate = new Date(decoded.exp * 1000);
+      console.warn(`⚠️ [JWT] Token expirado em: ${expirationDate.toLocaleString()}`);
+    }
+    
+    return isExpired;
+  } catch (error) {
+    console.error('❌ [JWT] Erro ao verificar expiração do token:', error);
+    return true; // Em caso de erro, considerar expirado por segurança
+  }
+};
+
+// Helper: calcula tempo restante até a expiração do token (em minutos)
+export const getTokenTimeRemaining = (token) => {
+  if (!token) return 0;
+  
+  try {
+    const decoded = decodeJwt(token);
+    if (!decoded || !decoded.exp) return null;
+    
+    const now = Math.floor(Date.now() / 1000);
+    const remainingSeconds = decoded.exp - now;
+    const remainingMinutes = Math.floor(remainingSeconds / 60);
+    
+    return remainingMinutes > 0 ? remainingMinutes : 0;
+  } catch (error) {
+    return 0;
   }
 };
 
@@ -700,6 +774,48 @@ export const apiService = {
     }
   },
 
+  // Condomínio
+  buscarCondominio: async (condominioId) => {
+    try {
+      console.log(`🔄 [API] Buscando dados do condomínio ID: ${condominioId}...`);
+      const response = await api.get(`/condominio/${condominioId}`);
+      console.log('✅ [API] Dados do condomínio recebidos:', response.data);
+      
+      const dados = response.data?.dados || response.data || null;
+      
+      if (!dados) {
+        console.warn('⚠️ [API] Nenhum dado de condomínio retornado');
+        return null;
+      }
+      
+      // Normalizar campos do condomínio
+      const condominio = {
+        cond_id: dados.cond_id ?? condominioId,
+        cond_nome: dados.cond_nome ?? null,
+        cond_endereco: dados.cond_endereco ?? null,
+        cond_cidade: dados.cond_cidade ?? null,
+        cond_estado: dados.cond_estado ?? null,
+        cond_cep: dados.cond_cep ?? null,
+        cond_telefone: dados.cond_telefone ?? null,
+        // Campos extras se existirem
+        _raw: dados
+      };
+      
+      console.log('🏘️ [API] Condomínio normalizado:', condominio);
+      return condominio;
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar condomínio:', error.response?.status, error.response?.data);
+      
+      // Se endpoint não existe (404), avisar mas não quebrar
+      if (error.response?.status === 404) {
+        console.warn('⚠️ [API] Endpoint /condominio/:id não implementado no backend');
+        return null;
+      }
+      
+      return null;
+    }
+  },
+
   // Perfil do Usuário (com normalização de campos para evitar diferenças de names entre backends)
   buscarPerfilUsuario: async (userId) => {
     try {
@@ -715,9 +831,21 @@ export const apiService = {
       const normalize = (p) => {
         // Se user_foto existe mas é apenas um path relativo, construir URL completa
         let userFoto = p.user_foto ?? null;
+        
+        console.log('📸 [API] user_foto recebido do backend:', userFoto);
+        console.log('🌐 [API] baseURL:', baseURL);
+        
         if (userFoto && userFoto.startsWith('/uploads/')) {
           userFoto = `${baseURL}${userFoto}`;
-          console.log('🔧 [API] user_foto convertido para URL completa:', userFoto);
+          console.log('✅ [API] user_foto convertido para URL completa:', userFoto);
+        } else if (userFoto && !userFoto.startsWith('http')) {
+          // Se não começa com /uploads/ mas também não é http/https, adiciona baseURL
+          userFoto = `${baseURL}${userFoto.startsWith('/') ? '' : '/'}${userFoto}`;
+          console.log('✅ [API] user_foto normalizado:', userFoto);
+        } else if (userFoto) {
+          console.log('ℹ️ [API] user_foto já é URL completa:', userFoto);
+        } else {
+          console.log('⚠️ [API] user_foto é NULL - usuário sem foto');
         }
         
         return {
@@ -746,6 +874,7 @@ export const apiService = {
           cond_endereco: p.cond_endereco ?? null,
           cond_cidade: p.cond_cidade ?? null,
           cond_estado: p.cond_estado ?? null,
+          cond_taxa_base: p.cond_taxa_base ?? null,
 
           // Mantém o objeto original para casos extras
           _raw: p,
@@ -881,4 +1010,72 @@ export const apiService = {
       return { sucesso: false, erro: error.message };
     }
   },
+
+  // Alterar Senha do Usuário
+  alterarSenha: async (userId, senhaAtual, novaSenha) => {
+    try {
+      console.log(`🔄 [API] Alterando senha do usuário ID: ${userId}...`);
+      console.log(`📋 [API] Dados enviados:`, { 
+        senhaAtual: senhaAtual ? '***' : '(vazio)', 
+        novaSenha: novaSenha ? '***' : '(vazio)' 
+      });
+      
+      const requestBody = {
+        senhaAtual: senhaAtual,  // ⚠️ Backend espera camelCase
+        novaSenha: novaSenha     // ⚠️ Backend espera camelCase
+      };
+      
+      console.log(`📤 [API] Body da requisição:`, Object.keys(requestBody));
+      
+      const response = await api.put(`/usuario/senha/${userId}`, requestBody);
+      
+      console.log('✅ [API] Senha alterada com sucesso:', response.data);
+      return response.data; // { sucesso: true, mensagem: "Senha alterada com sucesso" }
+    } catch (error) {
+      console.error('❌ [API] Erro ao alterar senha:', error.response?.status, error.response?.data);
+      
+      // Tratar erros específicos
+      if (error.response?.status === 401) {
+        throw new Error('Senha atual incorreta');
+      }
+      
+      if (error.response?.status === 404) {
+        console.warn('⚠️ [API] Endpoint /usuario/senha/:id não implementado no backend');
+        throw new Error('Funcionalidade de alterar senha ainda não implementada no backend');
+      }
+      
+      const errorMessage = error.response?.data?.mensagem || error.response?.data?.message || 'Erro ao alterar senha';
+      throw new Error(errorMessage);
+    }
+  },
+
+  // Atualizar Perfil do Usuário
+  atualizarPerfilUsuario: async (userId, dadosAtualizados) => {
+    try {
+      console.log(`🔄 [API] Atualizando perfil do usuário ID: ${userId}...`);
+      console.log(`📋 [API] Dados para atualizar:`, dadosAtualizados);
+      
+      const response = await api.put(`/usuario/perfil/${userId}`, dadosAtualizados);
+      
+      console.log('✅ [API] Perfil atualizado com sucesso:', response.data);
+      return response.data; // { sucesso: true, mensagem: "...", dados: {...} }
+    } catch (error) {
+      console.error('❌ [API] Erro ao atualizar perfil:', error.response?.status, error.response?.data);
+      
+      // Tratar erros específicos
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.mensagem || 'Dados inválidos';
+        throw new Error(errorMessage);
+      }
+      
+      if (error.response?.status === 404) {
+        console.warn('⚠️ [API] Endpoint /usuario/perfil/:id não implementado no backend');
+        throw new Error('Funcionalidade de editar perfil ainda não implementada no backend');
+      }
+      
+      const errorMessage = error.response?.data?.mensagem || error.response?.data?.message || 'Erro ao atualizar perfil';
+      throw new Error(errorMessage);
+    }
+  },
 };
+

@@ -20,7 +20,7 @@ export default function Reservas() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedPeriod, setSelectedPeriod] = useState(null); // 'manha', 'tarde', 'noite'
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('pendente'); // 'pendente', 'confirmada', 'cancelada'
+  const [filterStatus, setFilterStatus] = useState('todas'); // 'todas', 'pendente', 'confirmada', 'cancelada'
   
   // Novos estados para os modais
   const [environmentDetailsVisible, setEnvironmentDetailsVisible] = useState(false);
@@ -114,66 +114,11 @@ export default function Reservas() {
 
   // Filtrar reservas
   const filteredReservations = useMemo(() => {
+    if (filterStatus === 'todas') {
+      return myReservations;
+    }
     return myReservations.filter(r => r.status === filterStatus);
   }, [myReservations, filterStatus]);
-
-  // Agrupar reservas por período (Hoje, Esta Semana, Este Mês)
-  const groupedReservations = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    // Calcular início e fim da semana (Domingo a Sábado)
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
-    
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-    
-    // Calcular início e fim do mês
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    endOfMonth.setHours(23, 59, 59, 999);
-    
-    const groups = {
-      today: [],
-      thisWeek: [],
-      thisMonth: [],
-      later: []
-    };
-    
-    filteredReservations.forEach(reservation => {
-      const resDate = new Date(reservation.date + 'T00:00:00');
-      resDate.setHours(0, 0, 0, 0);
-      
-      if (resDate.getTime() === today.getTime()) {
-        groups.today.push(reservation);
-      } else if (resDate >= tomorrow && resDate <= endOfWeek) {
-        groups.thisWeek.push(reservation);
-      } else if (resDate > endOfWeek && resDate <= endOfMonth) {
-        groups.thisMonth.push(reservation);
-      } else if (resDate > endOfMonth) {
-        groups.later.push(reservation);
-      }
-    });
-    
-    // Ordenar reservas dentro de cada grupo por data
-    Object.keys(groups).forEach(key => {
-      groups[key].sort((a, b) => new Date(a.date) - new Date(b.date));
-    });
-    
-    return groups;
-  }, [filteredReservations]);
-
-  // Formatar data para exibição individual
-  const formatDate = (dateString) => {
-    const date = new Date(dateString + 'T00:00:00');
-    const options = { weekday: 'short', day: '2-digit', month: 'short' };
-    return date.toLocaleDateString('pt-BR', options);
-  };
 
   const PeriodPicker = () => {
     const periods = [
@@ -377,6 +322,7 @@ export default function Reservas() {
               {/* Filtros de status */}
               <View style={styles.statusFilterContainer}>
                 {[
+                  { key: 'todas', label: 'Todas', count: stats.total },
                   { key: 'pendente', label: 'Pendentes', count: stats.pending },
                   { key: 'confirmada', label: 'Confirmadas', count: stats.confirmed },
                   { key: 'cancelada', label: 'Canceladas', count: stats.cancelled },
@@ -406,108 +352,40 @@ export default function Reservas() {
                     >
                       {tab.label}
                     </Text>
+                    {tab.count > 0 && (
+                      <View
+                        style={[
+                          styles.statusFilterBadge,
+                          {
+                            backgroundColor: filterStatus === tab.key ? 'rgba(255, 255, 255, 0.3)' : theme.colors.primary,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusFilterBadgeText,
+                            { color: '#ffffff' },
+                          ]}
+                        >
+                          {tab.count}
+                        </Text>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 ))}
               </View>
 
-              {/* Lista de reservas agrupadas por período */}
-              {(groupedReservations.today.length > 0 || 
-                groupedReservations.thisWeek.length > 0 || 
-                groupedReservations.thisMonth.length > 0 || 
-                groupedReservations.later.length > 0) ? (
-                <>
-                  {/* Hoje */}
-                  {groupedReservations.today.length > 0 && (
-                    <View>
-                      <View style={[styles.dateSeparator, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                        <Text style={[styles.dateSeparatorText, { color: theme.colors.textSecondary }]}>
-                          Hoje
-                        </Text>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                      </View>
-                      
-                      {groupedReservations.today.map((res, index) => (
-                        <ReservationCard
-                          key={res.id}
-                          item={res}
-                          onCancel={handleCancelReservation}
-                          onPress={handleOpenReservationDetails}
-                          index={index}
-                        />
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Esta Semana */}
-                  {groupedReservations.thisWeek.length > 0 && (
-                    <View>
-                      <View style={[styles.dateSeparator, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                        <Text style={[styles.dateSeparatorText, { color: theme.colors.textSecondary }]}>
-                          Esta Semana
-                        </Text>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                      </View>
-                      
-                      {groupedReservations.thisWeek.map((res, index) => (
-                        <ReservationCard
-                          key={res.id}
-                          item={res}
-                          onCancel={handleCancelReservation}
-                          onPress={handleOpenReservationDetails}
-                          index={index}
-                        />
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Este Mês */}
-                  {groupedReservations.thisMonth.length > 0 && (
-                    <View>
-                      <View style={[styles.dateSeparator, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                        <Text style={[styles.dateSeparatorText, { color: theme.colors.textSecondary }]}>
-                          Este Mês
-                        </Text>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                      </View>
-                      
-                      {groupedReservations.thisMonth.map((res, index) => (
-                        <ReservationCard
-                          key={res.id}
-                          item={res}
-                          onCancel={handleCancelReservation}
-                          onPress={handleOpenReservationDetails}
-                          index={index}
-                        />
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Próximos Meses */}
-                  {groupedReservations.later.length > 0 && (
-                    <View>
-                      <View style={[styles.dateSeparator, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                        <Text style={[styles.dateSeparatorText, { color: theme.colors.textSecondary }]}>
-                          Próximos Meses
-                        </Text>
-                        <View style={[styles.dateSeparatorLine, { backgroundColor: theme.colors.border }]} />
-                      </View>
-                      
-                      {groupedReservations.later.map((res, index) => (
-                        <ReservationCard
-                          key={res.id}
-                          item={res}
-                          onCancel={handleCancelReservation}
-                          onPress={handleOpenReservationDetails}
-                          index={index}
-                        />
-                      ))}
-                    </View>
-                  )}
-                </>
+              {/* Lista de reservas */}
+              {filteredReservations.length > 0 ? (
+                filteredReservations.map((res, index) => (
+                  <ReservationCard
+                    key={res.id}
+                    item={res}
+                    onCancel={handleCancelReservation}
+                    onPress={handleOpenReservationDetails}
+                    index={index}
+                  />
+                ))
               ) : (
                 <Animatable.View 
                   animation="fadeIn" 
@@ -515,7 +393,9 @@ export default function Reservas() {
                 >
                   <CalendarCheck size={48} color={theme.colors.textSecondary} strokeWidth={1.5} />
                   <Text style={[styles.emptyStateText, { color: theme.colors.textSecondary }]}>
-                    Nenhuma reserva {filterStatus}
+                    {filterStatus === 'todas' 
+                      ? 'Nenhuma reserva encontrada' 
+                      : `Nenhuma reserva ${filterStatus}`}
                   </Text>
                 </Animatable.View>
               )}

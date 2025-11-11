@@ -74,9 +74,11 @@ export const styles = StyleSheet.create({
   },
   avatarText: {
     color: 'white',
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 48,
+    fontWeight: '700',
     textAlign: 'center',
+    lineHeight: 48,
+    includeFontPadding: false,
   },
   avatarOverlay: {
     position: 'absolute',

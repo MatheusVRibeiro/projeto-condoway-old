@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiService, setAuthToken, buildFullImageUrl } from '../services/api'; // 1. Importar o novo serviço e o setAuthToken
-import SplashScreen from '../screens/Auxiliary/SplashScreen'; // Importando o SplashScreen (pasta correta: Auxiliary)
+import { apiService, setAuthToken, buildFullImageUrl, isTokenExpired, getTokenTimeRemaining } from '../services/api'; // Importar helpers de validação de token
+import SplashScreen from '../screens/Auxiliary/SplashScreen';
 
 // 1. O contexto define a "forma" dos dados que serão compartilhados.
 const AuthContext = createContext({
@@ -19,18 +19,33 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     async function loadUserFromStorage() {
       try {
-        console.log('🔄 Carregando dados do AsyncStorage...');
+        console.log('🔄 [AuthContext] Carregando dados do AsyncStorage...');
         
         // Carregar tanto o usuário quanto o token
         const storedUser = await AsyncStorage.getItem('user');
         const storedToken = await AsyncStorage.getItem('token');
         
-        console.log('📦 Dados brutos do AsyncStorage:', { 
+        console.log('📦 [AuthContext] Dados brutos do AsyncStorage:', { 
           hasUser: !!storedUser, 
           hasToken: !!storedToken 
         });
         
         if (storedUser && storedToken) {
+          // Verificar se o token está expirado ANTES de restaurar a sessão
+          if (isTokenExpired(storedToken)) {
+            const timeRemaining = getTokenTimeRemaining(storedToken);
+            console.error('❌ [AuthContext] Token expirado encontrado no storage!');
+            console.error(`⏰ [AuthContext] Tempo restante: ${timeRemaining} minutos (expirado)`);
+            console.log('🧹 [AuthContext] Limpando dados e forçando novo login...');
+            
+            // Limpar dados expirados
+            await AsyncStorage.multiRemove(['user', 'token', 'userEmail', 'userPassword', 'authToken', 'userData']);
+            setAuthToken(null);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+          
           const userData = JSON.parse(storedUser);
           
           // Normalizar user_foto se for path relativo
@@ -39,20 +54,26 @@ export const AuthProvider = ({ children }) => {
             console.log('🔧 [AuthContext] user_foto normalizado ao carregar:', userData.user_foto);
           }
           
-          console.log('✅ Utilizador e Token carregados.');
+          const timeRemaining = getTokenTimeRemaining(storedToken);
+          console.log(`✅ [AuthContext] Utilizador e Token carregados. Token expira em ${timeRemaining} minutos.`);
           
           // Reconfigurar o Axios com o token salvo
           setAuthToken(storedToken);
           
           // Atualizar o estado com os dados do usuário
           setUser(userData);
+          
+          // Avisar se o token está perto de expirar
+          if (timeRemaining !== null && timeRemaining < 30) {
+            console.warn(`⚠️ [AuthContext] Token expira em ${timeRemaining} minutos! Considere fazer novo login.`);
+          }
         } else {
-          console.log('❌ Nenhum utilizador/token encontrado no storage');
+          console.log('❌ [AuthContext] Nenhum utilizador/token encontrado no storage');
         }
       } catch (e) {
-        console.error("Failed to load user from storage", e);
+        console.error("❌ [AuthContext] Failed to load user from storage", e);
       } finally {
-        console.log('🏁 AuthContext: setLoading(false)');
+        console.log('🏁 [AuthContext] setLoading(false)');
         setLoading(false);
       }
     }
@@ -73,7 +94,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('🔄 Fazendo login com email:', email);
+      console.log('🔄 [AuthContext] Fazendo login com email:', email);
       
       // 1. Chamar o apiService - retorna { sucesso: true, dados: { usuario, token } }
       const response = await apiService.login(email, password);
@@ -81,45 +102,56 @@ export const AuthProvider = ({ children }) => {
       // 2. Desestruturar a resposta para pegar o utilizador e o token
       const { usuario, token } = response.dados;
       
-      console.log('✅ Login realizado com sucesso. Usuário:', usuario.user_nome);
+      console.log('✅ [AuthContext] Login realizado com sucesso. Usuário:', usuario.user_nome);
+      
+      // Verificar validade e tempo de expiração do token
+      if (isTokenExpired(token)) {
+        console.error('❌ [AuthContext] ALERTA: Token recebido já está expirado!');
+        throw new Error('Token recebido do servidor já está expirado. Contate o administrador.');
+      }
+      
+      const timeRemaining = getTokenTimeRemaining(token);
+      console.log(`⏰ [AuthContext] Token válido. Expira em ${timeRemaining} minutos.`);
       
       // 3. Configurar o token no Axios para todas as futuras requisições
       setAuthToken(token);
       
-      // 4. Salvar o UTILIZADOR, TOKEN, EMAIL e SENHA no AsyncStorage (para renovação automática)
+      // 4. Salvar o UTILIZADOR, TOKEN, EMAIL e SENHA no AsyncStorage
       await AsyncStorage.setItem('user', JSON.stringify(usuario));
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('userEmail', email);
       await AsyncStorage.setItem('userPassword', password);
-      console.log('💾 Usuário, Token e Credenciais salvos no AsyncStorage');
+      console.log('💾 [AuthContext] Usuário, Token e Credenciais salvos no AsyncStorage');
       
       // ✅ Marcar onboarding como concluído após login bem-sucedido
       await AsyncStorage.setItem('onboardingSeen', 'true');
-      console.log('✅ Onboarding marcado como concluído');
+      console.log('✅ [AuthContext] Onboarding marcado como concluído');
       
       // 5. Atualizar o estado (agora só com os dados do utilizador)
       setUser(usuario);
-      console.log('✅ Estado atualizado');
+      console.log('✅ [AuthContext] Estado atualizado');
       
       return usuario;
     } catch (error) {
-      console.error("Login failed:", error.message || error);
+      console.error("❌ [AuthContext] Login failed:", error.message || error);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
+      console.log('🔴 [AuthContext] Iniciando logout...');
+      
       setUser(null);
       // Limpar o token do axios ao fazer logout
       setAuthToken(null);
       
-      // Limpar dados do AsyncStorage (incluindo credenciais)
-      await AsyncStorage.multiRemove(['user', 'token', 'userEmail', 'userPassword']);
+      // Limpar TODOS os dados do AsyncStorage (incluindo credenciais)
+      await AsyncStorage.multiRemove(['user', 'token', 'userEmail', 'userPassword', 'authToken', 'userData']);
       
-      console.log('✅ Logout realizado com sucesso');
+      console.log('✅ [AuthContext] Logout realizado com sucesso. Todos os dados limpos.');
     } catch (e) {
-      console.error("Failed to logout", e);
+      console.error("❌ [AuthContext] Failed to logout", e);
     }
   };
 

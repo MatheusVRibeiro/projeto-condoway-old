@@ -5,25 +5,82 @@ import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Home, MapPin, Calendar, Users, Car, Clock } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import { styles } from './styles';
-import { userProfile } from '../mock';
 import { useTheme } from '../../../../contexts/ThemeProvider';
 import { apiService } from '../../../../services/api';
+import { useProfile } from '../../../../hooks/useProfile';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 export default function UnitDetails() {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { user } = useAuth();
+  const { profileData, loading: loadingProfile } = useProfile();
   const [ambientes, setAmbientes] = useState([]);
   const [loadingAmbientes, setLoadingAmbientes] = useState(true);
-  const [unitData] = useState({
-    ...userProfile,
-    area: '85m²',
-    bedrooms: 3,
-    bathrooms: 2,
-    parkingSpots: 1,
-    registrationDate: 'Janeiro 2023',
-    monthlyFee: 'R$ 485,00',
-    city: 'São Paulo',
-    state: 'SP',
+  
+  // Usar dados reais da API em vez de mock
+  const formatRegistrationDate = () => {
+    // Tentar múltiplas fontes de data
+    const dataCadastro = profileData?.user_data_cadastro || 
+                         profileData?.data_cadastro || 
+                         user?.user_data_cadastro || 
+                         user?.data_cadastro;
+    
+    console.log('📅 [UnitDetails] Data de cadastro encontrada:', dataCadastro);
+    
+    if (!dataCadastro) {
+      return 'Data não informada';
+    }
+    
+    try {
+      const date = new Date(dataCadastro);
+      if (isNaN(date.getTime())) {
+        console.warn('⚠️ [UnitDetails] Data inválida:', dataCadastro);
+        return 'Data inválida';
+      }
+      const formattedDate = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      // Capitalizar primeira letra do mês
+      return formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+    } catch (error) {
+      console.error('❌ [UnitDetails] Erro ao formatar data:', error);
+      return 'Erro ao carregar data';
+    }
+  };
+  
+  const formatCurrency = (value) => {
+    if (!value || value === 0) return 'Não informado';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+  
+  const unitData = {
+    apartment: profileData?.ap_numero || user?.ap_numero || '---',
+    block: profileData?.bloc_nome || user?.bloc_nome || '---',
+    condominium: profileData?.cond_nome || user?.cond_nome || '---',
+    city: profileData?.cond_cidade || user?.cond_cidade || 'Não informado',
+    state: profileData?.cond_estado || user?.cond_estado || '--',
+    registrationDate: formatRegistrationDate(),
+    monthlyFee: formatCurrency(profileData?.cond_taxa_base || user?.cond_taxa_base),
+  };
+
+  console.log('📦 [UnitDetails] Dados da unidade:', unitData);
+  console.log('👤 [UnitDetails] profileData completo:', profileData);
+  console.log('👤 [UnitDetails] user completo:', user);
+  console.log('� [UnitDetails] Taxa base - Verificação:', {
+    'profileData.taxa_base': profileData?.taxa_base,
+    'user.taxa_base': user?.taxa_base,
+    'profileData.cond_taxa_base': profileData?.cond_taxa_base,
+    'user.cond_taxa_base': user?.cond_taxa_base,
+    'Tipo profileData.taxa_base': typeof profileData?.taxa_base,
+    'Tipo user.taxa_base': typeof user?.taxa_base,
+  });
+  console.log('�📋 [UnitDetails] Campos de data disponíveis:', {
+    'profileData.user_data_cadastro': profileData?.user_data_cadastro,
+    'profileData.data_cadastro': profileData?.data_cadastro,
+    'user.user_data_cadastro': user?.user_data_cadastro,
+    'user.data_cadastro': user?.data_cadastro
   });
 
   useEffect(() => {
@@ -105,7 +162,16 @@ export default function UnitDetails() {
         <View style={styles.placeholder} />
       </Animatable.View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      {loadingProfile ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary, marginTop: 16 }]}>
+            Carregando dados da unidade...
+          </Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+
         {/* Unit Overview */}
         <Animatable.View animation="fadeInUp" duration={600} delay={200} style={[styles.overviewCard, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
           <View style={styles.overviewHeader}>
@@ -113,9 +179,8 @@ export default function UnitDetails() {
               <Home size={32} color={theme.colors.primary} />
             </View>
             <View style={styles.overviewInfo}>
-              <Text style={[styles.overviewTitle, { color: theme.colors.text }]}>{unitData.apartment}</Text>
-              <Text style={[styles.overviewSubtitle, { color: theme.colors.primary }]}>{unitData.block} • {unitData.condominium}</Text>
-              <Text style={[styles.overviewDetail, { color: theme.colors.textSecondary }]}>{unitData.area} • {unitData.bedrooms} quartos • {unitData.bathrooms} banheiros</Text>
+              <Text style={[styles.overviewTitle, { color: theme.colors.text, fontSize: 22, fontWeight: '700' }]}>{unitData.condominium}</Text>
+              <Text style={[styles.overviewSubtitle, { color: theme.colors.textSecondary }]}>{unitData.block} - Apto {unitData.apartment}</Text>
             </View>
           </View>
         </Animatable.View>
@@ -126,9 +191,9 @@ export default function UnitDetails() {
           <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Condomínio</Text>
+              <Text style={[styles.fieldLabel, { color: theme.colors.text, fontWeight: '600' }]}>Condomínio</Text>
               <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-                <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                <Text style={[styles.fieldValue, { color: theme.colors.text, fontWeight: '400' }]}>
                   {unitData.condominium || 'Não informado'}
                 </Text>
               </View>
@@ -136,18 +201,18 @@ export default function UnitDetails() {
 
             <View style={styles.fieldRow}>
               <View style={[styles.fieldContainer, styles.fieldHalf]}>
-                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Bloco</Text>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text, fontWeight: '600' }]}>Bloco</Text>
                 <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text, fontWeight: '400' }]}>
                     {unitData.block || 'Não informado'}
                   </Text>
                 </View>
               </View>
 
               <View style={[styles.fieldContainer, styles.fieldHalf]}>
-                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Apartamento</Text>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text, fontWeight: '600' }]}>Apartamento</Text>
                 <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text, fontWeight: '400' }]}>
                     {unitData.apartment || 'Não informado'}
                   </Text>
                 </View>
@@ -156,18 +221,18 @@ export default function UnitDetails() {
 
             <View style={styles.fieldRow}>
               <View style={[styles.fieldContainer, styles.fieldLarge]}>
-                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Cidade</Text>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text, fontWeight: '600' }]}>Cidade</Text>
                 <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text, fontWeight: '400' }]}>
                     {unitData.city || 'Não informado'}
                   </Text>
                 </View>
               </View>
 
               <View style={[styles.fieldContainer, styles.fieldSmall]}>
-                <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Estado</Text>
+                <Text style={[styles.fieldLabel, { color: theme.colors.text, fontWeight: '600' }]}>Estado</Text>
                 <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-                  <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                  <Text style={[styles.fieldValue, { color: theme.colors.text, fontWeight: '400' }]}>
                     {unitData.state || '--'}
                   </Text>
                 </View>
@@ -175,9 +240,9 @@ export default function UnitDetails() {
             </View>
 
             <View style={styles.fieldContainer}>
-              <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>Cadastrado desde</Text>
+              <Text style={[styles.fieldLabel, { color: theme.colors.text, fontWeight: '600' }]}>Cadastrado desde</Text>
               <View style={[styles.fieldInputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-                <Text style={[styles.fieldValue, { color: theme.colors.text }]}>
+                <Text style={[styles.fieldValue, { color: theme.colors.text, fontWeight: '400' }]}>
                   {unitData.registrationDate || 'Não informado'}
                 </Text>
               </View>
@@ -226,6 +291,7 @@ export default function UnitDetails() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

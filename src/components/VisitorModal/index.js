@@ -68,33 +68,39 @@ const getInitials = (name) => {
 };
 
 const formatDate = (dateString) => {
-  if (!dateString) return 'Data inválida';
+  if (!dateString) return 'Data não informada';
   
   try {
     const date = new Date(dateString);
+    // Verificar se a data é válida
+    if (isNaN(date.getTime())) return 'Data inválida';
+    
     return date.toLocaleDateString('pt-BR', { 
       day: '2-digit', 
       month: 'long', 
       year: 'numeric' 
     });
   } catch {
-    return dateString;
+    return 'Data inválida';
   }
 };
 
 const formatCPF = (cpf) => {
-  if (!cpf) return '';
+  if (!cpf) return null;
   // Remove tudo que não é número
   const cleaned = cpf.toString().replace(/\D/g, '');
   // Formata: XXX.XXX.XXX-XX
   if (cleaned.length === 11) {
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   }
+  // Se não tem 11 dígitos, retorna null para não mostrar
+  if (cleaned.length === 0) return null;
+  // Se tem algum número mas formato errado, mostra o original
   return cpf;
 };
 
 const formatPhone = (phone) => {
-  if (!phone) return '';
+  if (!phone) return null;
   // Remove tudo que não é número
   const cleaned = phone.toString().replace(/\D/g, '');
   // Celular: (XX) XXXXX-XXXX (11 dígitos)
@@ -105,6 +111,9 @@ const formatPhone = (phone) => {
   else if (cleaned.length === 10) {
     return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
   }
+  // Se não tem formato válido, retorna null para não mostrar
+  if (cleaned.length === 0) return null;
+  // Se tem algum número mas formato errado, mostra o original
   return phone;
 };
 
@@ -335,7 +344,7 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
                 <Text style={styles.cardTitle}>Informações Pessoais</Text>
               </View>
               
-              {visitor.cpf && (
+              {visitor.cpf && formatCPF(visitor.cpf) && (
                 <View style={styles.infoRow}>
                   <View style={styles.infoIcon}>
                     <FileText size={16} color={theme.colors.textSecondary} strokeWidth={2} />
@@ -363,7 +372,7 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
                 </View>
               )}
 
-              {visitor.phone && (
+              {visitor.phone && formatPhone(visitor.phone) && (
                 <View style={styles.infoRow}>
                   <View style={styles.infoIcon}>
                     <Phone size={16} color={theme.colors.textSecondary} strokeWidth={2} />
@@ -407,7 +416,7 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
                   <Text style={styles.infoLabel}>DATA E HORÁRIO AGENDADO</Text>
                   <Text style={styles.infoValue}>
                     {formatDate(visitor.visit_date)}
-                    {visitor.visit_time && visitor.visit_time !== 'N/A' && ` às ${visitor.visit_time}`}
+                    {visitor.visit_time && ` às ${visitor.visit_time}`}
                   </Text>
                 </View>
               </View>

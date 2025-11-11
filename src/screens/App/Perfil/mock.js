@@ -2,7 +2,7 @@ export const userProfile = {
   name: "Ana Clara Silva",
   email: "ana.clara@email.com",
   phone: "(11) 98765-4321",
-  apartment: "Apto 72",
+  apartment: "72",
   block: "Bloco B",
   condominium: "Residencial Jardins",
   avatarUrl: require("../../../../assets/condoway-logo.png"),

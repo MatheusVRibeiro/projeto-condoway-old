@@ -12,6 +12,9 @@ export { default as ProfileHeader } from './ProfileHeader';
 export { default as AvatarPicker } from './AvatarPicker';
 export { default as StatsCard } from './StatsCard';
 
+// Auth Components
+export { default as TokenExpirationWarning } from './TokenExpirationWarning';
+
 // Legacy Components (manter compatibilidade)
 export { default as Input } from './Input';
 export { default as SimpleOnboarding } from './SimpleOnboarding';

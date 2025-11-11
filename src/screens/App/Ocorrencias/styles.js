@@ -121,6 +121,16 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
   },
 
+  // --- Period Header ---
+  periodHeader: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+
   // --- Categories grid ---
   categoryGrid: {
     flexDirection: 'row',
