@@ -965,6 +965,14 @@ export const apiService = {
       console.log('🔍 [uploadFotoPerfil] response.data.dados.path:', response.data?.dados?.path);
       console.log('🔍 [uploadFotoPerfil] response.data.dados.user_foto:', response.data?.dados?.user_foto);
       console.log('🔍 [uploadFotoPerfil] response.data.url:', response.data?.url);
+      console.log('🔍 [uploadFotoPerfil] response.data COMPLETO:', JSON.stringify(response.data, null, 2));
+      
+      // ⚠️ IMPORTANTE: Verificar se o backend está retornando sucesso = true
+      if (response.data?.sucesso === false) {
+        console.error('❌ [uploadFotoPerfil] Backend retornou sucesso = false');
+        console.error('📋 [uploadFotoPerfil] Mensagem de erro:', response.data?.mensagem || response.data?.erro);
+        return { sucesso: false, erro: response.data?.mensagem || response.data?.erro || 'Erro ao fazer upload' };
+      }
       
       // Backend retorna: { sucesso, mensagem, dados: { path, filename, ... } }
       if (response.data?.dados?.path) {

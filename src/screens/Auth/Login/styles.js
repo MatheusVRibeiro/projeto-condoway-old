@@ -51,50 +51,38 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    justifyContent: 'space-between',
-    minHeight: height,
+    justifyContent: 'center', // Centraliza verticalmente
+    paddingVertical: 20,
   },
   keyboardAvoid: {
     flex: 1,
-    justifyContent: 'space-between',
-    minHeight: height - 100,
-    paddingVertical: 20,
+    justifyContent: 'center', // Centraliza verticalmente
   },
 
-  // --- Header ---
+  // --- Header (Textos sem Logo) ---
   header: {
     alignItems: 'center',
-    marginBottom: 10,
-    marginTop: -70,
-    flex: 0,
     paddingHorizontal: 20,
-  },
-  logo: {
-    height: 280,
-    width: 560,
-    resizeMode: 'contain',
-    marginBottom: -60,
+    marginBottom: 30, // Espaço antes do formulário
   },
   welcomeText: {
-    fontSize: 32,
+    fontSize: 36, // Aumentado
     fontWeight: '800',
     color: '#fff',
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22, // Aumentado
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.95)',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
     letterSpacing: 0.3,
   },
   subtitle: {
-    fontSize: 17,
+    fontSize: 16,
     color: 'rgba(255, 255, 255, 0.85)',
     textAlign: 'center',
     lineHeight: 24,
@@ -102,24 +90,24 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // --- Formulário ---
+  // --- Formulário (Espaçamento REDUZIDO) ---
   formContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 24,
-    padding: 28,
-    marginVertical: 15,
+    padding: 20, // <-- Reduzido
+    marginVertical: 10, // <-- Reduzido
+    marginHorizontal: 24, // <-- Mantido (para o card flutuante)
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.2,
     shadowRadius: 24,
     elevation: 12,
-    flex: 0,
   },
   form: {
     width: '100%',
   },
   inputWrapper: {
-    marginBottom: 24,
+    marginBottom: 20, // <-- Reduzido
   },
   inputLabel: {
     fontSize: 14,
@@ -137,6 +125,18 @@ export const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     height: 56,
     paddingHorizontal: 4,
+  },
+  inputContainerError: {
+    borderColor: '#EF4444',
+    borderWidth: 2,
+    backgroundColor: '#FEF2F2',
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#EF4444',
+    marginTop: 6,
+    marginLeft: 4,
+    fontWeight: '500',
   },
   inputIconContainer: {
     width: 48,
@@ -159,12 +159,12 @@ export const styles = StyleSheet.create({
     marginRight: 4,
   },
 
-  // --- Opções (Lembrar/Esqueci) ---
+  // --- Opções (Espaçamento REDUZIDO) ---
   optionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24, // <-- Reduzido
   },
   rememberMeContainer: {
     flexDirection: 'row',
@@ -196,11 +196,11 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // --- Botão de Login ---
+  // --- Botão de Login (Espaçamento REDUZIDO) ---
   loginButton: {
     borderRadius: 16,
     height: 56,
-    marginBottom: 20,
+    marginBottom: 16, // <-- Reduzido
     shadowColor: 'rgb(37, 99, 235)',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
@@ -228,28 +228,27 @@ export const styles = StyleSheet.create({
     marginRight: 8,
   },
 
-  // --- Link de cadastro ---
-  signUpContainer: {
-    flexDirection: 'row',
+  // --- Mensagem de contato ---
+  contactContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    marginTop: 4,
   },
-  signUpText: {
+  contactText: {
     fontSize: 14,
     color: '#6B7280',
-  },
-  signUpLink: {
-    fontSize: 14,
-    color: 'rgb(37, 99, 235)',
-    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 20,
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
 
   // --- Ajuda ---
   helpContainer: {
     alignItems: 'center',
-    marginTop: 65,
-    marginBottom: 10,
-    flex: 0,
+    marginTop: 30, // Espaço após o formulário
+    paddingBottom: 10,
   },
   helpButton: {
     flexDirection: 'row',

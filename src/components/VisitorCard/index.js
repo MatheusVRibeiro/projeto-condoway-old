@@ -125,6 +125,12 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   
+  console.log('🎨 [VisitorCard] Renderizando:', {
+    name: item?.visitor_name,
+    hasStyles: !!styles,
+    containerStyle: styles?.container,
+  });
+  
   if (!item) {
     console.warn('⚠️ [VisitorCard] Item é null ou undefined');
     return null;
@@ -159,12 +165,7 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
   };
 
   return (
-    <Animatable.View 
-      animation="fadeInUp" 
-      delay={index * 80}
-      duration={700}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <TouchableOpacity 
         style={[
           styles.cardWrapper,
@@ -173,8 +174,7 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
         activeOpacity={0.9}
         onPress={handlePress}
       >
-        <LinearGradient
-          colors={[theme.colors.card, theme.colors.card]}
+        <View
           style={[
             styles.cardGradient,
             isAwaitingApproval && styles.cardGradientHighlight
@@ -187,17 +187,14 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
 
           {/* Left Section: Avatar + Info */}
           <View style={styles.leftSection}>
-            {/* Avatar with Gradient */}
-            <LinearGradient
-              colors={statusConfig.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.avatarGradient}
+            {/* Avatar com cor sólida ao invés de gradient */}
+            <View
+              style={[styles.avatarGradient, { backgroundColor: statusConfig.color }]}
             >
               <Text style={styles.avatarText}>
                 {getInitials(item.visitor_name)}
               </Text>
-            </LinearGradient>
+            </View>
             
             <View style={styles.infoContainer}>
               <Text style={styles.visitorName} numberOfLines={1}>
@@ -257,14 +254,11 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
             ) : (
               // CARD TIPO 1: Visita Pré-agendada - Apenas Status
               <>
-                <LinearGradient
-                  colors={[...statusConfig.gradient].reverse()}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.statusBadge}
+                <View
+                  style={[styles.statusBadge, { backgroundColor: statusConfig.color }]}
                 >
                   <StatusIcon size={13} color="#FFFFFF" strokeWidth={2.5} />
-                </LinearGradient>
+                </View>
                 
                 <View style={styles.arrowContainer}>
                   <ArrowRight size={18} color={theme.colors.textSecondary} strokeWidth={2.5} />
@@ -275,9 +269,9 @@ const VisitorCard = ({ item, index, onPress, onApprove, onReject }) => {
 
           {/* Decorative Elements */}
           <View style={[styles.decorLine, { backgroundColor: statusConfig.color }]} />
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
-    </Animatable.View>
+    </View>
   );
 };
 

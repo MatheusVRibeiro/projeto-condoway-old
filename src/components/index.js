@@ -33,3 +33,6 @@ export { default as ReservationDetailsModal } from './ReservationDetailsModal';
 export { default as VisitorHeader } from './VisitorHeader';
 export { default as VisitorCard } from './VisitorCard';
 export { default as VisitorModal } from './VisitorModal';
+
+// Search component
+export { default as SearchBar } from './SearchBar';

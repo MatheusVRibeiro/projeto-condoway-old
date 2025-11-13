@@ -113,6 +113,16 @@ const VisitantesScreen = () => {
   };
 
   const filteredData = getFilteredVisitors();
+  
+  console.log('🔍 [Visitantes] Debug Info:', {
+    totalVisitantes: visitantes.length,
+    filteredDataLength: filteredData.length,
+    selectedTab,
+    loading,
+    loadError,
+  });
+  
+  console.log('📋 [Visitantes] Primeiros 3 visitantes filtrados:', filteredData.slice(0, 3));
 
   const waitingCount = visitantes.filter(v => {
     const st = (v.status || v.vst_status || '').toString();
@@ -191,6 +201,13 @@ const VisitantesScreen = () => {
   };
 
   const renderItem = ({ item, index }) => {
+    console.log('🎨 [Visitantes] Renderizando card:', { 
+      index, 
+      name: item.visitor_name,
+      status: item.status,
+      id: item.id 
+    });
+    
     return (
       <VisitorCard 
         item={item} 
@@ -262,6 +279,7 @@ const VisitantesScreen = () => {
         data={filteredData}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        style={{ flex: 1 }}
         contentContainerStyle={[
           styles.listContainer,
           filteredData.length === 0 && styles.listContainerEmpty
@@ -281,6 +299,10 @@ const VisitantesScreen = () => {
             <ActivityIndicator size="small" color={theme.colors.primary} />
           </View>
         ) : null}
+        removeClippedSubviews={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={21}
       />
 
       <View style={styles.fabWrapper}>

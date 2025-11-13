@@ -5,10 +5,11 @@ const createStyles = (theme) => StyleSheet.create({
   container: {
     marginBottom: 12,
     marginHorizontal: 20,
+    minHeight: 80, // Garantir altura mínima
   },
   cardWrapper: {
     borderRadius: 18,
-    overflow: 'hidden',
+    overflow: 'visible', // Mudado de 'hidden' para 'visible'
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: theme.dark ? 0.25 : 0.1,
@@ -29,9 +30,10 @@ const createStyles = (theme) => StyleSheet.create({
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.card,
     position: 'relative',
-    overflow: 'hidden',
+    overflow: 'visible', // Mudado de 'hidden' para 'visible'
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 76, // Garantir altura mínima
   },
   cardGradientHighlight: {
     borderWidth: 2,

@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { View, Text, ImageBackground, Image, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
+import * as Animatable from 'react-native-animatable';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useOnboardingStatus } from '../../../hooks/useOnboardingStatus';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -17,7 +18,24 @@ const Onboarding = () => {
   const { completeOnboarding } = useOnboardingStatus();
   const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const flatListRef = useRef();
+
+  // Textos rotativos
+  const rotatingTexts = [
+    'Gerencie o seu condomínio de forma simples e moderna.',
+    'Fique por dentro de avisos, reservas e notificações em tempo real.',
+    'Organize suas tarefas e facilite o dia a dia do seu condomínio.',
+  ];
+
+  // Trocar texto a cada 3 segundos
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTextIndex((prevIndex) => (prevIndex + 1) % rotatingTexts.length);
+    }, 6000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleScroll = (event) => {
     const slideIndex = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -47,41 +65,29 @@ const Onboarding = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.primary }]}>
-      {/* Full-screen background image driven by currentIndex */}
-      <ImageBackground source={onboardingSlides[currentIndex].image} style={styles.illustration} resizeMode="cover" accessibilityLabel="Ilustração de fundo">
-        <SafeAreaView style={{ flex: 1 }}>
-          <View style={styles.logoContainer}>
+      {/* Full-screen background image */}
+      <ImageBackground source={onboardingSlides[0].image} style={styles.illustration} resizeMode="cover" accessibilityLabel="Ilustração de fundo">
+        <SafeAreaView style={{ flex: 1, justifyContent: 'space-between' }}>
+          <Animatable.View animation="fadeInDown" duration={1200} style={styles.logoContainer}>
             <Image source={require('../../../../assets/condo.png')} style={styles.logo} accessibilityLabel="Logo" />
-            <Text style={styles.logoText}>CondoWay</Text>
-          </View>
-          <FlatList
-            ref={flatListRef}
-            data={onboardingSlides}
-            renderItem={renderItem}
-            keyExtractor={item => item.key}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            style={[styles.carousel, { flex: 1 }]}
-            contentContainerStyle={{ justifyContent: 'center', minHeight: Dimensions.get('window').height }}
-            getItemLayout={(data, index) => ({ length: Dimensions.get('window').width, offset: Dimensions.get('window').width * index, index })}
-          />
-          <View style={styles.dotsContainer}>
-            {onboardingSlides.map((_, idx) => (
-              <View key={idx} style={[styles.dot, currentIndex === idx && styles.dotActive]} />
-            ))}
-          </View>
-          {currentIndex === onboardingSlides.length - 1 ? (
-            <TouchableOpacity style={[styles.button, styles.buttonPrimary]} onPress={handleStart} accessibilityLabel="Começar agora">
-              <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Começar agora</Text>
+          </Animatable.View>
+          
+          <Animatable.View animation="fadeInUp" duration={1200} delay={400} style={styles.contentContainer}>
+            <Animatable.Text 
+              key={currentTextIndex}
+              animation="fadeIn" 
+              duration={800}
+              style={[styles.subtitle, { color: '#fff' }]}
+            >
+              {rotatingTexts[currentTextIndex]}
+            </Animatable.Text>
+          </Animatable.View>
+          
+          <Animatable.View animation="fadeInUp" duration={1200} delay={600} style={styles.buttonContainer}>
+            <TouchableOpacity style={[styles.button, styles.buttonPrimary]} onPress={handleStart} accessibilityLabel="Acessar">
+              <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Acessar</Text>
             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.button} onPress={handleNext} accessibilityLabel="Próximo slide">
-              <Text style={styles.buttonText}>Próximo</Text>
-            </TouchableOpacity>
-          )}
+          </Animatable.View>
         </SafeAreaView>
       </ImageBackground>
     </View>

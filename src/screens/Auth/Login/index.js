@@ -104,7 +104,7 @@ export default function Login() {
                 
                 {/* Header com logo e saudação */}
                 <Animatable.View animation="fadeInDown" duration={1200} style={styles.header}>
-                  <Image source={require('../../../../assets/condo.png')} style={styles.logo} />
+                  {/* <Image source={require('../../../../assets/condo.png')} style={styles.logo} /> */}
                   <Text style={styles.welcomeText}>Bem-vindo!</Text>
                   <Text style={styles.title}>Faça login na sua conta</Text>
                   <Text style={styles.subtitle}>Acesse o seu condomínio de forma rápida e segura</Text>
@@ -213,12 +213,11 @@ export default function Login() {
                       </TouchableOpacity>
                     </Animatable.View>
 
-                    {/* Link para registro */}
-                    <Animatable.View animation="fadeInUp" duration={1000} delay={800} style={styles.signUpContainer}>
-                      <Text style={styles.signUpText}>Não tem uma conta? </Text>
-                      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                        <Text style={styles.signUpLink}>Cadastre-se</Text>
-                      </TouchableOpacity>
+                    {/* Mensagem de contato */}
+                    <Animatable.View animation="fadeInUp" duration={1000} delay={800} style={styles.contactContainer}>
+                      <Text style={styles.contactText}>
+                        Não tem uma conta? Entre em contato com o síndico do seu condomínio.
+                      </Text>
                     </Animatable.View>
 
                   </View>
