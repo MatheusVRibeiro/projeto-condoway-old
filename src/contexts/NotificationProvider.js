@@ -1,8 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Platform, Vibration } from 'react-native';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import Toast from 'react-native-toast-message';
 import { useAuth } from './AuthContext';
 import { apiService } from '../services/api';
+
+// Configurar como as notificações devem ser tratadas quando recebidas
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const NotificationContext = createContext();
 
@@ -13,7 +25,8 @@ export const NotificationProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [lastCheck, setLastCheck] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false); // Controle para evitar múltiplas chamadas
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [expoPushToken, setExpoPushToken] = useState('');
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -21,9 +34,115 @@ export const NotificationProvider = ({ children }) => {
     hasMore: true,
     perPage: 20
   });
-  const notificationsRef = useRef([]); // Ref para acessar notificações sem criar dependência
-  const lastFetchTime = useRef(0); // Cache simples para evitar requisições muito frequentes
-  const allNotificationsRef = useRef([]); // Ref para armazenar TODAS as notificações (para paginação)
+  const notificationsRef = useRef([]);
+  const lastFetchTime = useRef(0);
+  const allNotificationsRef = useRef([]);
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  // Registrar Push Token e configurar listeners
+  useEffect(() => {
+    // ⚠️ DESABILITADO TEMPORARIAMENTE - Precisa de projectId no app.json
+    // Reabilitar quando configurar EAS
+    /*
+    registerForPushNotificationsAsync().then(token => {
+      if (token) {
+        setExpoPushToken(token);
+        console.log('📱 Expo Push Token:', token);
+        
+        // Registrar token no backend se usuário estiver logado
+        if (user?.user_id || user?.userap_id) {
+          registerDeviceToken(token);
+        }
+      }
+    });
+
+    // Listener para notificações recebidas enquanto app está aberto
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('🔔 Notificação recebida (app em foreground):', notification);
+      
+      // Mostrar Toast
+      Toast.show({
+        type: 'info',
+        text1: notification.request.content.title || 'Nova Notificação',
+        text2: notification.request.content.body,
+        position: 'top',
+        visibilityTime: 4000,
+      });
+      
+      // Vibrar
+      if (Platform.OS === 'ios') {
+        Vibration.vibrate();
+      } else {
+        Vibration.vibrate(200);
+      }
+      
+      // Recarregar notificações do servidor
+      refreshNotifications(true);
+    });
+
+    // Listener para quando usuário interage com a notificação
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('👆 Usuário clicou na notificação:', response);
+      
+      // Recarregar notificações do servidor
+      refreshNotifications(true);
+    });
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+    */
+    console.log('⚠️ [Notifications] Push Notifications desabilitado temporariamente - Configure projectId no app.json');
+  }, [user?.user_id, user?.userap_id]);
+
+  // Função auxiliar para registrar Push Notifications
+  async function registerForPushNotificationsAsync() {
+    let token;
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      
+      if (finalStatus !== 'granted') {
+        console.log('❌ Permissão de notificações negada');
+        alert('É necessário permitir notificações para receber avisos importantes!');
+        return;
+      }
+      
+      try {
+        token = (await Notifications.getExpoPushTokenAsync({
+          projectId: Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId,
+        })).data;
+        console.log('✅ Push Token obtido:', token);
+      } catch (error) {
+        console.error('❌ Erro ao obter push token:', error);
+      }
+    } else {
+      console.log('⚠️ Push Notifications funcionam apenas em dispositivos físicos');
+    }
+
+    return token;
+  }
 
   const normalize = (raw) => {
     console.log('🔄 Normalizando notificação:', raw);
@@ -386,11 +505,17 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const registerDeviceToken = async (deviceToken) => {
-    if (!user?.user_id) return;
+    if (!user?.user_id && !user?.userap_id) {
+      console.log('⚠️ Usuário não logado, não registrando device token');
+      return;
+    }
+    
     try {
+      console.log('📡 Registrando device token no backend...');
       await apiService.registrarDeviceToken(deviceToken);
+      console.log('✅ Device token registrado com sucesso');
     } catch (error) {
-      console.error('Erro ao registrar device token:', error);
+      console.error('❌ Erro ao registrar device token:', error);
     }
   };
 
@@ -401,6 +526,7 @@ export const NotificationProvider = ({ children }) => {
     loadingMore,
     pagination,
     lastCheck,
+    expoPushToken,
     showNotification,
     markAsRead,
     markAllAsRead,

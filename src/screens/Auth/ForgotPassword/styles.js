@@ -6,34 +6,48 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  backButtonContainer: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    zIndex: 1,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    justifyContent: 'center',
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 40,
-    minHeight: height - 120,
+    paddingVertical: 24,
   },
   formContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -123,13 +137,17 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
   },
   backToLoginButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
+    gap: 8,
   },
   backToLoginText: {
     fontSize: 16,
     color: 'rgb(37, 99, 235)',
     fontWeight: '600',
+    marginLeft: 4,
   },
   // Success State Styles
   successContainer: {
@@ -186,26 +204,5 @@ export const styles = StyleSheet.create({
     color: '#6b7280',
     fontWeight: '500',
     textDecorationLine: 'underline',
-  },
-  // Help Button Styles
-  helpContainer: {
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  helpButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(107, 114, 128, 0.1)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: 'rgba(107, 114, 128, 0.2)',
-  },
-  helpText: {
-    color: '#6b7280',
-    marginLeft: 8,
-    fontSize: 14,
-    fontWeight: '500',
   },
 });

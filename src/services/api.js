@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
-  // baseURL: 'http://192.168.0.174:3333',
+  baseURL: 'http://192.168.0.174:3333',
   // baseURL: 'http://192.168.5.10:3333',
-  baseURL: 'http://10.67.23.46:3333',
+  // baseURL: 'http://10.67.23.46:3333',
   timeout: 30000, // 30 segundos
 });
 
@@ -1337,6 +1337,87 @@ export const apiService = {
       }
       
       const errorMessage = error.response?.data?.mensagem || error.response?.data?.message || 'Erro ao atualizar perfil';
+      throw new Error(errorMessage);
+    }
+  },
+
+  // Recuperação de Senha
+  solicitarRecuperacaoSenha: async (email) => {
+    try {
+      console.log('🔄 [API] Solicitando recuperação de senha para:', email);
+      const response = await api.post('/usuario/recuperar-senha', { user_email: email });
+      console.log('✅ [API] Email de recuperação enviado:', response.data);
+      return response.data; // { sucesso: true, mensagem: "Código enviado..." }
+    } catch (error) {
+      console.error('❌ [API] Erro ao solicitar recuperação:', error.response?.status, error.response?.data);
+      
+      // Log detalhado do erro
+      console.error('📋 [API] Detalhes do erro:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
+      const errorMessage = error.response?.data?.mensagem || 
+                          error.response?.data?.message || 
+                          error.response?.data?.erro ||
+                          error.message || 
+                          'Erro ao enviar email de recuperação';
+      throw new Error(errorMessage);
+    }
+  },
+
+  redefinirSenha: async (email, codigo, novaSenha) => {
+    try {
+      // Validação cliente adicional para evitar 400 do backend
+      if (!codigo || !novaSenha) {
+        throw new Error('Código e nova senha são obrigatórios.');
+      }
+
+      // Garantir tipos/trim
+      const codigoStr = String(codigo).trim();
+      const novaSenhaStr = String(novaSenha).trim();
+
+      console.log('🔄 [API] Redefinindo senha para:', email);
+
+      // Construir payload com variantes de nomes (snake_case e camelCase)
+      // Alguns backends aceitam `codigo_reset`/`nova_senha`, outros `codigo`/`novaSenha`.
+      const payload = {
+        codigo_reset: codigoStr,
+        codigo: codigoStr,
+        nova_senha: novaSenhaStr,
+        novaSenha: novaSenhaStr,
+      };
+
+      // Não enviar user_email por padrão (backend já retirou), mas manter compatibilidade
+      if (email) {
+        payload.user_email = String(email).trim();
+      }
+
+      const response = await api.post('/usuario/redefinir-senha', payload);
+
+      console.log('✅ [API] Senha redefinida com sucesso:', response.data);
+      return response.data; // { sucesso: true, mensagem: "Senha alterada..." }
+    } catch (error) {
+      console.error('❌ [API] Erro ao redefinir senha:', error.response?.status, error.response?.data);
+
+      // Log detalhado do erro
+      console.error('📋 [API] Detalhes do erro:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      const errorMessage = error.response?.data?.mensagem || 
+                          error.response?.data?.message || 
+                          error.response?.data?.erro ||
+                          error.message || 
+                          'Erro ao redefinir senha';
       throw new Error(errorMessage);
     }
   },
