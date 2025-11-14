@@ -95,6 +95,63 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
   },
 
+  // --- Group By Filters ---
+  groupByContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 16,
+  },
+  groupByLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  groupByButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  groupByButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 4,
+  },
+  groupByButtonText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  // --- Group Header ---
+  groupHeader: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  groupHeaderText: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'capitalize',
+  },
+  groupHeaderCount: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
   // --- Empty State ---
   emptyState: {
     backgroundColor: '#ffffff',
@@ -111,6 +168,43 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#64748b',
     marginTop: 12,
+    textAlign: 'center',
+  },
+
+  // --- Loading State ---
+  loadingContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+
+  // --- Empty Container ---
+  emptyContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748b',
     textAlign: 'center',
   },
 

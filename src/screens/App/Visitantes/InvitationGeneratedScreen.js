@@ -15,6 +15,10 @@ export default function InvitationGeneratedScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   
+  // ✅ CORREÇÃO: Esta tela não deve fazer parte do histórico de navegação
+  // Quando o usuário pressiona "Concluir" ou "Voltar", ele vai direto para o Dashboard
+  // sem possibilidade de voltar para esta tela usando o botão de voltar do sistema
+  
   // Recebe os parâmetros enviados da tela anterior
   const { 
     visitorName = "Visitante",
@@ -55,8 +59,17 @@ export default function InvitationGeneratedScreen() {
   };
 
   const handleFinish = () => {
-    // Volta para a tela principal de visitantes
-    navigation.navigate('Visitantes');
+    // Limpa o histórico de navegação e volta para a tela principal de visitantes
+    // Isso evita que o usuário volte para esta tela ao pressionar "voltar"
+    navigation.reset({
+      index: 0,
+      routes: [
+        { name: 'MainTabs' }, // Volta para as tabs principais (Dashboard)
+      ],
+    });
+    
+    // Opcional: navegar para a tab de visitantes especificamente
+    // navigation.navigate('MainTabs', { screen: 'Visitantes' });
   };
 
   return (

@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../contexts/ThemeProvider';
+import { useAuth } from '../../../contexts/AuthContext';
+import { apiService } from '../../../services/api';
 import { styles } from './styles';
 import { environments, allExistingReservations, myInitialReservations } from './mock';
 import { CalendarPlus, CalendarCheck, Info } from 'lucide-react-native';
@@ -10,22 +12,117 @@ import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
 import { EnvironmentCard, ReservationHeader, ReservationCard, EnvironmentDetailsModal, ReservationDetailsModal } from '../../../components';
+import { parseISO, isToday, isYesterday, isThisWeek, isLastWeek, isThisMonth, isLastMonth, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function Reservas() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('reservar');
-  const [myReservations, setMyReservations] = useState(myInitialReservations);
+  const [myReservations, setMyReservations] = useState([]);
+  const [ambientes, setAmbientes] = useState([]);
+  const [loadingAmbientes, setLoadingAmbientes] = useState(true);
+  const [loadingReservas, setLoadingReservas] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedPeriod, setSelectedPeriod] = useState(null); // 'manha', 'tarde', 'noite'
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('todas'); // 'todas', 'pendente', 'confirmada', 'cancelada'
+  const [filterStatus, setFilterStatus] = useState('pendente'); // 'pendente', 'confirmada', 'cancelada'
+  const [reservasDoAmbiente, setReservasDoAmbiente] = useState([]); // Reservas do ambiente selecionado
   
   // Novos estados para os modais
   const [environmentDetailsVisible, setEnvironmentDetailsVisible] = useState(false);
   const [reservationDetailsVisible, setReservationDetailsVisible] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
+
+  // ✅ Carregar ambientes da API
+  useEffect(() => {
+    carregarAmbientes();
+  }, []);
+
+  // ✅ Carregar reservas da API quando trocar para tab "minhas"
+  useEffect(() => {
+    if (activeTab === 'minhas' && user?.userap_id) {
+      carregarReservas();
+    }
+  }, [activeTab, user?.userap_id]);
+
+  // ✅ Carregar reservas do ambiente quando mudar data ou ambiente
+  useEffect(() => {
+    if (selectedEnvironment?.id && selectedDate) {
+      carregarReservasDoAmbiente();
+    }
+  }, [selectedEnvironment?.id, selectedDate]);
+
+  const carregarAmbientes = async () => {
+    try {
+      setLoadingAmbientes(true);
+      console.log('🔄 [Reservas] Carregando ambientes...');
+      const data = await apiService.listarAmbientes();
+      console.log('✅ [Reservas] Ambientes carregados:', data);
+      
+      // Mapear para o formato esperado pelo componente
+      const ambientesMapeados = data.map(amb => ({
+        id: amb.amd_id || amb.id,
+        name: amb.amd_nome || amb.nome || 'Ambiente',
+        description: amb.amd_descricao || amb.descricao || '',
+        capacity: amb.amd_capacidade || amb.capacidade || 0,
+        price: amb.amd_valor || amb.valor || 0,
+        available: true, // Disponível para reserva
+        availablePeriods: ['manha', 'tarde', 'noite'], // Pode vir do backend futuramente
+        image: amb.amd_imagem || amb.imagem || null,
+        amenities: amb.amd_comodidades || amb.comodidades || [],
+        rules: amb.amd_regras || amb.regras || [
+          "Respeite o horário de uso.",
+          "Mantenha o ambiente limpo após o uso.",
+          "Siga as normas do condomínio."
+        ],
+        items: amb.amd_items || amb.items || [
+          "Consulte a administração para mais detalhes"
+        ],
+        _raw: amb
+      }));
+      
+      setAmbientes(ambientesMapeados);
+    } catch (error) {
+      console.error('❌ [Reservas] Erro ao carregar ambientes:', error);
+      Toast.show({ type: 'error', text1: 'Erro ao carregar ambientes' });
+      // Fallback para mock em caso de erro
+      setAmbientes(environments);
+    } finally {
+      setLoadingAmbientes(false);
+    }
+  };
+
+  const carregarReservas = async () => {
+    try {
+      setLoadingReservas(true);
+      console.log('🔄 [Reservas] Carregando reservas do usuário...');
+      const data = await apiService.listarReservas(user.userap_id);
+      console.log('✅ [Reservas] Reservas carregadas:', data);
+      setMyReservations(data);
+    } catch (error) {
+      console.error('❌ [Reservas] Erro ao carregar reservas:', error);
+      Toast.show({ type: 'error', text1: 'Erro ao carregar suas reservas' });
+      // Fallback para mock em caso de erro
+      setMyReservations(myInitialReservations);
+    } finally {
+      setLoadingReservas(false);
+    }
+  };
+
+  const carregarReservasDoAmbiente = async () => {
+    try {
+      console.log(`🔄 [Reservas] Carregando reservas do ambiente ${selectedEnvironment.id}...`);
+      const data = await apiService.listarReservasAmbiente(selectedEnvironment.id);
+      console.log('✅ [Reservas] Reservas do ambiente carregadas:', data);
+      setReservasDoAmbiente(data);
+    } catch (error) {
+      console.error('❌ [Reservas] Erro ao carregar reservas do ambiente:', error);
+      setReservasDoAmbiente([]);
+    }
+  };
 
   // Calcular estatísticas
   const stats = useMemo(() => ({
@@ -38,87 +135,221 @@ export default function Reservas() {
   const handleOpenModal = useCallback((env) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Garantir que o environment tenha todas as propriedades necessárias
-    const fullEnvironment = environments.find(e => e.id === env.id) || env;
+    const fullEnvironment = ambientes.find(e => e.id === env.id) || env;
     setSelectedEnvironment(fullEnvironment);
     setSelectedPeriod(null);
     setSelectedDate(new Date().toISOString().split('T')[0]);
     setEnvironmentDetailsVisible(false); // Fecha o modal de detalhes
     setModalVisible(true);
-  }, []);
+  }, [ambientes]);
 
   const handleDetailsModal = useCallback((env) => {
     // Garantir que o environment tenha todas as propriedades necessárias
-    const fullEnvironment = environments.find(e => e.id === env.id) || env;
+    const fullEnvironment = ambientes.find(e => e.id === env.id) || env;
     setSelectedEnvironment(fullEnvironment);
     setEnvironmentDetailsVisible(true);
-  }, []);
+  }, [ambientes]);
 
   const handleOpenReservationDetails = useCallback((reservation) => {
     setSelectedReservation(reservation);
     setReservationDetailsVisible(true);
   }, []);
 
-  const handleRequestReservation = useCallback(() => {
+  const handleRequestReservation = useCallback(async () => {
     if (!selectedPeriod) {
       Toast.show({ type: 'error', text1: 'Por favor, selecione um período.' });
       return;
     }
+    
+    if (!user?.userap_id) {
+      Toast.show({ type: 'error', text1: 'Erro: Usuário não identificado' });
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
-      // Converter período para horário de exibição
+      // Converter período para horários específicos (formato HH:MM:SS)
       const periodTimes = {
-        manha: '08:00 - 12:00',
-        tarde: '12:00 - 18:00',
-        noite: '18:00 - 22:00'
+        manha: { inicio: '08:00:00', fim: '12:00:00' },
+        tarde: { inicio: '12:00:00', fim: '18:00:00' },
+        noite: { inicio: '18:00:00', fim: '22:00:00' }
       };
       
-      const newReservation = {
-        id: Date.now(),
-        environmentName: selectedEnvironment.name,
-        date: selectedDate,
-        time: periodTimes[selectedPeriod],
-        period: selectedPeriod,
-        status: 'pendente'
+      const horarios = periodTimes[selectedPeriod];
+      
+      const dadosReserva = {
+        ambiente_id: selectedEnvironment.id,
+        res_data_reserva: selectedDate,
+        res_horario_inicio: horarios.inicio,
+        res_horario_fim: horarios.fim,
       };
-      setMyReservations(prev => [newReservation, ...prev]);
-      allExistingReservations.push(newReservation);
+      
+      console.log('📤 [Reservas] Criando reserva...', dadosReserva);
+      
+      await apiService.criarReserva(dadosReserva);
+      
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setModalVisible(false);
-      Toast.show({ type: 'success', text1: 'Solicitação enviada!', text2: 'Aguarde a confirmação do síndico.' });
+      Toast.show({ 
+        type: 'success', 
+        text1: 'Solicitação enviada!', 
+        text2: 'Aguarde a confirmação do síndico.' 
+      });
+      
+      // Recarregar lista de reservas
+      if (activeTab === 'minhas') {
+        await carregarReservas();
+      }
+      
     } catch (err) {
-      Toast.show({ type: 'error', text1: 'Erro ao solicitar reserva.' });
+      console.error('❌ [Reservas] Erro ao criar reserva:', err);
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Erro ao solicitar reserva',
+        text2: err.message || 'Tente novamente'
+      });
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedPeriod, selectedEnvironment, selectedDate]);
+  }, [selectedPeriod, selectedEnvironment, selectedDate, user, activeTab]);
 
-  const handleCancelReservation = useCallback((id) => {
-    Alert.alert(
-      "Cancelar Reserva",
-      "Você tem certeza que deseja cancelar esta reserva?",
-      [
-        { text: "Voltar", style: "cancel" },
-        { 
-          text: "Sim, cancelar", 
-          onPress: () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            setMyReservations(prev => prev.map(r => r.id === id ? { ...r, status: 'cancelada' } : r));
-            Toast.show({ type: 'info', text1: 'Reserva cancelada.' });
-          },
-          style: 'destructive'
+  const handleCancelReservation = useCallback(async (id) => {
+    console.log(`🎯 [Reservas] handleCancelReservation chamado com ID: ${id}, tipo: ${typeof id}`);
+    
+    // Para web, usar window.confirm; para mobile, usar Alert.alert
+    const isWeb = typeof window !== 'undefined' && window.confirm;
+    
+    if (isWeb) {
+      const confirmar = window.confirm("Você tem certeza que deseja cancelar esta reserva?");
+      if (!confirmar) return;
+      
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Warning);
+        console.log(`🔄 [Reservas] Iniciando cancelamento da reserva ID: ${id}...`);
+        
+        const resultado = await apiService.cancelarReserva(id);
+        console.log('✅ [Reservas] Resultado do cancelamento:', resultado);
+        
+        Toast.show({ type: 'success', text1: 'Reserva cancelada com sucesso!' });
+        
+        // Recarregar lista de reservas
+        console.log('🔄 [Reservas] Recarregando lista de reservas...');
+        if (activeTab === 'minhas' && user?.userap_id) {
+          setLoadingReservas(true);
+          const data = await apiService.listarReservas(user.userap_id);
+          setMyReservations(data);
+          setLoadingReservas(false);
         }
-      ]
-    );
-  }, []);
+      } catch (error) {
+        console.error('❌ [Reservas] Erro ao cancelar reserva:', {
+          message: error.message,
+          stack: error.stack,
+          fullError: error
+        });
+        Toast.show({ 
+          type: 'error', 
+          text1: 'Erro ao cancelar reserva',
+          text2: error.message || 'Tente novamente'
+        });
+      }
+    } else {
+      Alert.alert(
+        "Cancelar Reserva",
+        "Você tem certeza que deseja cancelar esta reserva?",
+        [
+          { text: "Voltar", style: "cancel" },
+          { 
+            text: "Sim, cancelar", 
+            onPress: async () => {
+              try {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                console.log(`🔄 [Reservas] Iniciando cancelamento da reserva ID: ${id}...`);
+                
+                const resultado = await apiService.cancelarReserva(id);
+                console.log('✅ [Reservas] Resultado do cancelamento:', resultado);
+                
+                Toast.show({ type: 'success', text1: 'Reserva cancelada com sucesso!' });
+                
+                // Recarregar lista de reservas
+                console.log('🔄 [Reservas] Recarregando lista de reservas...');
+                if (activeTab === 'minhas' && user?.userap_id) {
+                  setLoadingReservas(true);
+                  const data = await apiService.listarReservas(user.userap_id);
+                  setMyReservations(data);
+                  setLoadingReservas(false);
+                }
+              } catch (error) {
+                console.error('❌ [Reservas] Erro ao cancelar reserva:', {
+                  message: error.message,
+                  stack: error.stack,
+                  fullError: error
+                });
+                Toast.show({ 
+                  type: 'error', 
+                  text1: 'Erro ao cancelar reserva',
+                  text2: error.message || 'Tente novamente'
+                });
+              }
+            },
+            style: 'destructive'
+          }
+        ]
+      );
+    }
+  }, [activeTab, user]);
 
   // Filtrar reservas
   const filteredReservations = useMemo(() => {
-    if (filterStatus === 'todas') {
-      return myReservations;
-    }
     return myReservations.filter(r => r.status === filterStatus);
   }, [myReservations, filterStatus]);
+
+  // Agrupar reservas inteligentemente (Hoje, Ontem, Esta Semana, etc)
+  const groupedReservations = useMemo(() => {
+    const groups = {
+      hoje: { label: 'Hoje', reservas: [] },
+      ontem: { label: 'Ontem', reservas: [] },
+      estaSemana: { label: 'Esta Semana', reservas: [] },
+      semanaPassada: { label: 'Semana Passada', reservas: [] },
+      esteMes: { label: 'Este Mês', reservas: [] },
+      mesPassado: { label: 'Mês Passado', reservas: [] },
+      maisAntigo: { label: 'Mais Antigo', reservas: [] },
+    };
+
+    filteredReservations.forEach(reserva => {
+      try {
+        const dateStr = reserva.date.includes('T') ? reserva.date : reserva.date + 'T00:00:00';
+        const dataReserva = parseISO(dateStr);
+
+        if (isToday(dataReserva)) {
+          groups.hoje.reservas.push(reserva);
+        } else if (isYesterday(dataReserva)) {
+          groups.ontem.reservas.push(reserva);
+        } else if (isThisWeek(dataReserva, { locale: ptBR })) {
+          groups.estaSemana.reservas.push(reserva);
+        } else if (isLastWeek(dataReserva, { locale: ptBR })) {
+          groups.semanaPassada.reservas.push(reserva);
+        } else if (isThisMonth(dataReserva)) {
+          groups.esteMes.reservas.push(reserva);
+        } else if (isLastMonth(dataReserva)) {
+          groups.mesPassado.reservas.push(reserva);
+        } else {
+          groups.maisAntigo.reservas.push(reserva);
+        }
+      } catch (error) {
+        console.error('Erro ao agrupar reserva:', error);
+      }
+    });
+
+    // Retornar apenas grupos que têm reservas
+    return Object.keys(groups)
+      .filter(key => groups[key].reservas.length > 0)
+      .map(key => ({
+        key,
+        label: groups[key].label,
+        reservas: groups[key].reservas.sort((a, b) => new Date(b.date) - new Date(a.date))
+      }));
+  }, [filteredReservations]);
 
   const PeriodPicker = () => {
     const periods = [
@@ -126,6 +357,8 @@ export default function Reservas() {
         id: 'manha', 
         label: 'Manhã', 
         time: '08:00 - 12:00',
+        horario_inicio: '08:00:00',
+        horario_fim: '12:00:00',
         icon: '🌅',
         color: '#f59e0b',
         lightColor: '#fef3c7'
@@ -134,6 +367,8 @@ export default function Reservas() {
         id: 'tarde', 
         label: 'Tarde', 
         time: '12:00 - 18:00',
+        horario_inicio: '12:00:00',
+        horario_fim: '18:00:00',
         icon: '☀️',
         color: '#3b82f6',
         lightColor: '#dbeafe'
@@ -142,20 +377,54 @@ export default function Reservas() {
         id: 'noite', 
         label: 'Noite', 
         time: '18:00 - 22:00',
+        horario_inicio: '18:00:00',
+        horario_fim: '22:00:00',
         icon: '🌙',
         color: '#8b5cf6',
         lightColor: '#ede9fe'
       }
     ];
 
-    // Verificar períodos já reservados
-    const reservedPeriods = allExistingReservations
-      .filter(r => 
-        r.environmentName === selectedEnvironment?.name && 
-        r.date === selectedDate && 
-        r.status !== 'cancelada'
-      )
-      .map(r => r.period);
+    // Normalizar data para comparação
+    const dataNormalizada = selectedDate.split('T')[0];
+
+    // Verificar períodos já reservados (usando reservas reais do banco)
+    const periodosReservados = periods.map(period => {
+      // Buscar reservas que conflitam com este período na data selecionada
+      const temReserva = reservasDoAmbiente.some(reserva => {
+        // Normalizar data da reserva
+        const dataReserva = reserva.date.split('T')[0];
+        
+        // Se não é a mesma data, não há conflito
+        if (dataReserva !== dataNormalizada) return false;
+        
+        // Se está cancelada, não bloqueia
+        if (reserva.status === 'cancelada') return false;
+        
+        // Verificar se os horários se sobrepõem
+        const reservaInicio = reserva.horario_inicio;
+        const reservaFim = reserva.horario_fim;
+        const periodoInicio = period.horario_inicio;
+        const periodoFim = period.horario_fim;
+        
+        const conflito = (
+          (periodoInicio >= reservaInicio && periodoInicio < reservaFim) ||
+          (periodoFim > reservaInicio && periodoFim <= reservaFim) ||
+          (periodoInicio <= reservaInicio && periodoFim >= reservaFim)
+        );
+        
+        if (conflito) {
+          console.log(`⚠️ Período ${period.label} bloqueado por reserva #${reserva.id}`);
+        }
+        
+        return conflito;
+      });
+      
+      return {
+        periodo: period.id,
+        reservado: temReserva
+      };
+    });
 
     return (
       <View>
@@ -164,7 +433,8 @@ export default function Reservas() {
         </Text>
         <View style={styles.periodGrid}>
           {periods.map(period => {
-            const isReserved = reservedPeriods.includes(period.id);
+            const periodoReservado = periodosReservados.find(p => p.periodo === period.id);
+            const isReserved = periodoReservado?.reservado || false;
             const isSelected = selectedPeriod === period.id;
             
             return (
@@ -299,15 +569,31 @@ export default function Reservas() {
               >
                 Ambientes Disponíveis
               </Animatable.Text>
-              {environments.map((env, index) => (
-                <EnvironmentCard 
-                  key={env.id} 
-                  item={env} 
-                  onReserve={handleOpenModal}
-                  onDetails={handleDetailsModal}
-                  index={index}
-                />
-              ))}
+              
+              {loadingAmbientes ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
+                  <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+                    Carregando ambientes...
+                  </Text>
+                </View>
+              ) : ambientes.length > 0 ? (
+                ambientes.map((env, index) => (
+                  <EnvironmentCard 
+                    key={env.id} 
+                    item={env} 
+                    onReserve={handleOpenModal}
+                    onDetails={handleDetailsModal}
+                    index={index}
+                  />
+                ))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                    Nenhum ambiente disponível no momento
+                  </Text>
+                </View>
+              )}
             </View>
           ) : (
             <View>
@@ -322,7 +608,6 @@ export default function Reservas() {
               {/* Filtros de status */}
               <View style={styles.statusFilterContainer}>
                 {[
-                  { key: 'todas', label: 'Todas', count: stats.total },
                   { key: 'pendente', label: 'Pendentes', count: stats.pending },
                   { key: 'confirmada', label: 'Confirmadas', count: stats.confirmed },
                   { key: 'cancelada', label: 'Canceladas', count: stats.cancelled },
@@ -352,39 +637,47 @@ export default function Reservas() {
                     >
                       {tab.label}
                     </Text>
-                    {tab.count > 0 && (
-                      <View
-                        style={[
-                          styles.statusFilterBadge,
-                          {
-                            backgroundColor: filterStatus === tab.key ? 'rgba(255, 255, 255, 0.3)' : theme.colors.primary,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.statusFilterBadgeText,
-                            { color: '#ffffff' },
-                          ]}
-                        >
-                          {tab.count}
-                        </Text>
-                      </View>
-                    )}
                   </TouchableOpacity>
                 ))}
               </View>
 
               {/* Lista de reservas */}
-              {filteredReservations.length > 0 ? (
-                filteredReservations.map((res, index) => (
-                  <ReservationCard
-                    key={res.id}
-                    item={res}
-                    onCancel={handleCancelReservation}
-                    onPress={handleOpenReservationDetails}
-                    index={index}
-                  />
+              {loadingReservas ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={theme.colors.primary} />
+                  <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+                    Carregando suas reservas...
+                  </Text>
+                </View>
+              ) : filteredReservations.length > 0 ? (
+                groupedReservations.map((group, groupIndex) => (
+                  <Animatable.View 
+                    key={group.key} 
+                    animation="fadeInUp" 
+                    delay={groupIndex * 100}
+                    duration={500}
+                  >
+                    {/* Header do grupo */}
+                    <View style={[styles.groupHeader, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+                      <Text style={[styles.groupHeaderText, { color: theme.colors.text }]}>
+                        {group.label}
+                      </Text>
+                      <Text style={[styles.groupHeaderCount, { color: theme.colors.textSecondary }]}>
+                        {group.reservas.length} {group.reservas.length === 1 ? 'reserva' : 'reservas'}
+                      </Text>
+                    </View>
+                    
+                    {/* Reservas do grupo */}
+                    {group.reservas.map((res, index) => (
+                      <ReservationCard
+                        key={res.id}
+                        item={res}
+                        onCancel={handleCancelReservation}
+                        onPress={handleOpenReservationDetails}
+                        index={index}
+                      />
+                    ))}
+                  </Animatable.View>
                 ))
               ) : (
                 <Animatable.View 
@@ -393,9 +686,11 @@ export default function Reservas() {
                 >
                   <CalendarCheck size={48} color={theme.colors.textSecondary} strokeWidth={1.5} />
                   <Text style={[styles.emptyStateText, { color: theme.colors.textSecondary }]}>
-                    {filterStatus === 'todas' 
-                      ? 'Nenhuma reserva encontrada' 
-                      : `Nenhuma reserva ${filterStatus}`}
+                    {filterStatus === 'pendente' 
+                      ? 'Nenhuma reserva pendente' 
+                      : filterStatus === 'confirmada'
+                      ? 'Nenhuma reserva confirmada'
+                      : 'Nenhuma reserva cancelada'}
                   </Text>
                 </Animatable.View>
               )}

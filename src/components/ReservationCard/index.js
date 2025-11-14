@@ -16,7 +16,7 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
       case 'pendente':
         return {
           color: '#f59e0b',
-          lightColor: '#fed7aa',
+          lightColor: '#fef3c7',
           icon: Clock,
           label: 'Pendente',
         };
@@ -36,8 +36,8 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
         };
       default:
         return {
-          color: '#6b7280',
-          lightColor: '#f3f4f6',
+          color: '#f59e0b',
+          lightColor: '#fef3c7',
           icon: Clock,
           label: status || 'Pendente',
         };
@@ -50,11 +50,32 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
   // Formatar data
   const formatDate = (dateString) => {
     try {
-      const date = parseISO(dateString + 'T00:00:00');
-      return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-    } catch {
+      const dateToFormat = dateString.includes('T') ? dateString : dateString + 'T00:00:00';
+      const date = parseISO(dateToFormat);
+      return format(date, "dd/MM/yyyy", { locale: ptBR });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
       return dateString;
     }
+  };
+
+  // Formatar data completa (ex: "Qui, 14 Nov")
+  const formatDateFull = (dateString) => {
+    try {
+      const dateToFormat = dateString.includes('T') ? dateString : dateString + 'T00:00:00';
+      const date = parseISO(dateToFormat);
+      return format(date, "EEE, dd MMM", { locale: ptBR });
+    } catch (error) {
+      return formatDate(dateString);
+    }
+  };
+
+  // Formatar horário (ex: "08:00 - 12:00")
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    // Se está no formato "HH:MM:SS - HH:MM:SS", remove apenas os segundos
+    // Exemplo: "18:00:00 - 22:00:00" vira "18:00 - 22:00"
+    return timeString.replace(/:\d{2}(?=\s|$)/g, '');
   };
 
   const handleCancel = () => {
@@ -94,7 +115,7 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
               {item.environmentName}
             </Text>
             <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-              ID: #{item.id}
+              #{item.id}
             </Text>
           </View>
 
@@ -110,16 +131,16 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
         {/* Informações principais */}
         <View style={styles.infoContainer}>
           <View style={styles.infoRow}>
-            <Calendar size={16} color={theme.colors.primary} strokeWidth={2.5} />
-            <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-              {formatDate(item.date)}
+            <Calendar size={18} color={theme.colors.primary} strokeWidth={2.5} />
+            <Text style={[styles.infoText, { color: theme.colors.text }]}>
+              {formatDateFull(item.date)}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Clock size={16} color={theme.colors.primary} strokeWidth={2.5} />
-            <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-              Horário: {item.time}
+            <Clock size={18} color={theme.colors.primary} strokeWidth={2.5} />
+            <Text style={[styles.infoText, { color: theme.colors.text }]}>
+              {formatTime(item.time)}
             </Text>
           </View>
         </View>
@@ -176,8 +197,8 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
   },
   subtitle: {
     fontSize: 12,
-    fontWeight: '500',
-    color: '#64748b',
+    fontWeight: '600',
+    color: '#94a3b8',
   },
   statusBadge: {
     flexDirection: 'row',
@@ -193,8 +214,8 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
     letterSpacing: 0.3,
   },
   infoContainer: {
-    marginBottom: 12,
     gap: 8,
+    marginBottom: 12,
   },
   infoRow: {
     flexDirection: 'row',
@@ -202,9 +223,9 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
     gap: 8,
   },
   infoText: {
-    fontSize: 13,
-    color: '#64748b',
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
   },
   cancelButton: {
     flexDirection: 'row',

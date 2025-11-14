@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
-  baseURL: 'http://192.168.0.174:3333',
+  // baseURL: 'http://192.168.0.174:3333',
   // baseURL: 'http://192.168.5.10:3333',
-  // baseURL: 'http://10.67.23.46:3333',
+  baseURL: 'http://10.67.23.46:3333',
   timeout: 30000, // 30 segundos
 });
 
@@ -749,6 +749,261 @@ export const apiService = {
     } catch (error) {
       console.error('❌ [API] Erro ao buscar ambientes:', error.response?.status, error.response?.data);
       return []; // Retorna array vazio em caso de erro
+    }
+  },
+
+  // === RESERVAS DE AMBIENTES ===
+  
+  // Listar reservas do usuário
+  listarReservas: async (userap_id) => {
+    try {
+      console.log(`🔄 [API] Buscando reservas do usuário ${userap_id}...`);
+      const response = await api.get(`/reservas`);
+      console.log('✅ [API] Reservas carregadas:', response.data);
+      
+      const reservas = response.data.dados || response.data || [];
+      
+      // Mapear status do backend para o frontend
+      const mapStatus = (status) => {
+        const statusLower = (status || 'pendente').toLowerCase();
+        // Backend: Pendente, Reservado, Cancelado
+        // Frontend: pendente, confirmada, cancelada
+        switch (statusLower) {
+          case 'reservado':
+            return 'confirmada';
+          case 'cancelado':
+            return 'cancelada';
+          case 'pendente':
+            return 'pendente';
+          default:
+            return 'pendente';
+        }
+      };
+      
+      // Normalizar campos do backend para o formato esperado pelo frontend
+      return reservas.map(r => ({
+        id: r.res_id || r.id,
+        environmentName: r.amd_nome || r.ambiente_nome || r.area || 'Ambiente',
+        ambiente_id: r.amd_id || r.ambiente_id,
+        date: r.res_data_reserva || r.data,
+        time: r.res_horario_inicio && r.res_horario_fim 
+          ? `${r.res_horario_inicio} - ${r.res_horario_fim}`
+          : r.horario,
+        horario_inicio: r.res_horario_inicio,
+        horario_fim: r.res_horario_fim,
+        status: mapStatus(r.res_status || r.status),
+        user_nome: r.user_nome,
+        ap_numero: r.ap_numero,
+        _raw: r
+      }));
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar reservas:', error.response?.status, error.response?.data);
+      return []; // Retorna array vazio em caso de erro
+    }
+  },
+
+  // Criar nova reserva
+  criarReserva: async (dadosReserva) => {
+    try {
+      console.log('🔄 [API] Criando nova reserva...', dadosReserva);
+      
+      // Formato esperado pelo backend
+      const payload = {
+        amd_id: dadosReserva.ambiente_id || dadosReserva.amd_id,
+        res_data_reserva: dadosReserva.res_data || dadosReserva.res_data_reserva,
+        res_horario_inicio: dadosReserva.res_horario_inicio || dadosReserva.horario_inicio,
+        res_horario_fim: dadosReserva.res_horario_fim || dadosReserva.horario_fim,
+      };
+      
+      console.log('📤 [API] Payload formatado:', payload);
+      
+      // ✅ VALIDAR DISPONIBILIDADE antes de criar
+      console.log('🔍 [API] Verificando disponibilidade...');
+      const disponivel = await apiService.verificarDisponibilidade(
+        payload.amd_id,
+        payload.res_data_reserva,
+        payload.res_horario_inicio,
+        payload.res_horario_fim
+      );
+      
+      if (!disponivel) {
+        console.log('❌ [API] Horário já reservado!');
+        throw new Error('Este horário já está reservado. Por favor, escolha outro período.');
+      }
+      
+      console.log('✅ [API] Horário disponível, criando reserva...');
+      const response = await api.post('/reservas', payload);
+      console.log('✅ [API] Reserva criada com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao criar reserva:', error.response?.status, error.response?.data);
+      
+      // Se o erro veio da validação de disponibilidade, propagar a mensagem
+      if (error.message && error.message.includes('já está reservado')) {
+        throw error;
+      }
+      
+      const errorMessage = error.response?.data?.mensagem || error.response?.data?.message || 'Erro ao criar reserva';
+      throw new Error(errorMessage);
+    }
+  },
+
+  // Obter detalhes de uma reserva específica
+  buscarReserva: async (reservaId) => {
+    try {
+      console.log(`🔄 [API] Buscando detalhes da reserva ${reservaId}...`);
+      const response = await api.get(`/reservas/${reservaId}`);
+      console.log('✅ [API] Detalhes da reserva:', response.data);
+      
+      const r = response.data.dados || response.data;
+      
+      // Mapear status do backend para o frontend
+      const mapStatus = (status) => {
+        const statusLower = (status || 'pendente').toLowerCase();
+        switch (statusLower) {
+          case 'reservado':
+            return 'confirmada';
+          case 'cancelado':
+            return 'cancelada';
+          case 'pendente':
+            return 'pendente';
+          default:
+            return 'pendente';
+        }
+      };
+      
+      // Normalizar para o formato do frontend
+      return {
+        id: r.res_id,
+        environmentName: r.amd_nome,
+        ambiente_id: r.amd_id,
+        amd_descricao: r.amd_descricao,
+        amd_capacidade: r.amd_capacidade,
+        date: r.res_data_reserva,
+        time: `${r.res_horario_inicio} - ${r.res_horario_fim}`,
+        horario_inicio: r.res_horario_inicio,
+        horario_fim: r.res_horario_fim,
+        status: mapStatus(r.res_status),
+        user_nome: r.user_nome,
+        user_telefone: r.user_telefone,
+        ap_numero: r.ap_numero,
+        _raw: r
+      };
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar detalhes da reserva:', error.response?.status, error.response?.data);
+      throw new Error(error.response?.data?.mensagem || 'Erro ao buscar reserva');
+    }
+  },
+
+  // Cancelar reserva
+  cancelarReserva: async (reservaId) => {
+    try {
+      console.log(`🔄 [API] Cancelando reserva ${reservaId}...`);
+      const response = await api.patch(`/reservas/${reservaId}/cancelar`);
+      console.log('✅ [API] Reserva cancelada com sucesso:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ [API] Erro ao cancelar reserva:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      const errorMessage = error.response?.data?.mensagem || error.response?.data?.message || 'Erro ao cancelar reserva';
+      throw new Error(errorMessage);
+    }
+  },
+
+  // Listar reservas de um ambiente específico
+  listarReservasAmbiente: async (ambiente_id) => {
+    try {
+      console.log(`🔄 [API] Buscando reservas do ambiente ${ambiente_id}...`);
+      const response = await api.get(`/reservas/ambiente/${ambiente_id}`);
+      console.log('✅ [API] Reservas do ambiente carregadas:', response.data);
+      
+      const reservas = response.data.dados || response.data || [];
+      
+      // Mapear status do backend para o frontend
+      const mapStatus = (status) => {
+        const statusLower = (status || 'pendente').toLowerCase();
+        switch (statusLower) {
+          case 'reservado':
+            return 'confirmada';
+          case 'cancelado':
+            return 'cancelada';
+          case 'pendente':
+            return 'pendente';
+          default:
+            return 'pendente';
+        }
+      };
+      
+      return reservas.map(r => ({
+        id: r.res_id,
+        date: r.res_data_reserva,
+        time: `${r.res_horario_inicio} - ${r.res_horario_fim}`,
+        horario_inicio: r.res_horario_inicio,
+        horario_fim: r.res_horario_fim,
+        status: mapStatus(r.res_status),
+        user_nome: r.user_nome,
+        ap_numero: r.ap_numero,
+        _raw: r
+      }));
+    } catch (error) {
+      console.error('❌ [API] Erro ao buscar reservas do ambiente:', error.response?.status, error.response?.data);
+      return [];
+    }
+  },
+
+  // Verificar disponibilidade (helper function - verifica se horário está ocupado)
+  verificarDisponibilidade: async (ambiente_id, data, horario_inicio, horario_fim) => {
+    try {
+      console.log(`🔄 [API] Verificando disponibilidade...`, { ambiente_id, data, horario_inicio, horario_fim });
+      
+      // Busca todas as reservas do ambiente
+      const reservas = await apiService.listarReservasAmbiente(ambiente_id);
+      
+      // Normalizar data para comparação (remover hora se houver)
+      const dataNormalizada = data.split('T')[0];
+      
+      // Filtra reservas na mesma data que não estão canceladas
+      const reservasMesmaData = reservas.filter(r => {
+        const dataReserva = r.date.split('T')[0];
+        const isMesmaData = dataReserva === dataNormalizada;
+        const naoEstaCancelada = r.status !== 'cancelada' && r.status !== 'cancelado';
+        
+        console.log(`📋 Reserva #${r.id}: data=${dataReserva}, mesmaData=${isMesmaData}, cancelada=${!naoEstaCancelada}`);
+        
+        return isMesmaData && naoEstaCancelada;
+      });
+      
+      console.log(`📊 [API] Encontradas ${reservasMesmaData.length} reservas na mesma data não canceladas`);
+      
+      // Verifica se há conflito de horários
+      const temConflito = reservasMesmaData.some(r => {
+        const inicio = r.horario_inicio;
+        const fim = r.horario_fim;
+        
+        // Verifica se os horários se sobrepõem
+        const conflito = (
+          (horario_inicio >= inicio && horario_inicio < fim) ||
+          (horario_fim > inicio && horario_fim <= fim) ||
+          (horario_inicio <= inicio && horario_fim >= fim)
+        );
+        
+        if (conflito) {
+          console.log(`⚠️ [API] Conflito detectado com reserva #${r.id}: ${inicio} - ${fim}`);
+        }
+        
+        return conflito;
+      });
+      
+      const disponivel = !temConflito;
+      console.log(`${disponivel ? '✅' : '❌'} [API] Disponibilidade: ${disponivel ? 'Livre' : 'Ocupado'}`);
+      
+      return disponivel;
+    } catch (error) {
+      console.error('❌ [API] Erro ao verificar disponibilidade:', error);
+      return true; // Em caso de erro, assume disponível para não bloquear o usuário
     }
   },
 

@@ -86,9 +86,12 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
 
   const formatDate = (dateString) => {
     try {
-      const date = parseISO(dateString + 'T00:00:00');
-      return format(date, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-    } catch {
+      // Se já tem hora no formato ISO, usa direto; senão adiciona
+      const dateToFormat = dateString.includes('T') ? dateString : dateString + 'T00:00:00';
+      const date = parseISO(dateToFormat);
+      return format(date, "dd/MM/yyyy", { locale: ptBR });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
       return dateString;
     }
   };

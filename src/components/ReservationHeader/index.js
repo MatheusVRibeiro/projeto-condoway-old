@@ -14,7 +14,7 @@ const ReservationHeader = ({ total = 0, pending = 0, confirmed = 0, cancelled = 
       value: pending,
       icon: Clock,
       color: '#f59e0b',
-      lightColor: '#fed7aa',
+      lightColor: '#fef3c7',
       darkColor: '#d97706',
     },
     {
