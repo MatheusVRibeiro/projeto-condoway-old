@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
-  baseURL: 'http://192.168.0.174:3333',
+  // baseURL: 'http://192.168.0.174:3333',
   // baseURL: 'http://192.168.5.10:3333',
-  // baseURL: 'http://10.67.23.46:3333',
+  baseURL: 'http://10.67.23.46:3333',
   timeout: 30000, // 30 segundos
 });
 
@@ -159,7 +159,7 @@ const handleError = (error, functionName) => {
 };
 
 // Helper: decodifica payload do JWT (somente para debug/fallback)
-const decodeJwt = (token) => {
+export const decodeJwt = (token) => {
   try {
     const base64Payload = token.split('.')[1];
     const base64 = base64Payload.replace(/-/g, '+').replace(/_/g, '/');
@@ -534,11 +534,12 @@ export const apiService = {
       
       console.log('📦 Resposta do login:', JSON.stringify(response.data, null, 2));
       
-      if (!response.data.sucesso) {
-        throw new Error(response.data.mensagem || 'E-mail ou senha inválidos.');
+      // Verificar se a resposta tem os dados necessários (token e usuario)
+      if (!response.data.dados || !response.data.dados.token || !response.data.dados.usuario) {
+        throw new Error('Resposta inválida do servidor');
       }
 
-      // A API retorna { sucesso: true, dados: { usuario, token } }
+      // A API retorna { dados: { usuario, token } }
       // Retornar a resposta completa para o AuthContext processar
       return response.data;
     } catch (error) {

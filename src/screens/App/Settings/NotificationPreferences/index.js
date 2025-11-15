@@ -603,21 +603,6 @@ const NotificationPreferences = () => {
           />
         </PreferenceSection>
 
-        {/* Zona de Perigo */}
-        <Animatable.View animation="fadeInUp" duration={500} delay={200} style={styles.dangerZone}>
-          <Text style={styles.dangerTitle}>Zona de Perigo</Text>
-          <Text style={styles.dangerDescription}>
-            Esta ação irá limpar permanentemente todo o histórico de notificações. 
-            Esta ação não pode ser desfeita.
-          </Text>
-          <TouchableOpacity 
-            style={styles.dangerButton}
-            onPress={handleClearNotifications}
-          >
-            <Text style={styles.dangerButtonText}>Limpar Histórico</Text>
-          </TouchableOpacity>
-        </Animatable.View>
-
         {/* Espaçamento inferior */}
         <View style={{ height: 32 }} />
       </ScrollView>

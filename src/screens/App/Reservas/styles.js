@@ -11,6 +11,26 @@ export const styles = StyleSheet.create({
     paddingBottom: 100,
   },
 
+  // --- Page Header ---
+  pageHeader: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#64748b',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+
   // --- Abas (Tabs) - Modernizadas ---
   tabsContainer: {
     flexDirection: 'row',

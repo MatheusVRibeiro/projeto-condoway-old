@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiService, setAuthToken, buildFullImageUrl, isTokenExpired, getTokenTimeRemaining } from '../services/api'; // Importar helpers de validação de token
+import { apiService, setAuthToken, buildFullImageUrl, isTokenExpired, getTokenTimeRemaining, decodeJwt } from '../services/api'; // Importar helpers de validação de token
 import SplashScreen from '../screens/Auxiliary/SplashScreen';
 
 // 1. O contexto define a "forma" dos dados que serão compartilhados.
@@ -47,6 +47,25 @@ export const AuthProvider = ({ children }) => {
           }
           
           const userData = JSON.parse(storedUser);
+          
+          // ✅ SOLUÇÃO: Se userap_id não estiver no userData, extrair do token
+          if (!userData.userap_id) {
+            console.warn('⚠️ [AuthContext] userap_id não encontrado no userData do storage');
+            console.log('🔍 [AuthContext] Tentando extrair userap_id do token JWT...');
+            
+            const decoded = decodeJwt(storedToken);
+            console.log('🔍 [AuthContext] Token decodificado:', JSON.stringify(decoded, null, 2));
+            
+            // O token pode ter userApId, userap_id, ou userapId
+            const userapId = decoded?.userApId || decoded?.userap_id || decoded?.userapId;
+            
+            if (userapId) {
+              console.log('✅ [AuthContext] userap_id extraído do token:', userapId);
+              userData.userap_id = userapId;
+            } else {
+              console.error('❌ [AuthContext] userap_id não encontrado nem no storage nem no token!');
+            }
+          }
           
           // Normalizar user_foto se for path relativo
           if (userData.user_foto) {
@@ -103,6 +122,28 @@ export const AuthProvider = ({ children }) => {
       const { usuario, token } = response.dados;
       
       console.log('✅ [AuthContext] Login realizado com sucesso. Usuário:', usuario.user_nome);
+      console.log('🔍 [AuthContext] Dados completos do usuário:', JSON.stringify(usuario, null, 2));
+      console.log('🔍 [AuthContext] userap_id:', usuario.userap_id);
+      console.log('🔍 [AuthContext] user_id:', usuario.user_id);
+      
+      // ✅ SOLUÇÃO: Se userap_id não vier no objeto usuario, extrair do token JWT
+      if (!usuario.userap_id) {
+        console.warn('⚠️ [AuthContext] userap_id não encontrado no objeto usuario');
+        console.log('🔍 [AuthContext] Tentando extrair userap_id do token JWT...');
+        
+        const decoded = decodeJwt(token);
+        console.log('🔍 [AuthContext] Token decodificado:', JSON.stringify(decoded, null, 2));
+        
+        // O token pode ter userApId, userap_id, ou userapId
+        const userapId = decoded?.userApId || decoded?.userap_id || decoded?.userapId;
+        
+        if (userapId) {
+          console.log('✅ [AuthContext] userap_id extraído do token:', userapId);
+          usuario.userap_id = userapId;
+        } else {
+          console.error('❌ [AuthContext] userap_id não encontrado nem no usuario nem no token!');
+        }
+      }
       
       // Verificar validade e tempo de expiração do token
       if (isTokenExpired(token)) {

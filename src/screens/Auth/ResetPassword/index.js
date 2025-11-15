@@ -131,10 +131,10 @@ export default function ResetPassword({ navigation, route }) {
         position: 'bottom'
       });
 
-      // Navegar para login após 3 segundos
+      // Navegar para login após 5 segundos
       setTimeout(() => {
         navigation.navigate('Login');
-      }, 3000);
+      }, 5000);
       
     } catch (error) {
       console.error('❌ Erro ao redefinir senha:', error);

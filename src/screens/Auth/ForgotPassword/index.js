@@ -63,10 +63,10 @@ const ForgotPassword = ({ navigation }) => {
         position: 'bottom'
       });
 
-      // Navegar para tela de redefinir senha após 2 segundos
+      // Navegar para tela de redefinir senha após 4 segundos
       setTimeout(() => {
         navigation.navigate('ResetPassword', { email });
-      }, 2000);
+      }, 4000);
       
     } catch (error) {
       console.error('❌ Erro ao solicitar recuperação:', error);

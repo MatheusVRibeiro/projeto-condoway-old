@@ -206,22 +206,6 @@ export default function Security() {
           </View>
         </Animatable.View>
 
-        {/* Security Settings */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>CONFIGURAÇÕES DE SEGURANÇA</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow, padding: 20 }]}>            
-            <Text style={{ color: theme.colors.text, textAlign: 'center' }}>Em breve — Implementação futura</Text>
-          </View>
-        </Animatable.View>
-
-        {/* Account Security */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>SEGURANÇA DA CONTA</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow, padding: 20 }]}>            
-            <Text style={{ color: theme.colors.text, textAlign: 'center' }}>Em breve — Implementação futura</Text>
-          </View>
-        </Animatable.View>
-
         {/* Password requirements was moved to Change Password section above */}
 
         <View style={styles.bottomSpacer} />

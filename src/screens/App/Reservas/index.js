@@ -512,6 +512,16 @@ export default function Reservas() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView>
         <View style={styles.content}>
+          {/* Título da página */}
+          <Animatable.View animation="fadeInDown" duration={500} style={styles.pageHeader}>
+            <Text style={[styles.pageTitle, { color: theme.colors.text }]}>
+              Reservas de Ambientes
+            </Text>
+            <Text style={[styles.pageSubtitle, { color: theme.colors.textSecondary }]}>
+              Reserve áreas comuns do condomínio com facilidade
+            </Text>
+          </Animatable.View>
+
           {/* Tabs modernizados */}
           <View style={[styles.tabsContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
             <TouchableOpacity
