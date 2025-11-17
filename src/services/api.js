@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
-  // baseURL: 'http://192.168.0.174:3333',
+  baseURL: 'http://192.168.0.174:3333',
   // baseURL: 'http://192.168.5.10:3333',
-  baseURL: 'http://10.67.23.46:3333',
+  // baseURL: 'http://10.67.23.46:3333',
   timeout: 30000, // 30 segundos
 });
 
@@ -572,7 +572,7 @@ export const apiService = {
     }
   },
 
-  criarNotificacao: async ({ userap_id, mensagem, tipo }) => {
+  criarNotificacao: async ({ userap_id, mensagem, tipo, prioridade }) => {
     try {
       console.log('🔄 [API] Criando notificação via POST /notificacao...');
       
@@ -581,8 +581,12 @@ export const apiService = {
         Userap_ID: userap_id,
         notificacaoMensagem: mensagem,
         NotDataEnvio: new Date().toISOString().slice(0, 19).replace('T', ' '), // MySQL datetime format
-        notificacaoLida: false
+        notificacaoLida: false,
       };
+
+      // Se o caller informou tipo/prioridade, inclua nos campos esperados pelo backend
+      if (tipo) requestData.not_tipo = tipo;
+      if (prioridade) requestData.not_prioridade = prioridade;
       
       console.log('📋 [API] Dados da notificação:', requestData);
       
@@ -1020,6 +1024,7 @@ export const apiService = {
         id: aviso.not_id,
         titulo: aviso.not_titulo,
         texto: aviso.not_mensagem,
+        prioridade: (aviso.not_prioridade || aviso.prioridade || 'alta').toLowerCase(),
       }));
       
       console.log('📋 [API] Avisos mapeados:', avisos);

@@ -300,10 +300,13 @@ export const NotificationProvider = ({ children }) => {
         const userId = user.userap_id || user.user_id;
         
         console.log(`💾 Persistindo notificação para userId: ${userId}`, { title, message, type });
+        // Determinar prioridade: warnings/errors => alta, demais => baixa
+        const prioridade = (type === 'error' || type === 'warning') ? 'alta' : 'baixa';
         const serverNotification = await apiService.criarNotificacao({ 
           userap_id: userId, 
           mensagem: message, 
-          tipo: type === 'info' ? 'Aviso' : type 
+          tipo: type === 'info' ? 'Aviso' : type,
+          prioridade,
         });
         console.log('✅ Notificação criada no servidor:', serverNotification);
         
