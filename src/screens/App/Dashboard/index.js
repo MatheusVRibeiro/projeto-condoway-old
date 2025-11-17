@@ -128,7 +128,7 @@ const DashboardSkeleton = () => {
 
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, getNotificationsByType, markAsRead, loadServerNotifications } = useNotifications();
   const { user } = useAuth();
   const { profileData } = useProfile();
   const { condominioData } = useCondominio();
@@ -146,7 +146,25 @@ export default function Dashboard() {
   };
 
   const handleReservarEspaco = React.useCallback(() => navigation.navigate('ReservasTab'), [navigation]);
-  const handleMinhasEncomendas = React.useCallback(() => navigation.navigate(ROUTES.PACKAGES || 'Packages'), [navigation]);
+  const handleMinhasEncomendas = React.useCallback(async () => {
+    try {
+      // Marcar notificações de entrega como lidas antes de navegar
+      const entregas = getNotificationsByType('entrega') || [];
+      const unread = entregas.filter(n => !n.read).map(n => n.id);
+
+      if (unread.length > 0) {
+        // Marcar em paralelo, não bloquear se algum falhar
+        await Promise.allSettled(unread.map(id => markAsRead(id)));
+        // Recarregar notificações do servidor para manter contador consistente
+        await loadServerNotifications();
+      }
+
+      navigation.navigate(ROUTES.PACKAGES || 'Packages');
+    } catch (err) {
+      console.error('❌ Erro ao marcar encomendas como lidas antes de navegar:', err);
+      navigation.navigate(ROUTES.PACKAGES || 'Packages');
+    }
+  }, [navigation, getNotificationsByType, markAsRead, loadServerNotifications]);
   const handleLiberarVisitante = React.useCallback(() => navigation.navigate(ROUTES.VISITANTES || 'Visitantes'), [navigation]);
   const handleAbrirOcorrencia = React.useCallback(() => navigation.navigate('OcorrenciasTab'), [navigation]);
   const handleVerNotificacoes = React.useCallback(() => navigation.navigate('Notifications'), [navigation]);
@@ -272,7 +290,7 @@ export default function Dashboard() {
         console.log('🔄 [DASHBOARD] Mock disponível:', avisosImportantesMock);
         
         const data = await apiService.buscarAvisosImportantes();
-        
+
         console.log('📦 [DASHBOARD] Dados recebidos da API:', data);
         console.log('📦 [DASHBOARD] Mounted?', mounted);
         console.log('📦 [DASHBOARD] É array?', Array.isArray(data));
@@ -281,8 +299,10 @@ export default function Dashboard() {
         if (!mounted) return;
         
         if (Array.isArray(data) && data.length > 0) {
-          console.log('✅ [DASHBOARD] Usando dados da API');
-          setAvisos(data);
+          // Filtrar apenas avisos com prioridade alta (se o backend fornecer a propriedade)
+          const apenasAltos = data.filter(a => (a.prioridade ? a.prioridade === 'alta' : true));
+          console.log('✅ [DASHBOARD] Usando dados da API (filtrados):', apenasAltos);
+          setAvisos(apenasAltos.length > 0 ? apenasAltos : data);
         } else {
           console.log('⚠️ [DASHBOARD] API retornou vazio, usando mock');
           // Fallback para mock se a API não retornar dados
@@ -402,7 +422,7 @@ export default function Dashboard() {
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Ações Rápidas</Text>
             <View style={styles.actionsGrid}>
                 <AcaoCard icon={Calendar} title="Reservar Espaço" onPress={handleReservarEspaco} theme={theme} />
-                <AcaoCard icon={Box} title="Minhas Encomendas" badgeCount={encomendas.quantidade} onPress={handleMinhasEncomendas} theme={theme} />
+                <AcaoCard icon={Box} title="Minhas Encomendas" onPress={handleMinhasEncomendas} theme={theme} />
                 <AcaoCard icon={UserPlus} title="Liberar Visitante" onPress={handleLiberarVisitante} theme={theme} />
                 <AcaoCard icon={MessageSquareWarning} title="Abrir Ocorrência" onPress={handleAbrirOcorrencia} theme={theme} />
             </View>
