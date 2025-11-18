@@ -167,6 +167,16 @@ export const AuthProvider = ({ children }) => {
       // ✅ Marcar onboarding como concluído após login bem-sucedido
       await AsyncStorage.setItem('onboardingSeen', 'true');
       console.log('✅ [AuthContext] Onboarding marcado como concluído');
+
+      // Notificar hook useOnboardingStatus (se presente) para atualizar imediatamente
+      try {
+        if (global.onOnboardingChanged) {
+          global.onOnboardingChanged('true');
+          console.log('📣 [AuthContext] Notified onOnboardingChanged');
+        }
+      } catch (e) {
+        console.warn('⚠️ [AuthContext] Erro ao notificar onOnboardingChanged', e);
+      }
       
       // 5. Atualizar o estado (agora só com os dados do utilizador)
       setUser(usuario);
