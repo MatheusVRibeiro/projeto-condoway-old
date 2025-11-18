@@ -171,7 +171,17 @@ export default function AuthorizeVisitorScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView 
+      <View style={styles.heroCard}>
+        <View style={styles.heroIconCircle}>
+          <User color={theme.colors.primary} size={22} strokeWidth={2.5} />
+        </View>
+        <View style={styles.heroTexts}>
+          <Text style={styles.heroTitle}>Pré-autorização rápida</Text>
+          <Text style={styles.heroSubtitle}>Preencha os dados e geramos o QR Code na hora.</Text>
+        </View>
+      </View>
+
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
