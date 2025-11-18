@@ -8,8 +8,6 @@ import { useTheme } from '../../contexts/ThemeProvider';
 const EnvironmentDetailsModal = ({ visible, environment, onClose, onReserve }) => {
   const { theme } = useTheme();
 
-  if (!environment) return null;
-
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose();
@@ -34,6 +32,8 @@ const EnvironmentDetailsModal = ({ visible, environment, onClose, onReserve }) =
           duration={400}
           style={[styles.modalContainer, { backgroundColor: theme.colors.card }]}
         >
+          {environment ? (
+            <>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
             <View style={styles.headerLeft}>
@@ -191,6 +191,13 @@ const EnvironmentDetailsModal = ({ visible, environment, onClose, onReserve }) =
                 </Text>
               </TouchableOpacity>
             </Animatable.View>
+          )}
+            </>
+          ) : (
+            <View style={[styles.loadingContainer, { borderColor: theme.colors.border }]}> 
+              <View style={[styles.loadingBar, { backgroundColor: theme.colors.border }]} />
+              <View style={[styles.loadingBar, { backgroundColor: theme.colors.border, width: '60%' }]} />
+            </View>
           )}
         </Animatable.View>
       </View>
@@ -379,6 +386,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#ffffff',
     letterSpacing: 0.2,
+  },
+  loadingContainer: {
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    backgroundColor: '#f8fafc',
+    gap: 12,
+  },
+  loadingBar: {
+    height: 12,
+    borderRadius: 999,
+    width: '100%',
   },
 });
 
