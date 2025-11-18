@@ -44,7 +44,7 @@ const OccurrenceHeader = ({ total = 0, open = 0, inProgress = 0, resolved = 0 })
       duration={600}
       style={[styles.container, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
     >
-      <View style={styles.totalContainer}>
+      <View style={[styles.totalContainer, { borderBottomColor: theme.colors.border }] }>
         <Text style={[styles.totalLabel, { color: theme.colors.textSecondary }]}>
           Total de Ocorrências
         </Text>
@@ -53,25 +53,32 @@ const OccurrenceHeader = ({ total = 0, open = 0, inProgress = 0, resolved = 0 })
         </Text>
       </View>
 
-      <View style={styles.statsContainer}>
+      <View style={[styles.statsContainer, { borderColor: theme.colors.border }] }>
         {stats.map((stat, index) => {
           const Icon = stat.icon;
+
+          // Escolher cores de acordo com o tema (light/dark)
+          const iconBg = theme.isDark ? `${stat.darkColor}20` : stat.lightColor; // adiciona transparência no dark
+          const iconColor = theme.isDark ? stat.darkColor : stat.color;
+          const valueColor = theme.isDark ? stat.darkColor : stat.color;
+          const itemBg = theme.isDark ? 'transparent' : '#f8fafc';
+
           return (
             <Animatable.View
               key={stat.id}
               animation="bounceIn"
               delay={index * 150}
               duration={800}
-              style={styles.statItem}
+              style={[styles.statItem, { backgroundColor: itemBg }]}
             >
               {/* Ícone circular colorido */}
-              <View style={[styles.iconContainer, { backgroundColor: stat.lightColor }]}>
-                <Icon color={stat.color} size={16} strokeWidth={2.5} />
+              <View style={[styles.iconContainer, { backgroundColor: iconBg }]}> 
+                <Icon color={iconColor} size={16} strokeWidth={2.5} />
               </View>
 
               {/* Valor e Label */}
               <View style={styles.statTextContainer}>
-                <Text style={[styles.statValue, { color: stat.color }]}>
+                <Text style={[styles.statValue, { color: valueColor }]}>
                   {stat.value}
                 </Text>
                 <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]} numberOfLines={1}>
