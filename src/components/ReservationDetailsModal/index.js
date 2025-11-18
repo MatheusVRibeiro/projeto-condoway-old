@@ -11,8 +11,6 @@ import { useTheme } from '../../contexts/ThemeProvider';
 const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) => {
   const { theme } = useTheme();
 
-  if (!reservation) return null;
-
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose();
@@ -107,11 +105,13 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
       onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        <Animatable.View 
-          animation="slideInUp" 
+        <Animatable.View
+          animation="slideInUp"
           duration={400}
           style={[styles.modalContainer, { backgroundColor: theme.colors.card }]}
         >
+          {reservation ? (
+            <>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
             <View style={styles.headerLeft}>
@@ -270,8 +270,8 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
           </ScrollView>
 
           {/* Footer com ações */}
-          <Animatable.View 
-            animation="fadeInUp" 
+          <Animatable.View
+            animation="fadeInUp"
             delay={500}
             style={[styles.footer, { borderTopColor: theme.colors.border }]}
           >
@@ -301,6 +301,13 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
               )}
             </View>
           </Animatable.View>
+            </>
+          ) : (
+            <View style={[styles.loadingContainer, { borderColor: theme.colors.border }]}> 
+              <View style={[styles.loadingBar, { backgroundColor: theme.colors.border }]} />
+              <View style={[styles.loadingBar, { backgroundColor: theme.colors.border, width: '65%' }]} />
+            </View>
+          )}
         </Animatable.View>
       </View>
     </Modal>
@@ -557,6 +564,18 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  loadingContainer: {
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    backgroundColor: '#f8fafc',
+    gap: 12,
+  },
+  loadingBar: {
+    height: 12,
+    borderRadius: 999,
+    width: '100%',
   },
 });
 
