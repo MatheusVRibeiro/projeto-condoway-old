@@ -267,13 +267,11 @@ const VisitantesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
-        <SearchBar
-          placeholder="Buscar por nome ou CPF..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+      <SearchBar
+        placeholder="Buscar por nome ou CPF..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
       <FlatList
         data={filteredData}
