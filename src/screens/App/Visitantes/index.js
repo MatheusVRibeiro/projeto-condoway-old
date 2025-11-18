@@ -85,6 +85,7 @@ const VisitantesScreen = () => {
         
         const mappedVisitor = {
           id: vstId ? vstId.toString() : randomId,
+          vst_id: vstId || null,
           visitor_name: nomeVisitante || 'Visitante',
           cpf: documentoVisitante || null,
           phone: celularVisitante || null,
@@ -267,13 +268,11 @@ const VisitantesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
-        <SearchBar
-          placeholder="Buscar por nome ou CPF..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+      <SearchBar
+        placeholder="Buscar por nome ou CPF..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
       <FlatList
         data={filteredData}
