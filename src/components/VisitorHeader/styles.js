@@ -45,8 +45,7 @@ const createStyles = (theme) => StyleSheet.create({
   },
   cardTouchable: {
     width: '100%',
-    height: '100%',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
