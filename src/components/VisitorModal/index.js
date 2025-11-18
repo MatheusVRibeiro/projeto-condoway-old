@@ -1,61 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, Alert, Dimensions } from 'react-native';
-import { 
-  X, 
-  FileText, 
-  Phone, 
-  Calendar, 
-  Clock, 
-  QrCode, 
+import { View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  X,
+  FileText,
+  Phone,
+  Calendar,
+  QrCode,
   UserCheck,
+  Clock,
   CheckCircle2,
-  Share2,
-  Copy,
-  MapPin,
-  Shield,
-  AlertCircle,
-  Trash2
+  Copy
 } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import Toast from 'react-native-toast-message';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../../contexts/ThemeProvider';
-import { apiService } from '../../services/api';
 import createStyles from './styles';
-
-const { height } = Dimensions.get('window');
 
 const getStatusConfig = (status) => {
   const configs = {
-    'Aguardando': { 
-      color: '#FF6B6B',
-      gradient: ['#FF6B6B', '#FF8E53'], 
-      label: 'Aguardando Entrada', 
-      icon: Clock 
-    },
-    'Entrou': { 
-      color: '#4ECDC4',
-      gradient: ['#4ECDC4', '#44A08D'], 
-      label: 'No Condomínio', 
-      icon: UserCheck 
-    },
-    'Finalizado': { 
-      color: '#95A5A6',
-      gradient: ['#95A5A6', '#7F8C8D'], 
-      label: 'Visita Concluída', 
-      icon: CheckCircle2 
-    },
-    'Cancelado': { 
-      color: '#E74C3C',
-      gradient: ['#E74C3C', '#C0392B'], 
-      label: 'Autorização Cancelada', 
-      icon: AlertCircle 
-    },
+    Aguardando: { color: '#E76E0D', label: 'Aguardando Entrada', icon: Clock },
+    Entrou: { color: '#0EA25C', label: 'No Condomínio', icon: UserCheck },
+    Finalizado: { color: '#95A5A6', label: 'Visita Concluída', icon: CheckCircle2 },
+    Cancelado: { color: '#E74C3C', label: 'Autorização Cancelada', icon: X },
   };
-  return configs[status] || configs['Aguardando'];
+
+  return configs[status] || configs.Aguardando;
 };
 
 const getInitials = (name) => {
@@ -69,16 +41,15 @@ const getInitials = (name) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Data não informada';
-  
+
   try {
     const date = new Date(dateString);
-    // Verificar se a data é válida
     if (isNaN(date.getTime())) return 'Data inválida';
-    
-    return date.toLocaleDateString('pt-BR', { 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric' 
+
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
     });
   } catch {
     return 'Data inválida';
@@ -87,43 +58,34 @@ const formatDate = (dateString) => {
 
 const formatCPF = (cpf) => {
   if (!cpf) return null;
-  // Remove tudo que não é número
   const cleaned = cpf.toString().replace(/\D/g, '');
-  // Formata: XXX.XXX.XXX-XX
   if (cleaned.length === 11) {
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   }
-  // Se não tem 11 dígitos, retorna null para não mostrar
   if (cleaned.length === 0) return null;
-  // Se tem algum número mas formato errado, mostra o original
   return cpf;
 };
 
 const formatPhone = (phone) => {
   if (!phone) return null;
-  // Remove tudo que não é número
   const cleaned = phone.toString().replace(/\D/g, '');
-  // Celular: (XX) XXXXX-XXXX (11 dígitos)
   if (cleaned.length === 11) {
     return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  } 
-  // Fixo: (XX) XXXX-XXXX (10 dígitos)
-  else if (cleaned.length === 10) {
+  }
+  if (cleaned.length === 10) {
     return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
   }
-  // Se não tem formato válido, retorna null para não mostrar
   if (cleaned.length === 0) return null;
-  // Se tem algum número mas formato errado, mostra o original
   return phone;
 };
 
-const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
+const VisitorModal = ({ visible, visitor, onClose }) => {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const [copiedField, setCopiedField] = useState(null);
-  
+
   if (!visitor) return null;
-  
+
   const statusConfig = getStatusConfig(visitor.status);
   const StatusIcon = statusConfig.icon;
 
@@ -131,7 +93,6 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
     try {
       await Clipboard.setStringAsync(text);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
       setCopiedField(field);
       Toast.show({
         type: 'success',
@@ -140,437 +101,122 @@ const VisitorModal = ({ visible, visitor, onClose, onRefresh }) => {
         position: 'bottom',
         visibilityTime: 2000,
       });
-      
       setTimeout(() => setCopiedField(null), 2000);
     } catch (error) {
       console.error('Erro ao copiar:', error);
     }
   };
 
-  const handleCancelAuthorization = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Cancelar Autorização',
-      `Deseja realmente cancelar a autorização de ${visitor.visitor_name}?`,
-      [
-        { text: 'Não', style: 'cancel' },
-        { 
-          text: 'Sim, Cancelar', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiService.cancelarVisitante(visitor.vst_id);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Toast.show({
-                type: 'success',
-                text1: 'Autorização Cancelada',
-                text2: 'A autorização foi cancelada com sucesso',
-              });
-              if (onRefresh) await onRefresh();
-              onClose();
-            } catch (error) {
-              console.error('Erro ao cancelar:', error);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              Toast.show({
-                type: 'error',
-                text1: 'Erro ao Cancelar',
-                text2: error.message || 'Não foi possível cancelar a autorização',
-              });
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleResendQRCode = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Reenviar QR Code',
-      `Deseja reenviar o QR Code para ${visitor.visitor_name}?`,
-      [
-        { text: 'Não', style: 'cancel' },
-        { 
-          text: 'Sim, Reenviar',
-          onPress: async () => {
-            try {
-              await apiService.reenviarConviteVisitante(visitor.vst_id);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Toast.show({
-                type: 'success',
-                text1: 'QR Code Reenviado',
-                text2: 'O QR Code foi reenviado com sucesso',
-              });
-            } catch (error) {
-              console.error('Erro ao reenviar:', error);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              Toast.show({
-                type: 'error',
-                text1: 'Erro ao Reenviar',
-                text2: error.message || 'Não foi possível reenviar o QR Code',
-              });
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleApproveVisitor = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Aprovar Visitante',
-      `Deseja aprovar a visita de ${visitor.visitor_name}?`,
-      [
-        { text: 'Não', style: 'cancel' },
-        { 
-          text: 'Sim, Aprovar',
-          onPress: () => {
-            // TODO: Implementar API de aprovação
-            console.log('Aprovar visitante:', visitor.vst_id);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Toast.show({
-              type: 'success',
-              text1: 'Visitante Aprovado',
-              text2: 'A visita foi aprovada com sucesso',
-            });
-            onClose();
-          }
-        }
-      ]
-    );
-  };
-
-  const handleRejectVisitor = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert(
-      'Recusar Visitante',
-      `Deseja recusar a visita de ${visitor.visitor_name}?`,
-      [
-        { text: 'Não', style: 'cancel' },
-        { 
-          text: 'Sim, Recusar',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: Implementar API de recusa
-            console.log('Recusar visitante:', visitor.vst_id);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Toast.show({
-              type: 'success',
-              text1: 'Visitante Recusado',
-              text2: 'A visita foi recusada',
-            });
-            onClose();
-          }
-        }
-      ]
-    );
-  };
-
   return (
     <Modal
       visible={visible}
       animationType="fade"
-      transparent={true}
+      transparent
       onRequestClose={onClose}
       statusBarTranslucent
     >
       <View style={styles.overlay}>
         <BlurView intensity={theme.dark ? 40 : 20} style={styles.blurView}>
-          <TouchableOpacity 
-            style={styles.backdrop} 
-            activeOpacity={1} 
-            onPress={onClose}
-          />
+          <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
         </BlurView>
 
-        <Animatable.View 
-          animation="slideInUp" 
-          duration={500}
+        <Animatable.View
+          animation="slideInUp"
+          duration={400}
           easing="ease-out-expo"
           style={styles.modalContainer}
         >
-          {/* Drag Handle */}
           <View style={styles.dragHandle} />
 
-          {/* Header com Avatar e Status */}
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <LinearGradient
-                colors={statusConfig.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.avatarLarge}
-              >
-                <Text style={styles.avatarLargeText}>
+          <View style={styles.sheetHeader}>
+            <View style={styles.headerAvatarWrapper}>
+              <View style={[styles.headerAvatar, { backgroundColor: `${statusConfig.color}15` }]}>
+                <Text style={[styles.headerAvatarText, { color: statusConfig.color }]}>
                   {getInitials(visitor.visitor_name)}
                 </Text>
-              </LinearGradient>
-
-              <View style={styles.headerInfo}>
-                <Text style={styles.visitorNameLarge} numberOfLines={2}>
-                  {visitor.visitor_name}
-                </Text>
-                
-                <LinearGradient
-                  colors={statusConfig.gradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.statusBadgeLarge}
-                >
-                  <StatusIcon size={16} color="#FFFFFF" strokeWidth={2.5} />
-                  <Text style={styles.statusTextLarge}>
-                    {statusConfig.label}
-                  </Text>
-                </LinearGradient>
+              </View>
+              <View style={styles.headerTitles}>
+                <Text style={styles.headerName} numberOfLines={1}>{visitor.visitor_name}</Text>
+                <View style={[styles.headerBadge, { backgroundColor: `${statusConfig.color}15` }]}>
+                  <StatusIcon size={14} color={statusConfig.color} strokeWidth={2.5} />
+                  <Text style={[styles.headerBadgeText, { color: statusConfig.color }]}>{statusConfig.label}</Text>
+                </View>
               </View>
             </View>
 
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <X size={26} color={theme.colors.text} strokeWidth={2.5} />
+            <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.85}>
+              <X size={18} color={theme.colors.text} strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView 
-            style={styles.scrollView} 
-            showsVerticalScrollIndicator={false}
+          <ScrollView
+            style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
-            bounces={true}
+            showsVerticalScrollIndicator={false}
           >
-            {/* Personal Information Card */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Shield size={16} color={theme.colors.primary} strokeWidth={2.5} />
-                <Text style={styles.cardTitle}>Informações Pessoais</Text>
-              </View>
-              
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Informações Pessoais</Text>
+
               {visitor.cpf && formatCPF(visitor.cpf) && (
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIcon}>
-                    <FileText size={16} color={theme.colors.textSecondary} strokeWidth={2} />
+                <View style={styles.sectionRow}>
+                  <View style={[styles.sectionIcon, { backgroundColor: `${theme.colors.primary}12` }]}>
+                    <FileText size={16} color={theme.colors.primary} strokeWidth={2.5} />
                   </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>DOCUMENTO (CPF)</Text>
-                    <Text style={styles.infoValue}>{formatCPF(visitor.cpf)}</Text>
+                  <View style={styles.sectionTexts}>
+                    <Text style={styles.sectionLabel}>DOCUMENTO (CPF)</Text>
+                    <Text style={styles.sectionValue}>{formatCPF(visitor.cpf)}</Text>
                   </View>
-                  <TouchableOpacity 
-                    onPress={() => handleCopy(visitor.cpf, 'CPF')}
-                    style={styles.copyButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Animatable.View
-                      animation={copiedField === 'CPF' ? 'pulse' : undefined}
-                      duration={500}
-                    >
-                      {copiedField === 'CPF' ? (
-                        <CheckCircle2 size={18} color="#10B981" strokeWidth={2.5} />
-                      ) : (
-                        <Copy size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-                      )}
-                    </Animatable.View>
+                  <TouchableOpacity onPress={() => handleCopy(visitor.cpf, 'CPF')} style={styles.copyButton}>
+                    <Copy size={16} color={copiedField === 'CPF' ? theme.colors.primary : theme.colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
                 </View>
               )}
 
               {visitor.phone && formatPhone(visitor.phone) && (
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIcon}>
-                    <Phone size={16} color={theme.colors.textSecondary} strokeWidth={2} />
+                <View style={styles.sectionRow}>
+                  <View style={[styles.sectionIcon, { backgroundColor: `${theme.colors.secondary}12` }]}>
+                    <Phone size={16} color={theme.colors.secondary} strokeWidth={2.5} />
                   </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>TELEFONE</Text>
-                    <Text style={styles.infoValue}>{formatPhone(visitor.phone)}</Text>
+                  <View style={styles.sectionTexts}>
+                    <Text style={styles.sectionLabel}>Telefone</Text>
+                    <Text style={styles.sectionValue}>{formatPhone(visitor.phone)}</Text>
                   </View>
-                  <TouchableOpacity 
-                    onPress={() => handleCopy(visitor.phone, 'Telefone')}
-                    style={styles.copyButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Animatable.View
-                      animation={copiedField === 'Telefone' ? 'pulse' : undefined}
-                      duration={500}
-                    >
-                      {copiedField === 'Telefone' ? (
-                        <CheckCircle2 size={18} color="#10B981" strokeWidth={2.5} />
-                      ) : (
-                        <Copy size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-                      )}
-                    </Animatable.View>
+                  <TouchableOpacity onPress={() => handleCopy(visitor.phone, 'Telefone')} style={styles.copyButton}>
+                    <Copy size={16} color={copiedField === 'Telefone' ? theme.colors.primary : theme.colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
                 </View>
               )}
             </View>
 
-            {/* Visit Details Card */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Calendar size={16} color={theme.colors.primary} strokeWidth={2.5} />
-                <Text style={styles.cardTitle}>Detalhes da Visita</Text>
-              </View>
-              
-              <View style={styles.infoRow}>
-                <View style={styles.infoIcon}>
-                  <Calendar size={16} color={theme.colors.textSecondary} strokeWidth={2} />
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Detalhes da Visita</Text>
+              <View style={styles.sectionRow}>
+                <View style={[styles.sectionIcon, { backgroundColor: `${theme.colors.primary}12` }]}>
+                  <Calendar size={16} color={theme.colors.primary} strokeWidth={2.5} />
                 </View>
-                <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoLabel}>DATA E HORÁRIO AGENDADO</Text>
-                  <Text style={styles.infoValue}>
+                <View style={styles.sectionTexts}>
+                  <Text style={styles.sectionLabel}>Data e horário agendado</Text>
+                  <Text style={styles.sectionValue}>
                     {formatDate(visitor.visit_date)}
                     {visitor.visit_time && ` às ${visitor.visit_time}`}
                   </Text>
                 </View>
               </View>
-
-              {visitor.entry_time && (
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIcon}>
-                    <Clock size={16} color="#10B981" strokeWidth={2} />
-                  </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>ENTRADA</Text>
-                    <Text style={[styles.infoValue, { color: '#10B981' }]}>
-                      {visitor.entry_time}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {visitor.exit_time && (
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIcon}>
-                    <Clock size={16} color="#EF4444" strokeWidth={2} />
-                  </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>SAÍDA</Text>
-                    <Text style={[styles.infoValue, { color: '#EF4444' }]}>
-                      {visitor.exit_time}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
-              {visitor.qr_code && (
-                <View style={styles.qrCodeCard}>
-                  <QrCode size={18} color={theme.colors.primary} strokeWidth={2} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.infoLabel}>QR CODE</Text>
-                    <Text style={styles.qrCodeText} numberOfLines={1}>
-                      {visitor.qr_code}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    onPress={() => handleCopy(visitor.qr_code, 'Código QR')}
-                    style={styles.copyButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Animatable.View
-                      animation={copiedField === 'Código QR' ? 'pulse' : undefined}
-                      duration={500}
-                    >
-                      {copiedField === 'Código QR' ? (
-                        <CheckCircle2 size={18} color="#10B981" strokeWidth={2.5} />
-                      ) : (
-                        <Copy size={16} color={theme.colors.primary} strokeWidth={2} />
-                      )}
-                    </Animatable.View>
-                  </TouchableOpacity>
-                </View>
-              )}
             </View>
 
-            {/* Notes Card */}
-            {visitor.notes && (
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <FileText size={16} color={theme.colors.primary} strokeWidth={2.5} />
-                  <Text style={styles.cardTitle}>Observações</Text>
-                </View>
-                <View style={styles.notesContainer}>
-                  <Text style={styles.notesText}>{visitor.notes}</Text>
+            {visitor.qr_code && (
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>QR Code</Text>
+                <View style={styles.qrRow}>
+                  <QrCode size={18} color={theme.colors.primary} strokeWidth={2.5} />
+                  <Text style={styles.qrText} numberOfLines={1}>{visitor.qr_code}</Text>
+                  <TouchableOpacity onPress={() => handleCopy(visitor.qr_code, 'Código QR')} style={styles.copyButton}>
+                    <Copy size={16} color={copiedField === 'Código QR' ? theme.colors.primary : theme.colors.textSecondary} strokeWidth={2} />
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
           </ScrollView>
-
-          {/* Actions */}
-          {visitor.status === 'Aguardando' && (
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity 
-                style={styles.actionButtonOutline}
-                onPress={handleResendQRCode}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={['transparent', 'transparent']}
-                  style={styles.actionGradient}
-                >
-                  <QrCode size={18} color={theme.colors.primary} strokeWidth={2.5} />
-                  <Text style={[styles.actionButtonText, { color: theme.colors.primary }]}>
-                    Reenviar QR Code
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.actionButtonDanger}
-                onPress={handleCancelAuthorization}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={['#EF4444', '#DC2626']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.actionGradient}
-                >
-                  <Trash2 size={18} color="#FFFFFF" strokeWidth={2.5} />
-                  <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>
-                    Cancelar Visita
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          )}
-          
-          {/* Approve/Reject Actions for Pending Visitors */}
-          {visitor.status === 'Pendente' && (
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity 
-                style={styles.actionButtonDanger}
-                onPress={handleRejectVisitor}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={['#EF4444', '#DC2626']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.actionGradient}
-                >
-                  <X size={18} color="#FFFFFF" strokeWidth={2.5} />
-                  <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>
-                    Recusar
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.actionButtonSuccess}
-                onPress={handleApproveVisitor}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={['#10B981', '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.actionGradient}
-                >
-                  <CheckCircle2 size={18} color="#FFFFFF" strokeWidth={2.5} />
-                  <Text style={[styles.actionButtonText, { color: '#FFFFFF' }]}>
-                    Aprovar
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          )}
         </Animatable.View>
       </View>
     </Modal>
