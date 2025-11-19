@@ -84,10 +84,19 @@ const VisitorModal = ({ visible, visitor, onClose }) => {
   const styles = createStyles(theme);
   const [copiedField, setCopiedField] = useState(null);
 
-  if (!visitor) return null;
+  if (!visible) return null;
 
-  const statusConfig = getStatusConfig(visitor.status);
+  const safeVisitor = visitor || {};
+
+  const statusConfig = getStatusConfig(safeVisitor.status);
   const StatusIcon = statusConfig.icon;
+
+  const visitorName = safeVisitor.visitor_name || safeVisitor.nome || 'Visitante';
+  const visitorCpf = safeVisitor.cpf || safeVisitor.documento;
+  const visitorPhone = safeVisitor.phone || safeVisitor.celular;
+  const visitorVisitDate = safeVisitor.visit_date || safeVisitor.validade_inicio;
+  const visitorVisitTime = safeVisitor.visit_time;
+  const visitorQrCode = safeVisitor.qr_code || safeVisitor.qrcode_hash;
 
   const handleCopy = async (text, field) => {
     try {
@@ -132,11 +141,11 @@ const VisitorModal = ({ visible, visitor, onClose }) => {
             <View style={styles.headerAvatarWrapper}>
               <View style={[styles.headerAvatar, { backgroundColor: `${statusConfig.color}15` }]}>
                 <Text style={[styles.headerAvatarText, { color: statusConfig.color }]}>
-                  {getInitials(visitor.visitor_name)}
+                  {getInitials(visitorName)}
                 </Text>
               </View>
               <View style={styles.headerTitles}>
-                <Text style={styles.headerName} numberOfLines={1}>{visitor.visitor_name}</Text>
+                <Text style={styles.headerName} numberOfLines={1}>{visitorName}</Text>
                 <View style={[styles.headerBadge, { backgroundColor: `${statusConfig.color}15` }]}>
                   <StatusIcon size={14} color={statusConfig.color} strokeWidth={2.5} />
                   <Text style={[styles.headerBadgeText, { color: statusConfig.color }]}>{statusConfig.label}</Text>
@@ -157,31 +166,31 @@ const VisitorModal = ({ visible, visitor, onClose }) => {
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Informações Pessoais</Text>
 
-              {visitor.cpf && formatCPF(visitor.cpf) && (
+              {visitorCpf && formatCPF(visitorCpf) && (
                 <View style={styles.sectionRow}>
-                  <View style={[styles.sectionIcon, { backgroundColor: `${theme.colors.primary}12` }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: `${theme.colors.primary}12` }]}> 
                     <FileText size={16} color={theme.colors.primary} strokeWidth={2.5} />
                   </View>
                   <View style={styles.sectionTexts}>
                     <Text style={styles.sectionLabel}>DOCUMENTO (CPF)</Text>
-                    <Text style={styles.sectionValue}>{formatCPF(visitor.cpf)}</Text>
+                    <Text style={styles.sectionValue}>{formatCPF(visitorCpf)}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => handleCopy(visitor.cpf, 'CPF')} style={styles.copyButton}>
+                  <TouchableOpacity onPress={() => handleCopy(visitorCpf, 'CPF')} style={styles.copyButton}>
                     <Copy size={16} color={copiedField === 'CPF' ? theme.colors.primary : theme.colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
                 </View>
               )}
 
-              {visitor.phone && formatPhone(visitor.phone) && (
+              {visitorPhone && formatPhone(visitorPhone) && (
                 <View style={styles.sectionRow}>
-                  <View style={[styles.sectionIcon, { backgroundColor: `${theme.colors.secondary}12` }]}>
+                  <View style={[styles.sectionIcon, { backgroundColor: `${theme.colors.secondary}12` }]}> 
                     <Phone size={16} color={theme.colors.secondary} strokeWidth={2.5} />
                   </View>
                   <View style={styles.sectionTexts}>
                     <Text style={styles.sectionLabel}>Telefone</Text>
-                    <Text style={styles.sectionValue}>{formatPhone(visitor.phone)}</Text>
+                    <Text style={styles.sectionValue}>{formatPhone(visitorPhone)}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => handleCopy(visitor.phone, 'Telefone')} style={styles.copyButton}>
+                  <TouchableOpacity onPress={() => handleCopy(visitorPhone, 'Telefone')} style={styles.copyButton}>
                     <Copy size={16} color={copiedField === 'Telefone' ? theme.colors.primary : theme.colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
                 </View>
@@ -197,20 +206,20 @@ const VisitorModal = ({ visible, visitor, onClose }) => {
                 <View style={styles.sectionTexts}>
                   <Text style={styles.sectionLabel}>Data e horário agendado</Text>
                   <Text style={styles.sectionValue}>
-                    {formatDate(visitor.visit_date)}
-                    {visitor.visit_time && ` às ${visitor.visit_time}`}
+                    {formatDate(visitorVisitDate)}
+                    {visitorVisitTime && ` às ${visitorVisitTime}`}
                   </Text>
                 </View>
               </View>
             </View>
 
-            {visitor.qr_code && (
+            {visitorQrCode && (
               <View style={styles.sectionCard}>
                 <Text style={styles.sectionTitle}>QR Code</Text>
                 <View style={styles.qrRow}>
                   <QrCode size={18} color={theme.colors.primary} strokeWidth={2.5} />
-                  <Text style={styles.qrText} numberOfLines={1}>{visitor.qr_code}</Text>
-                  <TouchableOpacity onPress={() => handleCopy(visitor.qr_code, 'Código QR')} style={styles.copyButton}>
+                  <Text style={styles.qrText} numberOfLines={1}>{visitorQrCode}</Text>
+                  <TouchableOpacity onPress={() => handleCopy(visitorQrCode, 'Código QR')} style={styles.copyButton}>
                     <Copy size={16} color={copiedField === 'Código QR' ? theme.colors.primary : theme.colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
                 </View>
