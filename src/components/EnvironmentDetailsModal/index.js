@@ -29,8 +29,8 @@ const EnvironmentDetailsModal = ({ visible, environment, onClose, onReserve }) =
       presentationStyle="overFullScreen"
     >
       <View style={styles.overlay}>
-        <Animatable.View 
-          animation="slideInUp" 
+        <Animatable.View
+          animation="slideInUp"
           duration={400}
           style={[styles.modalContainer, { backgroundColor: theme.colors.card }]}
         >
@@ -83,7 +83,11 @@ const EnvironmentDetailsModal = ({ visible, environment, onClose, onReserve }) =
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+          >
             {/* Descrição */}
             <Animatable.View animation="fadeIn" delay={100} style={styles.section}>
               <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
@@ -213,13 +217,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+    alignItems: 'stretch',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
   modalContainer: {
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    flex: 1,
     shadowColor: '#0f172a',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
@@ -274,6 +279,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  contentContainer: {
+    paddingBottom: 32,
   },
   section: {
     marginTop: 20,
