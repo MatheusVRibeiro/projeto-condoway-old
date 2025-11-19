@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet, Platform, StatusBar } from 'react-native';
 import { X, Users, MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
@@ -25,6 +25,8 @@ const EnvironmentDetailsModal = ({ visible, environment, onClose, onReserve }) =
       transparent={true}
       visible={visible}
       onRequestClose={handleClose}
+      statusBarTranslucent
+      presentationStyle="overFullScreen"
     >
       <View style={styles.overlay}>
         <Animatable.View 
@@ -207,9 +209,11 @@ const EnvironmentDetailsModal = ({ visible, environment, onClose, onReserve }) =
 
 const styles = StyleSheet.create({
   overlay: {
+    ...StyleSheet.absoluteFillObject,
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
   modalContainer: {
     backgroundColor: 'white',

@@ -709,12 +709,14 @@ export default function Reservas() {
         </View>
       </ScrollView>
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}
+      statusBarTranslucent
+      presentationStyle="overFullScreen"
+    >
         <View style={styles.modalOverlay}>
           <TouchableOpacity 
             style={styles.modalBackdrop}
