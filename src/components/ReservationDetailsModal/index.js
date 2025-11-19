@@ -94,7 +94,9 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
     }
   };
 
-  const statusConfig = getStatusConfig(reservation.status);
+  // Defensive: reservation may be null while loading on web/native. Use optional chaining
+  // so we don't read properties of null and cause a render crash.
+  const statusConfig = getStatusConfig(reservation?.status);
   const StatusIcon = statusConfig.icon;
 
   return (
@@ -216,7 +218,7 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
             </Animatable.View>
 
             {/* QR Code Simulado */}
-            {reservation.status === 'confirmada' && (
+            {reservation?.status === 'confirmada' && (
               <Animatable.View animation="fadeIn" delay={300} style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
                   Código de Acesso
@@ -289,7 +291,7 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
                 </Text>
               </TouchableOpacity>
 
-              {reservation.status !== 'cancelada' && (
+              {reservation?.status !== 'cancelada' && (
                 <TouchableOpacity
                   style={[styles.cancelButton, { backgroundColor: theme.colors.error + '15', borderColor: theme.colors.error + '40' }]}
                   onPress={handleCancel}
