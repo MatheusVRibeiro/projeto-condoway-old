@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet, Share } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet, Share, Platform, StatusBar } from 'react-native';
 import { X, Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, Share2, Copy } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -103,6 +103,8 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
       transparent={true}
       visible={visible}
       onRequestClose={handleClose}
+      statusBarTranslucent
+      presentationStyle="overFullScreen"
     >
       <View style={styles.overlay}>
         <Animatable.View
@@ -316,9 +318,11 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
 
 const styles = StyleSheet.create({
   overlay: {
+    ...StyleSheet.absoluteFillObject,
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
   modalContainer: {
     backgroundColor: 'white',
