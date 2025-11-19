@@ -10,6 +10,7 @@ const createStyles = (theme) => StyleSheet.create({
   headerContent: {
     paddingHorizontal: 20,
     marginBottom: 12,
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: RFValue(22),
@@ -17,12 +18,14 @@ const createStyles = (theme) => StyleSheet.create({
     color: theme.colors.text,
     letterSpacing: -0.5,
     marginBottom: 2,
+    textAlign: 'center',
   },
   headerSubtitle: {
     fontSize: RFValue(12),
     fontWeight: '500',
     color: theme.colors.textSecondary,
     letterSpacing: -0.1,
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',
