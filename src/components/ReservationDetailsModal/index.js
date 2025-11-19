@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet, Share } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, ScrollView, StyleSheet, Share, Platform, StatusBar } from 'react-native';
 import { X, Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, Share2, Copy } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -103,6 +103,8 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
       transparent={true}
       visible={visible}
       onRequestClose={handleClose}
+      statusBarTranslucent
+      presentationStyle="overFullScreen"
     >
       <View style={styles.overlay}>
         <Animatable.View
@@ -138,7 +140,11 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+          >
             {/* Status Card */}
             <Animatable.View 
               animation="fadeIn" 
@@ -316,15 +322,18 @@ const ReservationDetailsModal = ({ visible, reservation, onClose, onCancel }) =>
 
 const styles = StyleSheet.create({
   overlay: {
+    ...StyleSheet.absoluteFillObject,
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+    alignItems: 'stretch',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
   modalContainer: {
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    flex: 1,
     shadowColor: '#0f172a',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
@@ -375,6 +384,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  contentContainer: {
+    paddingBottom: 32,
   },
   statusCard: {
     flexDirection: 'row',

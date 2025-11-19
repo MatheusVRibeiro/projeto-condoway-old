@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform, StatusBar } from 'react-native';
 
 export const styles = StyleSheet.create({
   // --- Containers ---
@@ -252,9 +252,11 @@ export const styles = StyleSheet.create({
   
   // --- Modal de Reserva (Bottom Sheet Redesign) ---
   modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
   modalBackdrop: {
     position: 'absolute',
