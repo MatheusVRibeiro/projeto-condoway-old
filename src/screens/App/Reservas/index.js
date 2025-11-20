@@ -751,48 +751,51 @@ export default function Reservas() {
               </View>
             </View>
 
-            <ScrollView 
-              style={styles.sheetContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Seção do Calendário */}
-              <Animatable.View animation="fadeIn" delay={100} style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                  📅 Escolha a data
-                </Text>
-                <View style={[styles.calendarCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-                  <Calendar
-                    onDayPress={day => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setSelectedDate(day.dateString);
-                      setSelectedPeriod(null);
-                    }}
-                    markedDates={{ [selectedDate]: { selected: true, selectedColor: theme.colors.primary } }}
-                    minDate={(() => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return tomorrow.toISOString().split('T')[0];
-                    })()}
-                    theme={{
-                      todayTextColor: theme.colors.primary,
-                      arrowColor: theme.colors.primary,
-                      calendarBackground: 'transparent',
-                      textDisabledColor: theme.colors.textSecondary + '55',
-                      textSectionTitleColor: theme.colors.textSecondary,
-                      dayTextColor: theme.colors.text,
-                      monthTextColor: theme.colors.text,
-                      selectedDayBackgroundColor: theme.colors.primary,
-                      selectedDayTextColor: '#ffffff',
-                    }}
-                  />
-                </View>
-              </Animatable.View>
+            <View style={styles.sheetBody}>
+              <ScrollView
+                style={styles.sheetContent}
+                contentContainerStyle={styles.sheetContentContainer}
+                showsVerticalScrollIndicator={false}
+              >
+                {/* Seção do Calendário */}
+                <Animatable.View animation="fadeIn" delay={100} style={styles.section}>
+                  <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
+                    📅 Escolha a data
+                  </Text>
+                  <View style={[styles.calendarCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+                    <Calendar
+                      onDayPress={day => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setSelectedDate(day.dateString);
+                        setSelectedPeriod(null);
+                      }}
+                      markedDates={{ [selectedDate]: { selected: true, selectedColor: theme.colors.primary } }}
+                      minDate={(() => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return tomorrow.toISOString().split('T')[0];
+                      })()}
+                      theme={{
+                        todayTextColor: theme.colors.primary,
+                        arrowColor: theme.colors.primary,
+                        calendarBackground: 'transparent',
+                        textDisabledColor: theme.colors.textSecondary + '55',
+                        textSectionTitleColor: theme.colors.textSecondary,
+                        dayTextColor: theme.colors.text,
+                        monthTextColor: theme.colors.text,
+                        selectedDayBackgroundColor: theme.colors.primary,
+                        selectedDayTextColor: '#ffffff',
+                      }}
+                    />
+                  </View>
+                </Animatable.View>
 
-              {/* Seção de Períodos */}
-              <Animatable.View animation="fadeIn" delay={200} style={styles.section}>
-                <PeriodPicker />
-              </Animatable.View>
-            </ScrollView>
+                {/* Seção de Períodos */}
+                <Animatable.View animation="fadeIn" delay={200} style={styles.section}>
+                  <PeriodPicker />
+                </Animatable.View>
+              </ScrollView>
+            </View>
             
             {/* Footer fixo com botão de confirmar */}
             <Animatable.View 
