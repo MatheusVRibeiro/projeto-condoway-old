@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    flex: 1,
+    flex: '80%',
     shadowColor: '#0f172a',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
@@ -277,7 +277,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   content: {
-    flex: 1,
     paddingHorizontal: 20,
   },
   contentContainer: {

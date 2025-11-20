@@ -25,7 +25,13 @@ export default function Reservas() {
   const [loadingReservas, setLoadingReservas] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEnvironment, setSelectedEnvironment] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const getTomorrowISO = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getTomorrowISO());
   const [selectedPeriod, setSelectedPeriod] = useState(null); // 'manha', 'tarde', 'noite'
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState('pendente'); // 'pendente', 'confirmada', 'cancelada'
@@ -138,7 +144,7 @@ export default function Reservas() {
     const fullEnvironment = ambientes.find(e => e.id === env.id) || env;
     setSelectedEnvironment(fullEnvironment);
     setSelectedPeriod(null);
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setSelectedDate(getTomorrowISO());
     setEnvironmentDetailsVisible(false); // Fecha o modal de detalhes
     setModalVisible(true);
   }, [ambientes]);
@@ -167,17 +173,25 @@ export default function Reservas() {
     }
     
     try {
-      setIsSubmitting(true);
-      
-      // Converter período para horários específicos (formato HH:MM:SS)
+      // Validação: reservar com pelo menos 24 horas de antecedência
       const periodTimes = {
         manha: { inicio: '08:00:00', fim: '12:00:00' },
         tarde: { inicio: '12:00:00', fim: '18:00:00' },
         noite: { inicio: '18:00:00', fim: '22:00:00' }
       };
-      
       const horarios = periodTimes[selectedPeriod];
+
+      const reservationStart = new Date(`${selectedDate}T${horarios.inicio}`);
+      const now = new Date();
+      const minAllowed = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      if (reservationStart.getTime() < minAllowed.getTime()) {
+        Toast.show({ type: 'error', text1: 'Reserva inválida', text2: 'Reservas devem ser feitas com pelo menos 24 horas de antecedência.' });
+        return;
+      }
+      setIsSubmitting(true);
       
+      // Converter período para horários específicos (formato HH:MM:SS)
       const dadosReserva = {
         ambiente_id: selectedEnvironment.id,
         res_data_reserva: selectedDate,
@@ -508,6 +522,73 @@ export default function Reservas() {
     );
   };
 
+  // Marca no calendário os dias disponíveis com um ponto cinza
+  const markedDates = useMemo(() => {
+    const marks = {};
+
+    // Garantir que temos reservas do ambiente em formato esperado
+    const reservas = Array.isArray(reservasDoAmbiente) ? reservasDoAmbiente : [];
+
+    // Helper: verifica se todos os períodos estão ocupados para uma data
+    const isFullyBooked = (dateStr) => {
+      // períodos padrão
+      const periods = [
+        { inicio: '08:00:00', fim: '12:00:00' },
+        { inicio: '12:00:00', fim: '18:00:00' },
+        { inicio: '18:00:00', fim: '22:00:00' }
+      ];
+
+      // Filtra reservas na mesma data e que não estejam canceladas
+      const reservasNaData = reservas.filter(r => {
+        const rDate = (r.date || r.res_data_reserva || '').split('T')[0];
+        const status = (r.status || '').toString().toLowerCase();
+        return rDate === dateStr && status !== 'cancelada' && status !== 'cancelado';
+      });
+
+      // Se não há reservas, não está fully booked
+      if (reservasNaData.length === 0) return false;
+
+      // Para cada período, verificar se há ao menos uma reserva que o ocupe
+      const periodOccupied = periods.map(period => {
+        return reservasNaData.some(r => {
+          const inicio = r.horario_inicio || r.res_horario_inicio || '';
+          const fim = r.horario_fim || r.res_horario_fim || '';
+          if (!inicio || !fim) return false;
+          return (
+            (period.inicio >= inicio && period.inicio < fim) ||
+            (period.fim > inicio && period.fim <= fim) ||
+            (period.inicio <= inicio && period.fim >= fim)
+          );
+        });
+      });
+
+      // Se todos os períodos estão ocupados => fully booked
+      return periodOccupied.every(Boolean);
+    };
+
+    // Marca um periodo de 60 dias a partir de amanhã
+    const start = new Date();
+    start.setDate(start.getDate() + 1);
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const key = d.toISOString().split('T')[0];
+
+      // se estiver selecionado, marca como selected (mantém prioridade)
+      if (key === selectedDate) {
+        marks[key] = { selected: true, selectedColor: theme.colors.primary };
+        continue;
+      }
+
+      // se não estiver fully booked, considera disponível -> dot cinza
+      if (!isFullyBooked(key)) {
+        marks[key] = { marked: true, dotColor: theme.colors.textSecondary || '#9CA3AF' };
+      }
+    }
+
+    return marks;
+  }, [reservasDoAmbiente, selectedDate, theme.colors.primary, theme.colors.textSecondary]);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView>
@@ -760,7 +841,7 @@ export default function Reservas() {
                 {/* Seção do Calendário */}
                 <Animatable.View animation="fadeIn" delay={100} style={styles.section}>
                   <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                    📅 Escolha a data
+                    📅 Escolha a data de sua reserva
                   </Text>
                   <View style={[styles.calendarCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
                     <Calendar
@@ -769,7 +850,8 @@ export default function Reservas() {
                         setSelectedDate(day.dateString);
                         setSelectedPeriod(null);
                       }}
-                      markedDates={{ [selectedDate]: { selected: true, selectedColor: theme.colors.primary } }}
+                      markingType="simple"
+                      markedDates={markedDates}
                       minDate={(() => {
                         const tomorrow = new Date();
                         tomorrow.setDate(tomorrow.getDate() + 1);
