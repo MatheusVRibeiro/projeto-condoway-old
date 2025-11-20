@@ -269,7 +269,10 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '92%',
+    flex: 1,
+    width: '100%',
+    minHeight: '85%',
+    maxHeight: '96%',
     shadowColor: '#0f172a',
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.15,
@@ -329,9 +332,17 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#64748b',
   },
+  sheetBody: {
+    flex: 1,
+  },
   sheetContent: {
     flex: 1,
+  },
+  sheetContentContainer: {
+    flexGrow: 1,
     paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 120,
   },
   sheetFooter: {
     paddingHorizontal: 20,
