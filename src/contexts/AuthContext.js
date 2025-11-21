@@ -47,6 +47,24 @@ export const AuthProvider = ({ children }) => {
           }
           
           const userData = JSON.parse(storedUser);
+
+          // Bloquear acesso de perfis administrativos (sindic@, porteiro, etc.)
+          const isResident = (u) => {
+            if (!u) return false;
+            const tipo = (u.user_tipo || u.tipo || u.role || '').toString().toLowerCase();
+            // Aceitar quando explicitamente 'morador' ou conter 'morador'
+            return tipo === 'morador' || tipo.includes('morador');
+          };
+
+          if (!isResident(userData)) {
+            console.warn('⚠️ [AuthContext] Usuário no storage não é morador. Bloqueando acesso mobile.');
+            // Limpar dados e não restaurar sessão
+            await AsyncStorage.multiRemove(['user', 'token', 'userEmail', 'userPassword', 'authToken', 'userData']);
+            setAuthToken(null);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
           
           // ✅ SOLUÇÃO: Se userap_id não estiver no userData, extrair do token
           if (!userData.userap_id) {
@@ -111,7 +129,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, remember = false) => {
     try {
       console.log('🔄 [AuthContext] Fazendo login com email:', email);
       
@@ -157,12 +175,21 @@ export const AuthProvider = ({ children }) => {
       // 3. Configurar o token no Axios para todas as futuras requisições
       setAuthToken(token);
       
-      // 4. Salvar o UTILIZADOR, TOKEN, EMAIL e SENHA no AsyncStorage
+      // 4. Salvar o UTILIZADOR e TOKEN no AsyncStorage
       await AsyncStorage.setItem('user', JSON.stringify(usuario));
       await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userEmail', email);
-      await AsyncStorage.setItem('userPassword', password);
-      console.log('💾 [AuthContext] Usuário, Token e Credenciais salvos no AsyncStorage');
+      // Salvar apenas o e-mail se o usuário marcou "lembrar-me" (não salvar senha)
+      if (remember) {
+        await AsyncStorage.setItem('userEmail', email);
+        // Remover qualquer senha por segurança caso exista
+        await AsyncStorage.removeItem('userPassword');
+        console.log('💾 [AuthContext] Usuário e Token salvos; e-mail persistido (remember=true)');
+      } else {
+        // Garantir que não ficam credenciais salvas indevidamente
+        await AsyncStorage.removeItem('userEmail');
+        await AsyncStorage.removeItem('userPassword');
+        console.log('💾 [AuthContext] Usuário e Token salvos; credenciais não foram persistidas (remember=false)');
+      }
       
       // ✅ Marcar onboarding como concluído após login bem-sucedido
       await AsyncStorage.setItem('onboardingSeen', 'true');
@@ -178,10 +205,25 @@ export const AuthProvider = ({ children }) => {
         console.warn('⚠️ [AuthContext] Erro ao notificar onOnboardingChanged', e);
       }
       
+      // Restringir acesso a moradores apenas
+      const isResidentUser = (u) => {
+        if (!u) return false;
+        const tipo = (u.user_tipo || u.tipo || u.role || '').toString().toLowerCase();
+        return tipo === 'morador' || tipo.includes('morador');
+      };
+
+      if (!isResidentUser(usuario)) {
+        console.warn('⛔ [AuthContext] Login bloqueado: usuário não é morador.');
+        // Limpar token configurado
+        setAuthToken(null);
+        // Não salvar no storage nem atualizar estado
+        throw new Error('Acesso restrito ao aplicativo móvel. Apenas moradores podem acessar. Usuários administrativos devem usar a versão web.');
+      }
+
       // 5. Atualizar o estado (agora só com os dados do utilizador)
       setUser(usuario);
       console.log('✅ [AuthContext] Estado atualizado');
-      
+
       return usuario;
     } catch (error) {
       console.error("❌ [AuthContext] Login failed:", error.message || error);

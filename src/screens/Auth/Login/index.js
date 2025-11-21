@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Modal, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
@@ -11,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 import { useAuth } from '../../../contexts/AuthContext';
 import Help from '../../../screens/App/Perfil/Help';
-import { validateEmail, validateRequired } from '../../../utils/validation';
+import { validateEmail } from '../../../utils/validation';
 
 export default function Login() {
   const navigation = useNavigation();
@@ -19,65 +20,100 @@ export default function Login() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // estados de erro inline
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
 
+  // Limpa erro ao digitar
+  const handleEmailChange = (text) => {
+    setEmail(text);
+    if (emailError) setEmailError('');
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    if (passwordError) setPasswordError('');
+  };
+
+  // Preenchimento automático: carregar email/senha salvos, se existirem
+  useEffect(() => {
+    let mounted = true;
+    async function loadSavedEmail() {
+      try {
+        const savedEmail = await AsyncStorage.getItem('userEmail');
+        if (!mounted) return;
+        if (savedEmail) {
+          setEmail(savedEmail);
+          setRememberMe(true);
+        }
+      } catch (e) {
+        console.warn('[Login] Failed to load saved email', e);
+      }
+    }
+
+    loadSavedEmail();
+    return () => { mounted = false; };
+  }, []);
+
   async function handleLogin() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    // Validação de campos obrigatórios
-    if (!validateRequired(email)) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ type: 'error', text1: 'Campo obrigatório', text2: 'Por favor, informe o e-mail.', position: 'bottom' });
-      return;
+    // Validação local: usar estados de erro para feedback inline
+    setEmailError('');
+    setPasswordError('');
+    let hasError = false;
+
+    if (!email.trim()) {
+      setEmailError('Por favor, informe seu e-mail.');
+      hasError = true;
+    } else if (!validateEmail(email)) {
+      setEmailError('Digite um e-mail válido (ex: nome@exemplo.com).');
+      hasError = true;
     }
-    
-    if (!validateRequired(password)) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ type: 'error', text1: 'Campo obrigatório', text2: 'Por favor, informe a senha.', position: 'bottom' });
-      return;
+
+    if (!password) {
+      setPasswordError('Por favor, informe sua senha.');
+      hasError = true;
+    } else if (password.length < 6) {
+      setPasswordError('A senha deve ter no mínimo 6 caracteres.');
+      hasError = true;
     }
-    
-    // Validação de formato de e-mail
-    if (!validateEmail(email)) {
+
+    if (hasError) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ 
-        type: 'error', 
-        text1: 'E-mail inválido', 
-        text2: 'Digite um e-mail válido (ex: usuario@exemplo.com).', 
-        position: 'bottom' 
-      });
-      return;
-    }
-    
-    // Validação mínima de senha (pelo menos 6 caracteres)
-    if (password.length < 6) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Senha muito curta', 
-        text2: 'A senha deve ter no mínimo 6 caracteres.', 
-        position: 'bottom' 
-      });
       return;
     }
     
     setIsLoading(true);
     
     try {
-      const userData = await login(email, password);
+      const userData = await login(email, password, rememberMe);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
       console.error('Erro no login:', error); // Log para debug
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Erro de Login', 
-        text2: error.message, 
-        position: 'bottom' 
-      });
+      const msg = (error && error.message) ? error.message : '';
+
+      // Mapear erros da API para feedback inline quando fizer sentido
+      if (msg && (msg.includes('401') || msg.toLowerCase().includes('senha') || msg.toLowerCase().includes('inválid'))) {
+        // Marcar ambos os campos para feedback visual consistente
+        setEmailError('E-mail ou senha incorretos.');
+        setPasswordError('E-mail ou senha incorretos.');
+      } else if (msg && (msg.toLowerCase().includes('bloque') || msg.toLowerCase().includes('morador'))) {
+        // Acesso restrito: manter alerta/Toast mais visível
+        Alert.alert('Acesso Bloqueado', msg || 'Acesso restrito ao aplicativo móvel.', [{ text: 'OK' }]);
+      } else {
+        Toast.show({ 
+          type: 'error', 
+          text1: 'Erro de Conexão', 
+          text2: 'Não foi possível conectar ao servidor. Tente novamente.', 
+          position: 'bottom' 
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -117,16 +153,16 @@ export default function Login() {
                     {/* Campo de E-mail */}
                     <View style={styles.inputWrapper}>
                       <Text style={styles.inputLabel}>E-mail</Text>
-                      <View style={styles.inputContainer}>
+                      <View style={[styles.inputContainer, emailError && styles.inputContainerError]}>
                         <View style={styles.inputIconContainer}>
-                          <Mail color={theme.colors.primary} size={20} />
+                          <Mail color={emailError ? '#EF4444' : theme.colors.primary} size={20} />
                         </View>
                         <TextInput
                           style={styles.input}
                           placeholder="Digite seu e-mail"
                           placeholderTextColor={theme.colors.textSecondary}
                           value={email}
-                          onChangeText={setEmail}
+                          onChangeText={handleEmailChange}
                           keyboardType="email-address"
                           autoCapitalize="none"
                           autoComplete="email"
@@ -136,21 +172,26 @@ export default function Login() {
                           returnKeyType="next"
                         />
                       </View>
+                      {emailError ? (
+                        <Animatable.Text animation="fadeIn" duration={300} style={styles.errorText}>
+                          {emailError}
+                        </Animatable.Text>
+                      ) : null}
                     </View>
 
                     {/* Campo de Senha */}
                     <View style={styles.inputWrapper}>
                       <Text style={styles.inputLabel}>Senha</Text>
-                      <View style={styles.inputContainer}>
+                      <View style={[styles.inputContainer, passwordError && styles.inputContainerError]}>
                         <View style={styles.inputIconContainer}>
-                          <Lock color={theme.colors.primary} size={20} />
+                          <Lock color={passwordError ? '#EF4444' : theme.colors.primary} size={20} />
                         </View>
                         <TextInput
                           style={styles.input}
                           placeholder="Digite sua senha"
                           placeholderTextColor={theme.colors.textSecondary}
                           value={password}
-                          onChangeText={setPassword}
+                          onChangeText={handlePasswordChange}
                           secureTextEntry={!showPassword}
                           autoComplete="password"
                           accessibilityLabel="Campo de senha"
@@ -169,6 +210,11 @@ export default function Login() {
                           )}
                         </TouchableOpacity>
                       </View>
+                      {passwordError ? (
+                        <Animatable.Text animation="fadeIn" duration={300} style={styles.errorText}>
+                          {passwordError}
+                        </Animatable.Text>
+                      ) : null}
                     </View>
 
                     {/* Opções */}
