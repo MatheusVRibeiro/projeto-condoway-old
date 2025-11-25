@@ -76,13 +76,24 @@ export default StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
-  infoSection: {
+  detailsSection: {
     marginHorizontal: 20,
     marginBottom: 16,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
     gap: 12,
+  },
+  descriptionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
   },
   infoRow: {
     flexDirection: 'row',
@@ -133,67 +144,6 @@ export default StyleSheet.create({
     borderRadius: 12,
     marginRight: 8,
     backgroundColor: '#f1f5f9',
-  },
-  chatSection: {
-    paddingHorizontal: 20,
-    flex: 1,
-    marginBottom: 8,
-  },
-  chatScroll: {
-    maxHeight: 300,
-  },
-  commentBubble: {
-    maxWidth: '85%',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  moradorBubble: {
-    backgroundColor: '#3b82f6',
-    alignSelf: 'flex-end',
-  },
-  sindicoBubble: {
-    backgroundColor: '#f8fafc',
-    alignSelf: 'flex-start',
-  },
-  commentAuthor: {
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  commentText: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  commentDate: {
-    fontSize: 10,
-    fontWeight: '500',
-  },
-  messageInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    gap: 12,
-  },
-  messageInput: {
-    flex: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 14,
-    maxHeight: 100,
-  },
-  sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   footer: {
     flexDirection: 'row',

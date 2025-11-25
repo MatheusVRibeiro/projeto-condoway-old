@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, Modal, ScrollView, TouchableOpacity, TextInput, Image, Share } from 'react-native';
+import React from 'react';
+import { View, Text, Modal, ScrollView, TouchableOpacity, Image, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { X, MapPin, Calendar, AlertTriangle, Paperclip, Share2, Copy, MessageCircle, Send } from 'lucide-react-native';
+import { X, MapPin, Calendar, AlertTriangle, Paperclip, Share2, Copy, MessageCircle, FileText } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as Animatable from 'react-native-animatable';
@@ -9,18 +9,8 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../../contexts/ThemeProvider';
 import styles from './styles';
 
-const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
+const OccurrenceModal = ({ visible, occurrence, onClose }) => {
   const { theme } = useTheme();
-  const commentsScrollRef = useRef(null);
-  const [messageText, setMessageText] = React.useState('');
-
-  useEffect(() => {
-    if (visible && commentsScrollRef.current) {
-      setTimeout(() => {
-        commentsScrollRef.current?.scrollToEnd({ animated: true });
-      }, 300);
-    }
-  }, [visible, occurrence?.comments]);
 
   if (!occurrence) return null;
 
@@ -85,14 +75,6 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
     }
   };
 
-  // Enviar mensagem
-  const handleSendMessage = () => {
-    if (messageText.trim() && onSendMessage) {
-      onSendMessage(occurrence.id, messageText.trim());
-      setMessageText('');
-    }
-  };
-
   return (
     <Modal
       visible={visible}
@@ -139,15 +121,25 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
             </View>
           </View>
 
-          {/* Informações Principais */}
-          <View style={[styles.infoSection, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+          {/* Detalhes da Ocorrência */}
+          <View style={[styles.detailsSection, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <FileText size={18} color={theme.colors.textSecondary} />
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Detalhes da Ocorrência</Text>
+            </View>
+
+            <Text style={[styles.descriptionLabel, { color: theme.colors.textSecondary }]}>Descrição</Text>
+            <Text style={[styles.descriptionText, { color: theme.colors.text }]}>
+              {occurrence.description || 'Sem descrição'}
+            </Text>
+
             <View style={styles.infoRow}>
               <View style={[styles.infoIcon, { backgroundColor: '#eff6ff' }]}>
                 <MapPin size={18} color="#3b82f6" strokeWidth={2.5} />
               </View>
               <View style={styles.infoContent}>
                 <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Local</Text>
-                <Text style={[styles.infoValue, { color: theme.colors.text }]}>{occurrence.location}</Text>
+                <Text style={[styles.infoValue, { color: theme.colors.text }]}>{occurrence.location || 'Não informado'}</Text>
               </View>
             </View>
 
@@ -170,7 +162,7 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
                 </View>
                 <View style={styles.infoContent}>
                   <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Prioridade</Text>
-                  <Text style={[styles.infoValue, { color: theme.colors.text }]}>
+                  <Text style={[styles.infoValue, { color: theme.colors.text }]}> 
                     {occurrence.priority.charAt(0).toUpperCase() + occurrence.priority.slice(1)}
                   </Text>
                 </View>
@@ -183,7 +175,7 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
             <View style={styles.attachmentsSection}>
               <View style={styles.sectionHeader}>
                 <Paperclip size={18} color={theme.colors.textSecondary} />
-                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}> 
                   Anexos ({occurrence.attachments.length})
                 </Text>
               </View>
@@ -194,67 +186,6 @@ const OccurrenceModal = ({ visible, occurrence, onClose, onSendMessage }) => {
               </ScrollView>
             </View>
           )}
-
-          {/* Chat de Comentários */}
-          <View style={styles.chatSection}>
-            <View style={styles.sectionHeader}>
-              <MessageCircle size={18} color={theme.colors.textSecondary} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                Conversa ({occurrence.comments?.length || 0})
-              </Text>
-            </View>
-
-            <ScrollView
-              ref={commentsScrollRef}
-              style={styles.chatScroll}
-              onContentSizeChange={() => commentsScrollRef.current?.scrollToEnd({ animated: true })}
-            >
-              {occurrence.comments?.map((comment, index) => (
-                <Animatable.View
-                  key={index}
-                  animation="fadeInUp"
-                  delay={index * 50}
-                  duration={300}
-                  style={[
-                    styles.commentBubble,
-                    comment.author === 'Morador'
-                      ? styles.moradorBubble
-                      : [styles.sindicoBubble, { backgroundColor: theme.colors.card }],
-                  ]}
-                >
-                  <Text style={[styles.commentAuthor, { color: comment.author === 'Morador' ? 'rgba(255,255,255,0.8)' : theme.colors.textSecondary }]}>
-                    {comment.author}
-                  </Text>
-                  <Text style={[styles.commentText, { color: comment.author === 'Morador' ? '#ffffff' : theme.colors.text }]}>
-                    {comment.text}
-                  </Text>
-                  <Text style={[styles.commentDate, { color: comment.author === 'Morador' ? 'rgba(255,255,255,0.6)' : theme.colors.textSecondary }]}>
-                    {comment.date}
-                  </Text>
-                </Animatable.View>
-              ))}
-            </ScrollView>
-          </View>
-
-          {/* Input de Mensagem */}
-          <View style={[styles.messageInputContainer, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border }]}>
-            <TextInput
-              style={[styles.messageInput, { color: theme.colors.text, backgroundColor: theme.colors.background }]}
-              placeholder="Escreva uma mensagem..."
-              placeholderTextColor={theme.colors.textSecondary}
-              value={messageText}
-              onChangeText={setMessageText}
-              multiline
-              maxLength={500}
-            />
-            <TouchableOpacity
-              style={[styles.sendButton, { backgroundColor: theme.colors.primary, opacity: messageText.trim() ? 1 : 0.5 }]}
-              onPress={handleSendMessage}
-              disabled={!messageText.trim()}
-            >
-              <Send size={20} color="#ffffff" />
-            </TouchableOpacity>
-          </View>
 
           {/* Footer com Ações */}
           <View style={[styles.footer, { borderTopColor: theme.colors.border }]}>

@@ -30,7 +30,6 @@ export default function Ocorrencias() {
   const { theme } = useTheme();
   const { user } = useAuth(); // Pegando dados do usuário autenticado
   const actionSheetRef = useRef(null);
-  const commentsScrollRef = useRef(null);
   const insets = useSafeAreaInsets();
   const openImageOptions = () => actionSheetRef.current?.setModalVisible(true);
   const closeImageOptions = () => actionSheetRef.current?.setModalVisible(false);
@@ -60,7 +59,6 @@ export default function Ocorrencias() {
   const [uploading, setUploading] = useState(false); // Para formulário de criação
   const [uploadProgress, setUploadProgress] = useState({}); // {uri: percent}
   const [expandedId, setExpandedId] = useState(null);
-  const [messageDrafts, setMessageDrafts] = useState({}); // { [issueId]: text }
   
   // Estados para filtros
   const [filterStatus, setFilterStatus] = useState('abertas'); // Iniciado em 'abertas' ao invés de 'todas'
@@ -264,44 +262,6 @@ export default function Ocorrencias() {
     };
     loadDraft();
   }, []);
-
-  // Função para enviar comentário
-  const handleSendComment = async (issueId, text) => {
-    if (!text.trim()) {
-      Toast.show({ type: 'error', text1: 'Digite uma mensagem' });
-      return;
-    }
-
-    if (!user?.token) {
-      Toast.show({ type: 'error', text1: 'Usuário não autenticado' });
-      return;
-    }
-
-    try {
-      const novoComentario = await apiService.adicionarComentario(issueId, text);
-      
-      // Atualizar a lista local com o novo comentário
-      setMyIssues(prev => prev.map(it => 
-        it.oco_id === issueId 
-          ? { ...it, comments: [...(it.comments || []), novoComentario] } 
-          : it
-      ));
-      
-      setMessageDrafts(prev => ({ ...prev, [issueId]: '' }));
-      Toast.show({ type: 'success', text1: 'Mensagem enviada' });
-      
-      // Autoscroll para o final
-      setTimeout(() => commentsScrollRef.current?.scrollToEnd({ animated: true }), 150);
-      
-    } catch (error) {
-      console.error('Erro ao enviar comentário:', error);
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Erro ao enviar mensagem', 
-        text2: error.message 
-      });
-    }
-  };
 
   const handleSubmit = async () => {
     if (!description.trim() || !location.trim()) {
@@ -1155,7 +1115,6 @@ export default function Ocorrencias() {
         )}
       </View>
 
-      {/* ActionSheet nativo via react-native-actions-sheet */}
       <ActionSheet ref={actionSheetRef} containerStyle={{ backgroundColor: 'transparent' }}>
         <View style={[styles.modalContent, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
           <TouchableOpacity style={styles.modalOption} onPress={async () => { await handleTakePhoto(); closeImageOptions(); }}>
@@ -1170,11 +1129,10 @@ export default function Ocorrencias() {
         </View>
       </ActionSheet>
 
-      <OccurrenceModal 
+      <OccurrenceModal
         visible={showModal}
         occurrence={selectedOccurrence}
         onClose={() => setShowModal(false)}
-        onSendMessage={handleSendComment}
       />
     </SafeAreaView>
   );
