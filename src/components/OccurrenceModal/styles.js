@@ -99,25 +99,33 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  infoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
   },
-  infoContent: {
-    flex: 1,
+  detailGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+  detailCard: {
+    flexGrow: 1,
+    minWidth: '45%',
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  infoValue: {
+  detailValue: {
     fontSize: 14,
     fontWeight: '600',
   },

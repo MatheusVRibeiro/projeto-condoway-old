@@ -142,18 +142,21 @@ const OccurrenceModal = ({ visible, occurrence, onClose }) => {
                 <Text style={[styles.infoValue, { color: theme.colors.text }]}>{occurrence.location || 'Não informado'}</Text>
               </View>
             </View>
+            <Text style={[styles.descriptionLabel, { color: theme.colors.textSecondary }]}>Descrição</Text>
+            <Text style={[styles.descriptionText, { color: theme.colors.text }]}>
+              {occurrence.description || 'Sem descrição'}
+            </Text>
 
-            <View style={styles.infoRow}>
-              <View style={[styles.infoIcon, { backgroundColor: '#fef3c7' }]}>
-                <Calendar size={18} color="#f59e0b" strokeWidth={2.5} />
+            <View style={styles.detailGrid}>
+              <View style={styles.detailCard}>
+                <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Local</Text>
+                <Text style={[styles.detailValue, { color: theme.colors.text }]}>{occurrence.location || 'Não informado'}</Text>
               </View>
-              <View style={styles.infoContent}>
-                <Text style={[styles.infoLabel, { color: theme.colors.textSecondary }]}>Data de Registro</Text>
-                <Text style={[styles.infoValue, { color: theme.colors.text }]}>
-                  {formatFullDate(occurrence.date)}
-                </Text>
+
+              <View style={styles.detailCard}>
+                <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Data</Text>
+                <Text style={[styles.detailValue, { color: theme.colors.text }]}>{formatFullDate(occurrence.date)}</Text>
               </View>
-            </View>
 
             {occurrence.priority && (
               <View style={styles.infoRow}>
@@ -166,8 +169,8 @@ const OccurrenceModal = ({ visible, occurrence, onClose }) => {
                     {occurrence.priority.charAt(0).toUpperCase() + occurrence.priority.slice(1)}
                   </Text>
                 </View>
-              </View>
-            )}
+              )}
+            </View>
           </View>
 
           {/* Anexos */}
