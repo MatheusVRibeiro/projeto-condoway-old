@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Modal, Alert, ActivityIndicat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../contexts/ThemeProvider';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useNotifications } from '../../../contexts/NotificationProvider';
 import { apiService } from '../../../services/api';
 import { styles } from './styles';
 import { environments, allExistingReservations, myInitialReservations } from './mock';
@@ -12,12 +13,13 @@ import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
 import { EnvironmentCard, ReservationHeader, ReservationCard, EnvironmentDetailsModal, ReservationDetailsModal } from '../../../components';
-import { parseISO, isToday, isYesterday, isThisWeek, isLastWeek, isThisMonth, isLastMonth, startOfWeek, endOfWeek, differenceInDays } from 'date-fns';
+import { parseISO, isToday, isYesterday, isThisWeek, isLastWeek, isThisMonth, isLastMonth, startOfWeek, endOfWeek, differenceInDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Reservas() {
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { showNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState('reservar');
   const [myReservations, setMyReservations] = useState([]);
   const [ambientes, setAmbientes] = useState([]);
@@ -202,7 +204,39 @@ export default function Reservas() {
       console.log('📤 [Reservas] Criando reserva...', dadosReserva);
       
       await apiService.criarReserva(dadosReserva);
-      
+
+      // Mostrar notificação local de PRÉ-RESERVA (não persistida) para evitar mensagem
+      // de "confirmada" prematura caso o backend já esteja enviando a notificação errada.
+      try {
+        // Formatar data no padrão brasileiro e hora sem segundos
+        const dateObj = new Date(selectedDate + 'T00:00:00');
+        const dateBR = format(dateObj, 'dd/MM/yyyy');
+        const timeShort = (dadosReserva.res_horario_inicio || '').slice(0,5); // 'HH:MM'
+
+        // Montar mensagem plana e versão estruturada para permitir renderização com negrito
+        const plainMessage = `Sua reserva do ambiente "${selectedEnvironment?.name}" para ${dateBR} às ${timeShort} foi registrada como pré-reserva. Aguarde a confirmação do porteiro/síndico.`;
+
+        const formattedParts = [
+          { text: 'Sua reserva do ambiente ', bold: false },
+          { text: selectedEnvironment?.name || 'Ambiente', bold: true },
+          { text: ' para ', bold: false },
+          { text: dateBR, bold: true },
+          { text: ' às ', bold: false },
+          { text: timeShort, bold: true },
+          { text: ' foi registrada como pré-reserva. Aguarde a confirmação do porteiro/síndico.', bold: false }
+        ];
+
+        await showNotification(
+          'Pré-reserva enviada',
+          plainMessage,
+          'info',
+          false, // persist=false para não criar duplicata no servidor
+          { formatted: formattedParts, meta: { kind: 'reservation', ambiente: selectedEnvironment?.name, date: dateBR, time: timeShort } }
+        );
+      } catch (e) {
+        console.warn('⚠️ Erro ao exibir notificação local de pré-reserva:', e);
+      }
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setModalVisible(false);
       Toast.show({ 
@@ -902,7 +936,7 @@ export default function Reservas() {
                   <>
                     <CalendarCheck size={20} color="#ffffff" strokeWidth={2.5} />
                     <Text style={styles.confirmReservationButtonText}>
-                      Confirmar Reserva
+                      Confirmar Pré-Reserva
                     </Text>
                   </>
                 )}

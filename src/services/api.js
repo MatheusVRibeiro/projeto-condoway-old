@@ -1157,10 +1157,10 @@ export const apiService = {
   // Últimas Atualizações / Atividades Recentes
   buscarUltimasAtualizacoes: async (userapId) => {
     try {
-      console.log(`🔄 [API] Buscando últimas atualizações para userap_id: ${userapId}...`);
-      const response = await api.get(`/atualizacoes/${userapId}`);
-      console.log('✅ [API] Atualizações recebidas:', response.data);
-      return response.data; // { sucesso, mensagem, dados }
+        console.log(`🔄 [API] Buscando últimas atualizações (dashboard) para userap_id: ${userapId}...`);
+        const response = await api.get(`/dashboard/updates/${userapId}`);
+        console.log('✅ [API] Atualizações (dashboard) recebidas:', response.data);
+        return response.data; // { sucesso, mensagem, dados }
     } catch (error) {
       // Endpoint ainda não implementado no backend - retornar dados vazios silenciosamente
       if (error.response?.status === 404) {

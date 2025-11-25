@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { format } from 'date-fns';
 import { Platform, Vibration } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -37,6 +38,7 @@ export const NotificationProvider = ({ children }) => {
   const notificationsRef = useRef([]);
   const lastFetchTime = useRef(0);
   const allNotificationsRef = useRef([]);
+  const lastReservationRequestRef = useRef(null); // guarda última pré-reserva criada localmente
   const notificationListener = useRef();
   const responseListener = useRef();
 
@@ -146,16 +148,113 @@ export const NotificationProvider = ({ children }) => {
 
   const normalize = (raw) => {
     console.log('🔄 Normalizando notificação:', raw);
+    let messageText = raw.not_mensagem || raw.message || '';
+    const typeLower = raw.not_tipo?.toLowerCase() || (raw.type && raw.type.toLowerCase()) || 'info';
+    // Tentar melhorar formatação de datas/hora dentro da mensagem (ex.: 2025-11-27 -> 27/11/2025, 18:00:00 -> 18:00)
+    try {
+      // Detectar data ISO YYYY-MM-DD
+      const isoDateMatch = messageText.match(/(\d{4}-\d{2}-\d{2})/);
+      if (isoDateMatch) {
+        const iso = isoDateMatch[1];
+        const d = new Date(iso + 'T00:00:00');
+        if (!isNaN(d.getTime())) {
+          const formattedDate = format(d, 'dd/MM/yyyy');
+          messageText = messageText.replace(iso, formattedDate);
+        }
+      }
+
+      // Detectar hora com segundos HH:MM:SS e substituir por HH:MM
+      const timeMatch = messageText.match(/(\d{2}:\d{2}:\d{2})/);
+      if (timeMatch) {
+        const t = timeMatch[1];
+        const short = t.slice(0,5);
+        messageText = messageText.replace(t, short);
+      }
+    } catch (e) {
+      console.warn('⚠️ [Notifications] Erro ao normalizar data/hora da mensagem:', e);
+    }
+
     const normalized = {
       id: raw.not_id || raw.id || String(Date.now()),
       title: raw.not_tipo === 'Entrega' ? 'Encomenda Chegou' : (raw.not_tipo === 'Aviso' ? 'Aviso' : (raw.not_tipo === 'Mensagem' ? 'Nova Mensagem' : 'Notificação')),
-      message: raw.not_mensagem || raw.message || '',
-      type: raw.not_tipo?.toLowerCase() || (raw.type && raw.type.toLowerCase()) || 'info',
+      message: messageText,
+      type: typeLower,
       priority: raw.not_prioridade?.toLowerCase() || 'baixa', // Adicionado para usar a prioridade da API
       timestamp: raw.not_data_envio ? new Date(raw.not_data_envio) : (raw.created_at ? new Date(raw.created_at) : new Date()),
       read: raw.not_lida === 1 || raw.not_lida === true || raw.read === true || false,
       raw,
+      // formatted parts: detectar datas/hora e strings entre aspas para grifar (bold) na UI
+      formatted: null,
     };
+
+    // Construir formatted parts heurístico: datas (dd/mm/yyyy), horas (HH:MM) e trechos entre aspas serão marcados bold
+    try {
+      const parts = [];
+      let remaining = normalized.message || '';
+
+      // Regex para datas dd/MM/yyyy e horas HH:MM
+      const dateRegex = /(\d{2}\/\d{2}\/\d{4})/;
+      const timeRegex = /(\d{2}:\d{2})/;
+      const quoteRegex = /"([^"]+)"/;
+
+      // Primeiro, se encontrar uma string entre aspas, deixamos como parte bold (normalmente nome do ambiente)
+      const quoteMatch = remaining.match(quoteRegex);
+      if (quoteMatch) {
+        const before = remaining.split(quoteMatch[0])[0];
+        if (before) parts.push({ text: before, bold: false });
+        parts.push({ text: quoteMatch[1], bold: true });
+        const after = remaining.split(quoteMatch[0])[1] || '';
+        remaining = after;
+      }
+
+      // Em seguida, procurar por datas e horas dentro do restante e marcar bold
+      let cursor = remaining;
+      while (cursor.length > 0) {
+        const dMatch = cursor.match(dateRegex);
+        const tMatch = cursor.match(timeRegex);
+
+        // Encontrar o primeiro dos dois
+        let firstIndex = -1;
+        let firstType = null;
+        let firstMatch = null;
+
+        if (dMatch) firstIndex = cursor.indexOf(dMatch[1]);
+        if (tMatch) {
+          const timeIndex = cursor.indexOf(tMatch[1]);
+          if (firstIndex === -1 || timeIndex < firstIndex) {
+            firstIndex = timeIndex;
+            firstType = 'time';
+            firstMatch = tMatch[1];
+          }
+        }
+        if (dMatch && (firstType === null)) {
+          firstType = 'date';
+          firstMatch = dMatch[1];
+        }
+
+        if (firstIndex === -1) {
+          // nada mais a marcar
+          if (cursor) parts.push({ text: cursor, bold: false });
+          break;
+        }
+
+        if (firstIndex > 0) {
+          parts.push({ text: cursor.slice(0, firstIndex), bold: false });
+        }
+
+        parts.push({ text: firstMatch, bold: true });
+        cursor = cursor.slice(firstIndex + firstMatch.length);
+      }
+
+      // If no parts constructed, fallback to whole message
+      if (parts.length === 0) {
+        normalized.formatted = null;
+      } else {
+        normalized.formatted = parts;
+      }
+    } catch (e) {
+      console.warn('⚠️ [Notifications] Erro ao criar formatted parts:', e);
+    }
     console.log('✅ Notificação normalizada:', normalized);
     return normalized;
   };
@@ -188,7 +287,110 @@ export const NotificationProvider = ({ children }) => {
       console.log('📦 Notificações recebidas do servidor:', serverList?.length || 0);
       
       if (Array.isArray(serverList)) {
-        const mapped = serverList.map(normalize);
+          let mapped = serverList.map(normalize);
+
+          // Filtrar confirmações de reserva prematuras geradas pelo backend
+          try {
+            const last = lastReservationRequestRef.current;
+            if (last) {
+              mapped = mapped.filter(n => {
+                const msg = (n.message || '').toLowerCase();
+
+                // Heurística: identificar notificações de confirmação de reserva
+                const rawTipo = String(n.raw?.not_tipo || '').toLowerCase();
+                const isReservationConfirm = rawTipo.includes('reservation') || rawTipo.includes('reserva') || msg.includes('reserva') && msg.includes('confirm');
+
+                if (!isReservationConfirm) return true;
+
+                const matchesAmbiente = last.ambiente && msg.includes(String(last.ambiente).toLowerCase());
+                const matchesDate = last.date && msg.includes(String(last.date).toLowerCase());
+                const matchesTime = last.time && msg.includes(String(last.time).toLowerCase());
+
+                const recent = (Date.now() - last.ts) < 30000; // 30s
+
+                if (recent && matchesAmbiente && matchesDate && matchesTime) {
+                  console.log('⚠️ [Notifications] Ignorando confirmação prematura do servidor para pré-reserva local:', n);
+                  return false; // filtrar (ignorar) notificações prematuras
+                }
+
+                return true;
+              });
+            }
+          } catch (e) {
+            console.warn('⚠️ [Notifications] Erro ao filtrar confirmações prematuras:', e);
+          }
+
+          // Validação adicional: para notificações que dizem "Reserva Confirmada",
+          // confirmar que existe realmente uma reserva com status confirmado no servidor.
+          try {
+            // Encontrar notificações candidatas a confirmação de reserva
+            const confirmNotifs = mapped.filter(n => {
+              const msg = (n.message || '').toLowerCase();
+              const rawTipo = String(n.raw?.not_tipo || '').toLowerCase();
+              return rawTipo.includes('reserva') || (msg.includes('reserva') && msg.includes('confirm')) || (n.title && n.title.toLowerCase().includes('reserva'));
+            });
+
+            if (confirmNotifs.length > 0) {
+              // Buscar reservas do usuário para validar status
+              let userReservations = [];
+              try {
+                userReservations = await apiService.listarReservas(user.userap_id);
+              } catch (e) {
+                console.warn('⚠️ [Notifications] Erro ao buscar reservas para validação:', e);
+              }
+
+              const validated = [];
+              for (const n of mapped) {
+                // Se não for confirmação, mantém
+                const msg = n.message || '';
+                const rawTipo = String(n.raw?.not_tipo || '').toLowerCase();
+                const isReservationConfirm = rawTipo.includes('reserva') || (msg.toLowerCase().includes('reserva') && msg.toLowerCase().includes('confirm'));
+
+                if (!isReservationConfirm) {
+                  validated.push(n);
+                  continue;
+                }
+
+                // Tentar extrair ambiente, data e hora via regex (formato após normalização: dd/MM/yyyy e HH:MM)
+                const re = /sua reserva do\s+"?([^"\n]+)"?\s+para\s+(\d{2}\/\d{2}\/\d{4})\s+às\s+(\d{2}:\d{2})/i;
+                const m = msg.match(re);
+
+                if (!m) {
+                  // Se não conseguimos extrair, manter (para não perder notificações legítimas)
+                  validated.push(n);
+                  continue;
+                }
+
+                const [, ambienteName, dateStr, timeStr] = m;
+
+                // Procurar reserva correspondente com status 'confirmada'
+                const match = userReservations.find(r => {
+                  const rAmb = (r.environmentName || r.amd_nome || r.ambiente_nome || '').toString().toLowerCase();
+                  const rDate = (r.date || r.res_data_reserva || '').toString().split('T')[0];
+                  const rDateBR = rDate ? format(new Date(rDate + 'T00:00:00'), 'dd/MM/yyyy') : '';
+                  const rTime = (r.horario_inicio || r.res_horario_inicio || '').toString().slice(0,5);
+
+                  const sameAmb = ambienteName.toLowerCase().includes(rAmb) || rAmb.includes(ambienteName.toLowerCase());
+                  const sameDate = dateStr === rDateBR;
+                  const sameTime = timeStr === rTime;
+
+                  // status já está mapeado para 'confirmada' no listarReservas
+                  return sameAmb && sameDate && sameTime && r.status === 'confirmada';
+                });
+
+                if (match) {
+                  validated.push(n);
+                } else {
+                  console.log('⚠️ [Notifications] Ignorando notificação de confirmação sem reserva confirmada correspondente:', n);
+                  // ignorar
+                }
+              }
+
+              mapped = validated;
+            }
+          } catch (e) {
+            console.warn('⚠️ [Notifications] Erro na validação adicional de confirmações de reserva:', e);
+          }
         
         // Armazenar TODAS as notificações
         allNotificationsRef.current = mapped;
@@ -276,7 +478,7 @@ export const NotificationProvider = ({ children }) => {
 
   // Removido useEffect automático - notificações serão carregadas apenas via pull-to-refresh
 
-  const showNotification = async (title, message, type = 'info', persist = false) => {
+  const showNotification = async (title, message, type = 'info', persist = false, options = {}) => {
     // Mostrar Toast imediatamente
     Toast.show({
       type: type === 'error' ? 'error' : type === 'success' ? 'success' : 'info',
@@ -330,11 +532,34 @@ export const NotificationProvider = ({ children }) => {
       type,
       timestamp: new Date(),
       read: false,
+      // Opções estruturadas para permitir renderização com partes em negrito
+      formatted: options.formatted || null,
+      meta: options.meta || null,
     };
-
     setNotifications(prev => [notification, ...prev]);
     setUnreadCount(prev => prev + 1);
-    
+
+    // Se for uma pré-reserva local, guardar referência para evitar notificações de
+    // "reserva confirmada" geradas imediatamente pelo backend (bug conhecido)
+    try {
+      if (!persist && options?.meta?.kind === 'reservation') {
+        lastReservationRequestRef.current = {
+          ambiente: options.meta.ambiente,
+          date: options.meta.date,
+          time: options.meta.time,
+          ts: Date.now()
+        };
+        // Limpar depois de 30s para não bloquear confirmações legítimas
+        setTimeout(() => {
+          if (lastReservationRequestRef.current && (Date.now() - lastReservationRequestRef.current.ts) > 30000) {
+            lastReservationRequestRef.current = null;
+          }
+        }, 31000);
+      }
+    } catch (e) {
+      console.warn('⚠️ [Notifications] Erro guardando lastReservationRequestRef:', e);
+    }
+
     return notification;
   };
 
