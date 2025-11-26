@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  Send,
   Book,
   Headphones,
   Clock
@@ -26,7 +25,6 @@ export default function Help({ navigation: navProp }) {
   const { theme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedFaq, setExpandedFaq] = useState(null);
-  const [supportMessage, setSupportMessage] = useState('');
 
   const faqData = [
     {
@@ -102,15 +100,6 @@ export default function Help({ navigation: navProp }) {
 
   const toggleFaq = (id) => {
     setExpandedFaq(expandedFaq === id ? null : id);
-  };
-
-  const sendSupportMessage = () => {
-    if (!supportMessage.trim()) {
-      Alert.alert('Erro', 'Digite sua mensagem antes de enviar.');
-      return;
-    }
-    Alert.alert('Sucesso', 'Mensagem enviada! Nossa equipe responderá em breve.');
-    setSupportMessage('');
   };
 
   const ContactCard = ({ option }) => (
@@ -203,27 +192,7 @@ export default function Help({ navigation: navProp }) {
           </View>
         </Animatable.View>
 
-        {/* Support Message */}
-        <Animatable.View animation="fadeInUp" duration={600} delay={700} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>ENVIE UMA MENSAGEM</Text>
-          <View style={[styles.sectionContent, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
-            <Text style={[styles.messageLabel, { color: theme.colors.text }]}>Descreva seu problema ou dúvida:</Text>
-            <TextInput
-              style={[styles.messageInput, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, color: theme.colors.text }]}              
-              multiline
-              numberOfLines={4}
-              placeholder="Digite sua mensagem aqui..."
-              placeholderTextColor={theme.colors.textSecondary}
-              value={supportMessage}
-              onChangeText={setSupportMessage}
-              textAlignVertical="top"
-            />
-            <TouchableOpacity style={[styles.sendButton, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]} onPress={sendSupportMessage}>
-              <Send size={20} color="white" />
-              <Text style={styles.sendButtonText}>Enviar Mensagem</Text>
-            </TouchableOpacity>
-          </View>
-        </Animatable.View>
+        
 
         {/* Contact Options (moved below Support Message) */}
         <Animatable.View animation="fadeInUp" duration={600} delay={300} style={styles.section}>

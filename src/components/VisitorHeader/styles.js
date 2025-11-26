@@ -4,7 +4,7 @@ import { RFValue } from 'react-native-responsive-fontsize';
 const createStyles = (theme) => StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
-    paddingTop: 12,
+    paddingTop: -10,
     paddingBottom: 8,
   },
   headerContent: {
@@ -13,7 +13,7 @@ const createStyles = (theme) => StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: RFValue(22),
+    fontSize: RFValue(28),
     fontWeight: '700',
     color: theme.colors.text,
     letterSpacing: -0.5,
@@ -21,7 +21,7 @@ const createStyles = (theme) => StyleSheet.create({
     textAlign: 'center',
   },
   headerSubtitle: {
-    fontSize: RFValue(12),
+    fontSize: RFValue(14),
     fontWeight: '500',
     color: theme.colors.textSecondary,
     letterSpacing: -0.1,
@@ -50,32 +50,34 @@ const createStyles = (theme) => StyleSheet.create({
     width: '100%',
     paddingVertical: 16,
     paddingHorizontal: 12,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 12,
+    gap: 6,
   },
   iconWrapper: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 6,
   },
   statValue: {
-    fontSize: RFValue(20),
+    fontSize: RFValue(22),
     fontWeight: '800',
     color: theme.colors.text,
     letterSpacing: -0.5,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: RFValue(10),
+    fontSize: RFValue(12),
     fontWeight: '600',
     color: theme.colors.textSecondary,
     letterSpacing: 0.3,
   },
   statTextWrapper: {
-    flex: 1,
+    flex: 0,
+    alignItems: 'center',
     gap: 2,
   },
 });

@@ -149,10 +149,60 @@ export const NotificationProvider = ({ children }) => {
   const normalize = (raw) => {
     console.log('🔄 Normalizando notificação:', raw);
     let messageText = raw.not_mensagem || raw.message || '';
+    // Ajuste: se mensagem de visitante indicar "aguardando na portaria",
+    // quando a notificação for do tipo visitante transformamos para "chegou e está no condomínio".
+    try {
+      const rawTipoLower = String(raw.not_tipo || raw.type || '').toLowerCase();
+      const isVisitorNotification = rawTipoLower.includes('visit') || rawTipoLower.includes('visitante');
+
+      if (isVisitorNotification && /aguardando.*portaria|aguardando na portaria|na portaria aguardando/i.test(messageText)) {
+        // Tentar extrair nome do visitante entre aspas ou no início da mensagem
+        let visitorName = null;
+        const quoted = messageText.match(/"([^"]+)"/);
+        if (quoted && quoted[1]) visitorName = quoted[1];
+        if (!visitorName) {
+          const m = messageText.match(/^([A-ZÀ-Ÿ][\w\-à-ÿ']+(?:\s+[A-ZÀ-Ÿ][\w\-à-ÿ']+){0,3})/);
+          if (m && m[1]) visitorName = m[1];
+        }
+
+        if (visitorName) {
+          messageText = `${visitorName} chegou e está no condomínio`;
+        } else {
+          messageText = messageText.replace(/aguardando.*portaria/ig, 'chegou e está no condomínio');
+          messageText = messageText.replace(/na portaria aguardando/ig, 'chegou e está no condomínio');
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ [Notifications] Erro ao ajustar mensagem de visitante:', e);
+    }
     const typeLower = raw.not_tipo?.toLowerCase() || (raw.type && raw.type.toLowerCase()) || 'info';
     // Tentar melhorar formatação de datas/hora dentro da mensagem (ex.: 2025-11-27 -> 27/11/2025, 18:00:00 -> 18:00)
     try {
-      // Detectar data ISO YYYY-MM-DD
+      // Remover menções a fuso horário (ex.: "Brasília", "GMT-3", "UTC")
+      messageText = messageText.replace(/\b(Hor[aá]rio de Brasi[íi]lia|padr[aã]o de Brasi[íi]lia|Bras[íi]lia|Brasilia|GMT[+-]?\d+|UTC[+-]?\d+)\b/ig, '');
+
+      // Converter meses em inglês para números (ex: January 3, 2025 -> 03/01/2025)
+      const months = {
+        january: '01', february: '02', march: '03', april: '04', may: '05', june: '06',
+        july: '07', august: '08', september: '09', october: '10', november: '11', december: '12',
+        jan: '01', feb: '02', mar: '03', apr: '04', jun: '06', jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+      };
+
+      // Pattern: MonthName DD, YYYY  (e.g., January 3, 2025)
+      messageText = messageText.replace(/\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),\s*(\d{4})\b/ig, (m, mon, day, year) => {
+        const mm = months[mon.toLowerCase()] || '01';
+        const dd = String(day).padStart(2, '0');
+        return `${dd}/${mm}/${year}`;
+      });
+
+      // Pattern: DD MonthName YYYY  (e.g., 3 January 2025)
+      messageText = messageText.replace(/\b(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b/ig, (m, day, mon, year) => {
+        const mm = months[mon.toLowerCase()] || '01';
+        const dd = String(day).padStart(2, '0');
+        return `${dd}/${mm}/${year}`;
+      });
+
+      // Detectar data ISO YYYY-MM-DD e transformar
       const isoDateMatch = messageText.match(/(\d{4}-\d{2}-\d{2})/);
       if (isoDateMatch) {
         const iso = isoDateMatch[1];
@@ -164,12 +214,11 @@ export const NotificationProvider = ({ children }) => {
       }
 
       // Detectar hora com segundos HH:MM:SS e substituir por HH:MM
-      const timeMatch = messageText.match(/(\d{2}:\d{2}:\d{2})/);
-      if (timeMatch) {
-        const t = timeMatch[1];
-        const short = t.slice(0,5);
-        messageText = messageText.replace(t, short);
-      }
+      messageText = messageText.replace(/(\d{2}:\d{2}:\d{2})/g, (m) => m.slice(0,5));
+
+      // Detectar horas isoladas HH:MM (mantém)
+      // Finalmente, limpar duplicações de espaços e caracteres sobrando
+      messageText = messageText.replace(/\s{2,}/g, ' ').replace(/\s+[,\.]/g, (s) => s.trim());
     } catch (e) {
       console.warn('⚠️ [Notifications] Erro ao normalizar data/hora da mensagem:', e);
     }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Users, CalendarCheck, MapPin, Info, Utensils, PartyPopper, Volleyball } from 'lucide-react-native';
+import { Users, CalendarCheck, MapPin, Info, Utensils, PartyPopper, Volleyball, Gamepad, Book } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../contexts/ThemeProvider';
@@ -31,6 +31,12 @@ const EnvironmentCard = ({ item, onReserve, onDetails, index = 0 }) => {
     }
     if (nameLower.includes('quadra') || nameLower.includes('tênis') || nameLower.includes('esporte')) {
       return { icon: Volleyball, color: '#10b981', lightColor: '#d1fae5' };
+    }
+    if (nameLower.includes('jogos') || nameLower.includes('sala de jogos') || nameLower.includes('game')) {
+      return { icon: Gamepad, color: '#8b5cf6', lightColor: '#f3e8ff' };
+    }
+    if (nameLower.includes('estudo') || nameLower.includes('biblioteca') || nameLower.includes('study')) {
+      return { icon: Book, color: '#06b6d4', lightColor: '#dffafe' };
     }
     return { icon: MapPin, color: '#3b82f6', lightColor: '#dbeafe' };
   };

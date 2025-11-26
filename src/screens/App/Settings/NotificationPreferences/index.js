@@ -19,7 +19,6 @@ import {
   Users,
   Package,
   AlertTriangle,
-  Shield,
   Volume2,
   VolumeX,
   Clock,
@@ -30,14 +29,12 @@ import {
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../../contexts/ThemeProvider';
-import { useNotifications } from '../../../../contexts/NotificationProvider';
 import * as Animatable from 'react-native-animatable';
 import Toast from 'react-native-toast-message';
 
 const NotificationPreferences = () => {
   const navigation = useNavigation();
   const { theme, themeMode, setThemeMode } = useTheme();
-  const { showNotification } = useNotifications();
 
   // Estados das preferências de notificação
   const [preferences, setPreferences] = useState({
@@ -57,9 +54,7 @@ const NotificationPreferences = () => {
     visitors: true,
     maintenanceUpdates: true,
     
-    // Segurança
-    accessLogs: true,
-    securityAlerts: true,
+    // Segurança (removido: exibido em outra tela)
     
     // Configurações Avançadas
     quietHoursEnabled: false,
@@ -129,25 +124,7 @@ const NotificationPreferences = () => {
     }
   };
 
-  const handleTestNotification = () => {
-    if (!preferences.pushEnabled) {
-      Alert.alert(
-        'Notificações Desabilitadas',
-        'Ative as notificações push para testar',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
-    showNotification('Teste de Notificação', 'Esta é uma notificação de teste do CondoWay!');
-    
-    Toast.show({
-      type: 'info',
-      text1: 'Notificação enviada!',
-      text2: 'Verifique a área de notificações',
-      position: 'bottom',
-    });
-  };
+  
 
   const handleClearNotifications = () => {
     Alert.alert(
@@ -305,17 +282,7 @@ const NotificationPreferences = () => {
       color: theme.colors.text,
       flex: 1,
     },
-    testButton: {
-      backgroundColor: theme.colors.primary + '20',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
-    },
-    testButtonText: {
-      color: theme.colors.primary,
-      fontSize: 12,
-      fontFamily: 'Poppins-Medium',
-    },
+    
     content: {
       flex: 1,
       padding: 16,
@@ -461,12 +428,7 @@ const NotificationPreferences = () => {
         
         <Text style={styles.headerTitle}>Preferências</Text>
         
-        <TouchableOpacity 
-          style={styles.testButton}
-          onPress={handleTestNotification}
-        >
-          <Text style={styles.testButtonText}>Testar</Text>
-        </TouchableOpacity>
+        {/* botão de teste removido */}
       </Animatable.View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -584,24 +546,7 @@ const NotificationPreferences = () => {
           />
         </PreferenceSection>
 
-        {/* Seção Segurança */}
-        <PreferenceSection title="Segurança" icon={Shield}>
-          <PreferenceItem
-            title="Logs de Acesso"
-            description="Registros de entrada e saída"
-            value={preferences.accessLogs}
-            onToggle={(value) => updatePreference('accessLogs', value)}
-            icon={Shield}
-          />
-          
-          <PreferenceItem
-            title="Alertas de Segurança"
-            description="Notificações sobre incidentes"
-            value={preferences.securityAlerts}
-            onToggle={(value) => updatePreference('securityAlerts', value)}
-            icon={AlertTriangle}
-          />
-        </PreferenceSection>
+        {/* Seção Segurança removida */}
 
         {/* Espaçamento inferior */}
         <View style={{ height: 32 }} />
