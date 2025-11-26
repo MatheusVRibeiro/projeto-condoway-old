@@ -154,8 +154,13 @@ const handleError = (error, functionName) => {
     fullError: error.response?.data || error.message
   });
   
+  // Construímos um Error enriquecido com o statusCode e details para facilitar
+  // tratamento específico nas camadas superiores (components/screens).
+  const enrichedError = new Error(errorMessage);
+  enrichedError.statusCode = statusCode;
+  enrichedError.details = errorDetails;
   // Lança o erro para que a UI possa capturá-lo
-  throw new Error(errorMessage);
+  throw enrichedError;
 };
 
 // Helper: decodifica payload do JWT (somente para debug/fallback)
