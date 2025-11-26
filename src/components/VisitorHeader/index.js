@@ -64,7 +64,7 @@ const VisitorHeader = ({ awaitingCount = 0, approvedCount = 0, totalCount = 0, o
                 onPress={() => handleCardPress(stat.id)}
               >
                 <View style={[styles.iconWrapper, { backgroundColor: `${stat.color}15` }]}> 
-                  <Icon size={18} color={stat.color} strokeWidth={2.5} />
+                  <Icon size={24} color={stat.color} strokeWidth={2.5} />
                 </View>
                 <View style={styles.statTextWrapper}>
                   <Text style={styles.statValue}>{stat.value}</Text>

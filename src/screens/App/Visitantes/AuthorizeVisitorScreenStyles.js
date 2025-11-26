@@ -5,6 +5,7 @@ const styles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    paddingTop: 12,
   },
   // Header - Estilo moderno compacto
   header: {
@@ -12,7 +13,7 @@ const styles = (theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 30,
     paddingBottom: 12,
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,

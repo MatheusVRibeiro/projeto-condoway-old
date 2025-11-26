@@ -113,7 +113,7 @@ const styles = (theme) => StyleSheet.create({
   },
   emptyTitle: {
     fontSize: RFValue(22),
-    fontWeight: '800',
+    fontWeight: '',
     color: theme.colors.text,
     marginTop: 24,
     marginBottom: 10,
