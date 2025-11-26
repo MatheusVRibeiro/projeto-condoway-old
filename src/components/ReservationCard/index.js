@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Clock, CheckCircle, XCircle, Calendar, MapPin } from 'lucide-react-native';
+import { Clock, CheckCircle, XCircle, Calendar, MapPin, Gamepad, Book, Utensils, PartyPopper, Volleyball } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as Animatable from 'react-native-animatable';
@@ -78,6 +78,27 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
     return timeString.replace(/:\d{2}(?=\s|$)/g, '');
   };
 
+  // Ícone do ambiente baseado no nome (igual ao EnvironmentCard)
+  const getEnvironmentIcon = (name) => {
+    const nameLower = (name || '').toLowerCase();
+    if (nameLower.includes('salão') || nameLower.includes('festas')) {
+      return { icon: PartyPopper, color: '#ec4899', lightColor: '#fce7f3' };
+    }
+    if (nameLower.includes('churrasqueira') || nameLower.includes('gourmet')) {
+      return { icon: Utensils, color: '#f59e0b', lightColor: '#fed7aa' };
+    }
+    if (nameLower.includes('quadra') || nameLower.includes('tênis') || nameLower.includes('esporte')) {
+      return { icon: Volleyball, color: '#10b981', lightColor: '#d1fae5' };
+    }
+    if (nameLower.includes('jogos') || nameLower.includes('sala de jogos') || nameLower.includes('game')) {
+      return { icon: Gamepad, color: '#8b5cf6', lightColor: '#f3e8ff' };
+    }
+    if (nameLower.includes('estudo') || nameLower.includes('biblioteca') || nameLower.includes('study')) {
+      return { icon: Book, color: '#06b6d4', lightColor: '#dffafe' };
+    }
+    return { icon: MapPin, color: '#3b82f6', lightColor: '#dbeafe' };
+  };
+
   const handleCancel = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onCancel(item.id);
@@ -111,12 +132,24 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
         {/* Header com título e status */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
-              {item.environmentName}
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-              #{item.id}
-            </Text>
+            {/* Ícone do ambiente com container */}
+            {(() => {
+              const env = getEnvironmentIcon(item.environmentName);
+              const EnvIcon = env.icon;
+              return (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.iconContainer, { backgroundColor: env.lightColor }]}>
+                    <EnvIcon size={24} color={env.color} strokeWidth={2} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
+                      {item.environmentName}
+                    </Text>
+                    <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>#{item.id}</Text>
+                  </View>
+                </View>
+              );
+            })()}
           </View>
 
           {/* Badge de status */}
@@ -212,6 +245,13 @@ const ReservationCard = ({ item, onCancel, onPress, index = 0 }) => {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   infoContainer: {
     gap: 8,
