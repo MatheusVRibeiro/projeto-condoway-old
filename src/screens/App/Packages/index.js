@@ -1,9 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, ScrollView, RefreshControl, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, RefreshControl, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Package, Camera } from 'lucide-react-native';
+import { Package } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
-import * as Haptics from 'expo-haptics';
 import { isToday, isThisWeek, parseISO } from 'date-fns';
 import { useTheme } from '../../../contexts/ThemeProvider';
 
@@ -18,7 +17,7 @@ import LoadingState from '../../../components/LoadingState';
 // Hooks customizados
 import { usePackages } from '../../../hooks/usePackages';
 import useModal from '../../../hooks/useModal';
-import useQRScanner from '../../../hooks/useQRScanner';
+
 
 export default function Packages() {
   const { theme } = useTheme();
@@ -35,17 +34,13 @@ export default function Packages() {
   } = usePackages();
 
   const { isVisible: modalVisible, selectedItem: selectedPackage, openModal, closeModal } = useModal();
-  const { openQRScanner } = useQRScanner();
 
   // Callbacks memoizados para performance
   const handleOpenModal = useCallback((pkg) => {
     openModal(pkg);
   }, [openModal]);
 
-  const handleScanQR = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    openQRScanner();
-  }, [openQRScanner]);
+  
 
   // Filtrar pacotes baseado na busca por loja e código
   const filteredPackages = useMemo(() => {
@@ -186,14 +181,7 @@ export default function Packages() {
         package={selectedPackage}
       />
 
-      {/* Floating Action Button - Scanner QR */}
-      <TouchableOpacity 
-        style={[styles.fabButton, { backgroundColor: theme.colors.primary }]}
-        onPress={handleScanQR}
-        activeOpacity={0.8}
-      >
-        <Camera size={24} color="#ffffff" strokeWidth={2.5} />
-      </TouchableOpacity>
+      {/* Floating Action Button removed as per request (camera icon) */}
     </SafeAreaView>
   );
 }
@@ -245,20 +233,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  fabButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#3b82f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
+  
 });

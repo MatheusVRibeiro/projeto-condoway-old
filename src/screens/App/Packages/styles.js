@@ -370,24 +370,7 @@ export const styles = StyleSheet.create({
     color: '#475569',
   },
 
-  // --- Floating Action Button ---
-  fabButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#3b82f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1000,
-  },
+  // FAB removed per request: camera icon eliminated from Packages screen
 
   // --- Package Card Urgency ---
   urgentBadge: {

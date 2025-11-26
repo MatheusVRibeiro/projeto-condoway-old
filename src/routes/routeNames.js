@@ -6,7 +6,7 @@ export const ROUTES = {
   PERFIL: 'PerfilTab',
   PROFILE_MAIN: 'ProfileMain',
   NOTIFICATION_PREFERENCES: 'NotificationPreferences',
-  MAINTABS: 'MainTabs',
+  MAINTABS: 'Dashboard',
   VISITANTES: 'Visitantes',
   LOGIN: 'Login',
   SIGNUP: 'SignUp',

@@ -64,12 +64,12 @@ export default function InvitationGeneratedScreen() {
     navigation.reset({
       index: 0,
       routes: [
-        { name: 'MainTabs' }, // Volta para as tabs principais (Dashboard)
+        { name: 'Dashboard' }, // Volta para as tabs principais (Dashboard)
       ],
     });
     
     // Opcional: navegar para a tab de visitantes especificamente
-    // navigation.navigate('MainTabs', { screen: 'Visitantes' });
+  // navigation.navigate('Dashboard', { screen: 'Visitantes' });
   };
 
   return (
