@@ -13,7 +13,7 @@ import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import * as Animatable from 'react-native-animatable';
 import { EnvironmentCard, ReservationHeader, ReservationCard, EnvironmentDetailsModal, ReservationDetailsModal } from '../../../components';
-import { parseISO, isToday, isYesterday, isThisWeek, isLastWeek, isThisMonth, isLastMonth, startOfWeek, endOfWeek, differenceInDays, format } from 'date-fns';
+import { parseISO, isToday, isYesterday, isThisWeek, isThisMonth, isLastMonth, startOfWeek, endOfWeek, differenceInDays, format, subWeeks, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Reservas() {
@@ -175,7 +175,7 @@ export default function Reservas() {
     }
     
     try {
-      // Validação: reservar com pelo menos 24 horas de antecedência
+      // Validação: reserva deve ser para o dia seguinte ou posterior (nunca no mesmo dia)
       const periodTimes = {
         manha: { inicio: '08:00:00', fim: '12:00:00' },
         tarde: { inicio: '12:00:00', fim: '18:00:00' },
@@ -183,12 +183,14 @@ export default function Reservas() {
       };
       const horarios = periodTimes[selectedPeriod];
 
-      const reservationStart = new Date(`${selectedDate}T${horarios.inicio}`);
-      const now = new Date();
-      const minAllowed = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const reservationDate = new Date(selectedDate + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Resetar horas para comparar apenas a data
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-      if (reservationStart.getTime() < minAllowed.getTime()) {
-        Toast.show({ type: 'error', text1: 'Reserva inválida', text2: 'Reservas devem ser feitas com pelo menos 24 horas de antecedência.' });
+      if (reservationDate.getTime() < tomorrow.getTime()) {
+        Toast.show({ type: 'error', text1: 'Reserva inválida', text2: 'Reservas só podem ser feitas a partir do dia seguinte.' });
         return;
       }
       setIsSubmitting(true);
@@ -375,7 +377,7 @@ export default function Reservas() {
           groups.ontem.reservas.push(reserva);
         } else if (isThisWeek(dataReserva, { locale: ptBR })) {
           groups.estaSemana.reservas.push(reserva);
-        } else if (isLastWeek(dataReserva, { locale: ptBR })) {
+        } else if (dataReserva >= startOfWeek(subWeeks(new Date(), 1), { locale: ptBR }) && dataReserva <= endOfWeek(subWeeks(new Date(), 1), { locale: ptBR })) {
           groups.semanaPassada.reservas.push(reserva);
         } else if (isThisMonth(dataReserva)) {
           groups.esteMes.reservas.push(reserva);

@@ -2,9 +2,9 @@ import axios from 'axios';
 
 // 1. Cria uma instância do axios com a baseURL pré-configurada
 const api = axios.create({
-  baseURL: 'http://192.168.0.174:3333',
+  // baseURL: 'http://192.168.0.174:3333',
   // baseURL: 'http://192.168.5.10:3333',
-  // baseURL: 'http://10.67.23.46:3333',
+  baseURL: 'http://10.67.23.46:3333',
   timeout: 30000, // 30 segundos
 });
 
