@@ -69,16 +69,22 @@ export const AuthProvider = ({ children }) => {
           // ✅ SOLUÇÃO: Se userap_id não estiver no userData, extrair do token
           if (!userData.userap_id) {
             console.warn('⚠️ [AuthContext] userap_id não encontrado no userData do storage');
-            console.log('🔍 [AuthContext] Tentando extrair userap_id do token JWT...');
+            if (__DEV__) {
+              console.log('🔍 [AuthContext] Tentando extrair userap_id do token JWT...');
+            }
             
             const decoded = decodeJwt(storedToken);
-            console.log('🔍 [AuthContext] Token decodificado:', JSON.stringify(decoded, null, 2));
+            if (__DEV__) {
+              console.log('🔍 [AuthContext] Token decodificado:', JSON.stringify(decoded, null, 2));
+            }
             
             // O token pode ter userApId, userap_id, ou userapId
             const userapId = decoded?.userApId || decoded?.userap_id || decoded?.userapId;
             
             if (userapId) {
-              console.log('✅ [AuthContext] userap_id extraído do token:', userapId);
+              if (__DEV__) {
+                console.log('✅ [AuthContext] userap_id extraído do token:', userapId);
+              }
               userData.userap_id = userapId;
             } else {
               console.error('❌ [AuthContext] userap_id não encontrado nem no storage nem no token!');
@@ -92,7 +98,9 @@ export const AuthProvider = ({ children }) => {
           }
           
           const timeRemaining = getTokenTimeRemaining(storedToken);
-          console.log(`✅ [AuthContext] Utilizador e Token carregados. Token expira em ${timeRemaining} minutos.`);
+          if (__DEV__) {
+            console.log(`✅ [AuthContext] Utilizador e Token carregados. Token expira em ${timeRemaining} minutos.`);
+          }
           
           // Reconfigurar o Axios com o token salvo
           setAuthToken(storedToken);
@@ -147,16 +155,22 @@ export const AuthProvider = ({ children }) => {
       // ✅ SOLUÇÃO: Se userap_id não vier no objeto usuario, extrair do token JWT
       if (!usuario.userap_id) {
         console.warn('⚠️ [AuthContext] userap_id não encontrado no objeto usuario');
-        console.log('🔍 [AuthContext] Tentando extrair userap_id do token JWT...');
+        if (__DEV__) {
+          console.log('🔍 [AuthContext] Tentando extrair userap_id do token JWT...');
+        }
         
         const decoded = decodeJwt(token);
-        console.log('🔍 [AuthContext] Token decodificado:', JSON.stringify(decoded, null, 2));
+        if (__DEV__) {
+          console.log('🔍 [AuthContext] Token decodificado:', JSON.stringify(decoded, null, 2));
+        }
         
         // O token pode ter userApId, userap_id, ou userapId
         const userapId = decoded?.userApId || decoded?.userap_id || decoded?.userapId;
         
         if (userapId) {
-          console.log('✅ [AuthContext] userap_id extraído do token:', userapId);
+          if (__DEV__) {
+            console.log('✅ [AuthContext] userap_id extraído do token:', userapId);
+          }
           usuario.userap_id = userapId;
         } else {
           console.error('❌ [AuthContext] userap_id não encontrado nem no usuario nem no token!');
@@ -170,7 +184,9 @@ export const AuthProvider = ({ children }) => {
       }
       
       const timeRemaining = getTokenTimeRemaining(token);
-      console.log(`⏰ [AuthContext] Token válido. Expira em ${timeRemaining} minutos.`);
+      if (__DEV__) {
+        console.log(`⏰ [AuthContext] Token válido. Expira em ${timeRemaining} minutos.`);
+      }
       
       // 3. Configurar o token no Axios para todas as futuras requisições
       setAuthToken(token);
@@ -183,12 +199,16 @@ export const AuthProvider = ({ children }) => {
         await AsyncStorage.setItem('userEmail', email);
         // Remover qualquer senha por segurança caso exista
         await AsyncStorage.removeItem('userPassword');
-        console.log('💾 [AuthContext] Usuário e Token salvos; e-mail persistido (remember=true)');
+        if (__DEV__) {
+          console.log('💾 [AuthContext] Usuário e Token salvos; e-mail persistido (remember=true)');
+        }
       } else {
         // Garantir que não ficam credenciais salvas indevidamente
         await AsyncStorage.removeItem('userEmail');
         await AsyncStorage.removeItem('userPassword');
-        console.log('💾 [AuthContext] Usuário e Token salvos; credenciais não foram persistidas (remember=false)');
+        if (__DEV__) {
+          console.log('💾 [AuthContext] Usuário e Token salvos; credenciais não foram persistidas (remember=false)');
+        }
       }
       
       // ✅ Marcar onboarding como concluído após login bem-sucedido

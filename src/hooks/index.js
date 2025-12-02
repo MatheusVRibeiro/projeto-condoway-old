@@ -11,6 +11,9 @@ export { useLatestUpdates } from './useLatestUpdates';
 export { usePaginatedOcorrencias } from './usePaginatedOcorrencias';
 export { usePaginatedVisitantes } from './usePaginatedVisitantes';
 
+// Utility Hooks
+export { useDebounce } from './useDebounce';
+
 // Legacy Hooks (manter compatibilidade)
 export { default as useAsync } from './useAsync';
 // export { default as useBiometrics } from './useBiometrics'; // removido: suporte a biometria/Face ID

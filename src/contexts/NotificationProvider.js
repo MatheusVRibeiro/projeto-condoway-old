@@ -487,12 +487,23 @@ export const NotificationProvider = ({ children }) => {
             });
           }
           
-          setNotifications(paginatedData);
-          notificationsRef.current = paginatedData;
+          // Deduplicar por ID antes de definir notificações
+          const uniqueData = paginatedData.filter((notif, index, self) =>
+            index === self.findIndex((t) => t.id === notif.id)
+          );
+          setNotifications(uniqueData);
+          notificationsRef.current = uniqueData;
         } else {
-          // Infinite scroll - adicionar aos existentes
-          setNotifications(prev => [...prev, ...paginatedData]);
-          notificationsRef.current = [...notificationsRef.current, ...paginatedData];
+          // Infinite scroll - adicionar aos existentes, deduplicando por ID
+          setNotifications(prev => {
+            const combined = [...prev, ...paginatedData];
+            return combined.filter((notif, index, self) =>
+              index === self.findIndex((t) => t.id === notif.id)
+            );
+          });
+          notificationsRef.current = [...notificationsRef.current, ...paginatedData].filter((notif, index, self) =>
+            index === self.findIndex((t) => t.id === notif.id)
+          );
         }
         
         const unread = mapped.filter(n => !n.read).length;
@@ -561,9 +572,16 @@ export const NotificationProvider = ({ children }) => {
         });
         console.log('✅ Notificação criada no servidor:', serverNotification);
         
-        // Adicionar a notificação normalizada retornada do servidor
+        // Adicionar a notificação normalizada retornada do servidor (com deduplicação por ID)
         const normalized = normalize(serverNotification);
-        setNotifications(prev => [normalized, ...prev]);
+        setNotifications(prev => {
+          // Verificar se notificação já existe (evitar duplicata)
+          if (prev.some(n => n.id === normalized.id)) {
+            console.log('⚠️ Notificação duplicada ignorada:', normalized.id);
+            return prev;
+          }
+          return [normalized, ...prev];
+        });
         setUnreadCount(prev => prev + 1);
         
         return normalized;
@@ -585,7 +603,15 @@ export const NotificationProvider = ({ children }) => {
       formatted: options.formatted || null,
       meta: options.meta || null,
     };
-    setNotifications(prev => [notification, ...prev]);
+    
+    // Adicionar com deduplicação por ID
+    setNotifications(prev => {
+      if (prev.some(n => n.id === notification.id)) {
+        console.log('⚠️ Notificação local duplicada ignorada:', notification.id);
+        return prev;
+      }
+      return [notification, ...prev];
+    });
     setUnreadCount(prev => prev + 1);
 
     // Se for uma pré-reserva local, guardar referência para evitar notificações de

@@ -25,6 +25,23 @@ const parseDateTime = (dateString) => {
   }
 };
 
+// Helper para verificar se a validade expirou
+const isExpired = (validadeFimString) => {
+  if (!validadeFimString) return false;
+  try {
+    const validadeFimDate = new Date(validadeFimString);
+    const hoje = new Date();
+    
+    // Resetar horários para comparar apenas datas
+    validadeFimDate.setHours(0, 0, 0, 0);
+    hoje.setHours(0, 0, 0, 0);
+    
+    return validadeFimDate < hoje;
+  } catch (error) {
+    return false;
+  }
+};
+
 const VisitantesScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
@@ -49,16 +66,6 @@ const VisitantesScreen = () => {
     if (!Array.isArray(visitantes)) return [];
 
     return visitantes
-      .filter(v => {
-        const status = (v.status || v.vst_status || '').toString();
-        if (selectedTab === 'waiting') {
-          return status !== 'Entrou' && status !== 'Finalizado' && status !== 'Cancelado';
-        } else if (selectedTab === 'present') {
-          return status === 'Entrou';
-        } else {
-          return status === 'Finalizado' || status === 'Cancelado';
-        }
-      })
       .map((v, index) => {
         const randomId = Math.random().toString();
         const vstId = v.vst_id || v.id;
@@ -83,6 +90,29 @@ const VisitantesScreen = () => {
         // Extrair hora da data
         const horaValidade = parseDateTime(dataValidade);
         
+        // ⚠️ VERIFICAR SE A VALIDADE EXPIROU (antes de filtrar por aba)
+        let statusFinal = statusVisitante || 'Aguardando';
+        if (dataValidadeFim && statusFinal !== 'Entrou' && statusFinal !== 'Finalizado' && statusFinal !== 'Cancelado') {
+          try {
+            const validadeFimDate = new Date(dataValidadeFim);
+            const hoje = new Date();
+            
+            // Resetar horários para comparar apenas datas
+            validadeFimDate.setHours(0, 0, 0, 0);
+            hoje.setHours(0, 0, 0, 0);
+            
+            // Se a data de validade fim for anterior a hoje, marcar como Cancelado
+            if (validadeFimDate < hoje) {
+              statusFinal = 'Cancelado';
+              if (__DEV__) {
+                console.log(`⚠️ [Visitantes] Visitante ${nomeVisitante} expirado: validade ${dataValidadeFim}`);
+              }
+            }
+          } catch (error) {
+            console.error('❌ [Visitantes] Erro ao verificar validade:', error);
+          }
+        }
+        
         const mappedVisitor = {
           id: vstId ? vstId.toString() : randomId,
           vst_id: vstId || null,
@@ -93,7 +123,7 @@ const VisitantesScreen = () => {
           visit_date_end: dataValidadeFim || null,
           visit_time: horaValidade || null,
           qr_code: qrCodeHash || null,
-          status: statusVisitante || 'Aguardando',
+          status: statusFinal,
           tipo: tipoVisita || 'agendado',
           sub_status: v.sub_status || v.vst_sub_status || null,
           vst_precisa_aprovacao: v.precisa_aprovacao || v.vst_precisa_aprovacao || false,
@@ -103,6 +133,17 @@ const VisitantesScreen = () => {
         };
         
         return mappedVisitor;
+      })
+      .filter(v => {
+        // Filtrar por aba usando o status já atualizado (com verificação de expiração)
+        const status = v.status;
+        if (selectedTab === 'waiting') {
+          return status !== 'Entrou' && status !== 'Finalizado' && status !== 'Cancelado';
+        } else if (selectedTab === 'present') {
+          return status === 'Entrou';
+        } else {
+          return status === 'Finalizado' || status === 'Cancelado';
+        }
       })
       .filter(v => {
         if (!searchQuery.trim()) return true;
@@ -127,12 +168,41 @@ const VisitantesScreen = () => {
 
   const waitingCount = visitantes.filter(v => {
     const st = (v.status || v.vst_status || '').toString();
-    return st !== 'Entrou' && st !== 'Finalizado' && st !== 'Cancelado';
+    const validadeFim = v.validadeFim || v.validade_fim || v.vst_validade_fim;
+    
+    // Se já está cancelado, entrou ou finalizado, não conta como aguardando
+    if (st === 'Entrou' || st === 'Finalizado' || st === 'Cancelado') {
+      return false;
+    }
+    
+    // Se a validade expirou, não conta como aguardando (será cancelado automaticamente)
+    if (isExpired(validadeFim)) {
+      return false;
+    }
+    
+    return true;
   }).length;
 
   const presentCount = visitantes.filter(v => {
     const status = v.status || v.vst_status;
     return status === 'Entrou';
+  }).length;
+
+  const historyCount = visitantes.filter(v => {
+    const st = (v.status || v.vst_status || '').toString();
+    const validadeFim = v.validadeFim || v.validade_fim || v.vst_validade_fim;
+    
+    // Conta como histórico se já está finalizado/cancelado ou se a validade expirou
+    if (st === 'Finalizado' || st === 'Cancelado') {
+      return true;
+    }
+    
+    // Se a validade expirou, vai para histórico
+    if (isExpired(validadeFim)) {
+      return true;
+    }
+    
+    return false;
   }).length;
 
   useFocusEffect(
@@ -223,7 +293,7 @@ const VisitantesScreen = () => {
       <VisitorHeader 
         awaitingCount={waitingCount}
         approvedCount={presentCount}
-        totalCount={visitantes.length}
+        totalCount={historyCount}
         onCardPress={handleTabChange}
       />
 

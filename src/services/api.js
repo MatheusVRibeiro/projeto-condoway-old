@@ -133,10 +133,14 @@ api.interceptors.response.use(
 export const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    console.log('✅ [API] Token configurado no Axios:', token.substring(0, 20) + '...');
+    if (__DEV__) {
+      console.log('✅ [API] Token configurado no Axios:', token.substring(0, 20) + '...');
+    }
   } else {
     delete api.defaults.headers.common['Authorization'];
-    console.log('🔓 [API] Token removido do Axios');
+    if (__DEV__) {
+      console.log('🔓 [API] Token removido do Axios');
+    }
   }
 };
 
@@ -219,6 +223,36 @@ export const getTokenTimeRemaining = (token) => {
   } catch (error) {
     return 0;
   }
+};
+
+// Helper: retry automático para requisições que falharem por problemas de rede
+export const retryRequest = async (requestFn, maxRetries = 3, delayMs = 1000) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await requestFn();
+    } catch (error) {
+      lastError = error;
+      
+      // Não fazer retry se for erro de validação/auth (4xx exceto 408/429)
+      const status = error.response?.status;
+      if (status && status >= 400 && status < 500 && status !== 408 && status !== 429) {
+        throw error;
+      }
+      
+      // Se não for o último attempt, aguardar antes de tentar novamente
+      if (attempt < maxRetries) {
+        console.warn(`⚠️ [Retry] Tentativa ${attempt}/${maxRetries} falhou. Aguardando ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        // Aumentar delay exponencialmente (backoff)
+        delayMs *= 2;
+      }
+    }
+  }
+  
+  console.error(`❌ [Retry] Todas as ${maxRetries} tentativas falharam`);
+  throw lastError;
 };
 
 // 4. O novo objeto de serviço, agora usando a instância do axios
