@@ -138,10 +138,14 @@ export default function EditProfile() {
       console.log('  - Condomínio:', profileData.cond_nome || 'não encontrado');
       console.log('  - Foto (user_foto):', profileData.user_foto || 'NULL - Mostrará letra');
 
+      // Formata o telefone ao carregar
+      const rawPhone = profileData.user_telefone || user?.user_telefone || '';
+      const formattedPhone = rawPhone ? formatPhone(rawPhone) : '';
+
       setProfile({
         name: profileData.user_nome || user?.user_nome || '',
         email: profileData.user_email || user?.user_email || '',
-        phone: profileData.user_telefone || user?.user_telefone || '',
+        phone: formattedPhone,
         apartment: profileData.ap_numero || '',
         block: profileData.bloc_nome || '',
         condominium: profileData.cond_nome || '',
@@ -151,12 +155,17 @@ export default function EditProfile() {
     } else if (user) {
       console.log('⚠️ [EditProfile] Sem profileData, usando dados do user');
       console.log('  - Foto (user.user_foto):', user.user_foto || 'NULL - Mostrará letra');
+      
+      // Formata o telefone ao carregar
+      const rawPhone = user.user_telefone || '';
+      const formattedPhone = rawPhone ? formatPhone(rawPhone) : '';
+
       // Se não há profileData, usa os dados básicos do user
       setProfile(prev => ({
         ...prev,
         name: user.user_nome || '',
         email: user.user_email || '',
-        phone: user.user_telefone || '',
+        phone: formattedPhone,
         avatarUrl: user.user_foto || null,
       }));
     }
